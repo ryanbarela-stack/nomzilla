@@ -31,7 +31,9 @@ export function KaijuHeader({ streak, stage, target, characterId, onChangeTarget
   return (
     <div className="bg-[#161b22] border border-[#30363d] rounded-lg p-4 flex flex-col sm:flex-row items-center gap-4">
       <div className="flex flex-col items-center gap-1">
-        <KaijuCanvas stage={stage.index} characterId={characterId} size={128} />
+        <div className="bg-[#0d1117] border border-[#30363d] rounded-lg p-2 inline-flex items-end justify-center">
+          <KaijuCanvas stage={stage.index} characterId={characterId} size={128} />
+        </div>
         <button
           onClick={() => setPickerOpen(true)}
           className="text-xs text-gray-400 hover:text-emerald-400 underline decoration-dotted"
