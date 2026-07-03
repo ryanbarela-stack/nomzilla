@@ -45,7 +45,11 @@ function App() {
   }
 
   function changeTarget(value: number) {
-    setSettings({ targetCalories: value });
+    setSettings((prev) => ({ ...prev, targetCalories: value }));
+  }
+
+  function changeCharacter(id: string) {
+    setSettings((prev) => ({ ...prev, characterId: id }));
   }
 
   function changeMonth(delta: number) {
@@ -69,7 +73,9 @@ function App() {
         streak={streak}
         stage={stage}
         target={settings.targetCalories}
+        characterId={settings.characterId}
         onChangeTarget={changeTarget}
+        onChangeCharacter={changeCharacter}
       />
 
       <DayPanel

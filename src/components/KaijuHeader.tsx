@@ -1,19 +1,25 @@
 import { useState } from "react";
 import { KaijuCanvas } from "./KaijuCanvas";
+import { CharacterPicker } from "./CharacterPicker";
 import { GROWTH_STAGES, getNextStage, type GrowthStage } from "../lib/streak";
+import { getCharacter } from "../lib/characters";
 
 interface Props {
   streak: number;
   stage: GrowthStage;
   target: number;
+  characterId: string;
   onChangeTarget: (value: number) => void;
+  onChangeCharacter: (id: string) => void;
 }
 
-export function KaijuHeader({ streak, stage, target, onChangeTarget }: Props) {
+export function KaijuHeader({ streak, stage, target, characterId, onChangeTarget, onChangeCharacter }: Props) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(String(target));
+  const [pickerOpen, setPickerOpen] = useState(false);
   const next = getNextStage(stage);
   const daysToNext = next ? Math.max(0, next.minStreak - streak) : null;
+  const character = getCharacter(characterId);
 
   function commitTarget() {
     const val = Number(draft);
@@ -24,7 +30,19 @@ export function KaijuHeader({ streak, stage, target, onChangeTarget }: Props) {
 
   return (
     <div className="bg-[#161b22] border border-[#30363d] rounded-lg p-4 flex flex-col sm:flex-row items-center gap-4">
-      <KaijuCanvas stage={stage.index} size={128} />
+      <div className="flex flex-col items-center gap-1">
+        <KaijuCanvas stage={stage.index} characterId={characterId} size={128} />
+        <button
+          onClick={() => setPickerOpen(true)}
+          className="text-xs text-gray-400 hover:text-emerald-400 underline decoration-dotted"
+        >
+          {character.kind === "sprite" ? character.name : "Change look"}
+        </button>
+      </div>
+
+      {pickerOpen && (
+        <CharacterPicker selectedId={characterId} onSelect={onChangeCharacter} onClose={() => setPickerOpen(false)} />
+      )}
 
       <div className="flex-1 w-full flex flex-col gap-2 text-center sm:text-left">
         <div className="flex items-center justify-center sm:justify-start gap-2">

@@ -11,6 +11,7 @@ export interface DayLog {
 
 export interface Settings {
   targetCalories: number;
+  characterId: string;
 }
 
 export type LogsByDate = Record<string, DayLog>;
