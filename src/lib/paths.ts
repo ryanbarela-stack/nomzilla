@@ -1,0 +1,37 @@
+import type { GrowthStage } from "./streak";
+
+export type PathId = "titan" | "warden" | "emperor";
+
+export interface EvolutionPath {
+  id: PathId;
+  name: string;
+  tagline: string;
+  /** Display names for stage index 3, 4, and 5. */
+  stageNames: [string, string, string];
+}
+
+export const PATHS: EvolutionPath[] = [
+  { id: "titan", name: "Titan", tagline: "Rock-hewn and unstoppable", stageNames: ["Young Titan", "Titan", "Ancient Titan"] },
+  { id: "warden", name: "Warden", tagline: "Armored guardian", stageNames: ["Young Warden", "Warden", "Grand Warden"] },
+  { id: "emperor", name: "Emperor", tagline: "Regal and resplendent", stageNames: ["Young Emperor", "Emperor", "Emperor Eternal"] },
+];
+
+export function getPath(id: string | null): EvolutionPath | null {
+  return PATHS.find((p) => p.id === id) ?? null;
+}
+
+/** The name to show for the current stage, accounting for the (possibly still unchosen) evolution path. */
+export function getStageDisplayName(stage: GrowthStage, pathId: string | null): string {
+  if (stage.index < 3) return stage.name;
+  const path = getPath(pathId);
+  if (!path) return "Choose Your Path!";
+  return path.stageNames[stage.index - 3];
+}
+
+/** Name to use when previewing an upcoming (not-yet-reached) stage, e.g. in "log N more days to reach X". */
+export function getStagePreviewName(stage: GrowthStage, pathId: string | null): string {
+  if (stage.index < 3) return stage.name;
+  const path = getPath(pathId);
+  if (!path) return "your evolved form";
+  return path.stageNames[stage.index - 3];
+}

@@ -34,13 +34,15 @@ export interface GrowthStage {
   minStreak: number;
 }
 
+// Names for stage 3+ are placeholders — the displayed name once a path is chosen
+// comes from lib/paths.ts (getStageDisplayName / getStagePreviewName).
 export const GROWTH_STAGES: GrowthStage[] = [
-  { index: 0, name: "Hatchling", minStreak: 0 },
-  { index: 1, name: "Baby Kaiju", minStreak: 3 },
-  { index: 2, name: "Juvenile", minStreak: 7 },
-  { index: 3, name: "Teen Terror", minStreak: 14 },
-  { index: 4, name: "Adult Titan", minStreak: 30 },
-  { index: 5, name: "Kaiju King", minStreak: 60 },
+  { index: 0, name: "Egg", minStreak: 0 },
+  { index: 1, name: "Cracking Egg", minStreak: 3 },
+  { index: 2, name: "Hatchling", minStreak: 7 },
+  { index: 3, name: "Evolving", minStreak: 14 },
+  { index: 4, name: "Ascending", minStreak: 30 },
+  { index: 5, name: "Apex Form", minStreak: 60 },
 ];
 
 export function getStageForStreak(streak: number): GrowthStage {

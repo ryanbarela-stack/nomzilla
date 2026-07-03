@@ -1,154 +1,344 @@
+import type { PathId } from "./paths";
+
 export const GRID = 32;
-
-interface Palette {
-  body: string;
-  bodyLight: string;
-  bodyDark: string;
-  belly: string;
-  bellyDark: string;
-  spike: string;
-  spikeLight: string;
-  eye: string;
-  blush: string;
-  outline: string;
-  sparkle: boolean;
-  crown: boolean;
-}
-
-const PALETTES: Palette[] = [
-  { body: "#b7f0c0", bodyLight: "#e3fbe6", bodyDark: "#8ed69b", belly: "#fff6df", bellyDark: "#ffe9bc", spike: "#ffc2d1", spikeLight: "#ffe0e8", eye: "#3b2a20", blush: "#ff9fb3", outline: "#3f6b46", sparkle: false, crown: false },
-  { body: "#9de6ac", bodyLight: "#c9f7d3", bodyDark: "#6fc984", belly: "#fff0d0", bellyDark: "#ffdfa8", spike: "#ffb0c6", spikeLight: "#ffd3de", eye: "#2e2118", blush: "#ff90a8", outline: "#2f5a3a", sparkle: false, crown: false },
-  { body: "#7fdba0", bodyLight: "#b3efc6", bodyDark: "#54b978", belly: "#fff0d0", bellyDark: "#ffdca0", spike: "#ffd166", spikeLight: "#ffe6a3", eye: "#241c14", blush: "#ff8aa0", outline: "#28503a", sparkle: false, crown: false },
-  { body: "#5fcf8f", bodyLight: "#8fe6b3", bodyDark: "#3ba86c", belly: "#ffedc2", bellyDark: "#ffd48f", spike: "#ffd166", spikeLight: "#ffe6a3", eye: "#2a6fdb", blush: "#ff8296", outline: "#1f4530", sparkle: true, crown: false },
-  { body: "#45b87a", bodyLight: "#78d6a0", bodyDark: "#2a8f5c", belly: "#ffe6ad", bellyDark: "#ffcb73", spike: "#c9a0ff", spikeLight: "#e6cfff", eye: "#ffb238", blush: "#ff7d94", outline: "#194526", sparkle: true, crown: false },
-  { body: "#2fae7a", bodyLight: "#5fd6a3", bodyDark: "#1c8560", belly: "#ffe9b8", bellyDark: "#ffce80", spike: "#ffd75e", spikeLight: "#fff0b0", eye: "#7fe0ff", blush: "#ff7a90", outline: "#123a2b", sparkle: true, crown: true },
-];
-
-const SHINE = "#ffffff";
+const GROUND_Y = GRID - 3;
+const CX = GRID / 2;
 
 function px(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, color: string) {
   ctx.fillStyle = color;
   ctx.fillRect(Math.round(x), Math.round(y), Math.round(w), Math.round(h));
 }
 
-/**
- * Draws a cute chibi-proportioned pixel-art kaiju at the given growth stage (0-5)
- * onto a GRIDxGRID canvas. `time` (seconds) drives a gentle idle bob and blink.
- */
-export function drawKaiju(ctx: CanvasRenderingContext2D, stage: number, time = 0) {
-  const s = Math.max(0, Math.min(5, stage));
-  const t = s / 5;
-  const pal = PALETTES[s];
-  const outline = pal.outline;
+function drawGroundShadow(ctx: CanvasRenderingContext2D, width: number) {
+  ctx.globalAlpha = 0.22;
+  px(ctx, CX - width / 2, GROUND_Y, width, 2, "#000000");
+  ctx.globalAlpha = 1;
+}
 
-  // outlined block: dark rim first, fill drawn inset on top
-  function part(x: number, y: number, w: number, h: number, color: string) {
-    px(ctx, x - 1, y - 1, w + 2, h + 2, outline);
+const EGG_PALETTE = {
+  shell: "#f2ede0",
+  shellLight: "#ffffff",
+  shellDark: "#d8d2c2",
+  speckle: "#b8b2a4",
+  outline: "#8f8b82",
+  glow: "#ffe9a8",
+};
+
+function drawEggBody(ctx: CanvasRenderingContext2D, w: number, h: number) {
+  const centerY = GROUND_Y - h / 2;
+  ctx.lineWidth = 1;
+  ctx.fillStyle = EGG_PALETTE.shell;
+  ctx.strokeStyle = EGG_PALETTE.outline;
+  ctx.beginPath();
+  ctx.ellipse(CX, centerY, w / 2, h / 2, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.stroke();
+
+  ctx.fillStyle = EGG_PALETTE.shellLight;
+  ctx.beginPath();
+  ctx.ellipse(CX - w * 0.18, centerY - h * 0.22, w * 0.22, h * 0.28, -0.3, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = EGG_PALETTE.shellDark;
+  ctx.beginPath();
+  ctx.ellipse(CX + w * 0.2, centerY + h * 0.2, w * 0.18, h * 0.24, 0.3, 0, Math.PI * 2);
+  ctx.fill();
+
+  const speckles: [number, number][] = [
+    [-0.2, -0.05],
+    [0.18, 0.12],
+    [0.02, -0.32],
+    [-0.12, 0.3],
+    [0.28, -0.1],
+  ];
+  for (const [ox, oy] of speckles) {
+    px(ctx, CX + ox * w - 0.6, centerY + oy * h - 0.6, 1.3, 1.3, EGG_PALETTE.speckle);
+  }
+  return centerY;
+}
+
+function drawEgg(ctx: CanvasRenderingContext2D, cracked: boolean) {
+  const w = 15;
+  const h = 19;
+  drawGroundShadow(ctx, w + 2);
+  const centerY = drawEggBody(ctx, w, h);
+
+  if (cracked) {
+    ctx.strokeStyle = EGG_PALETTE.outline;
+    ctx.lineWidth = 1.1;
+    ctx.beginPath();
+    ctx.moveTo(CX + 0.5, centerY - h * 0.42);
+    ctx.lineTo(CX + 2, centerY - h * 0.18);
+    ctx.lineTo(CX - 1.5, centerY + 0.05 * h);
+    ctx.lineTo(CX + 1.5, centerY + 0.28 * h);
+    ctx.lineTo(CX, centerY + 0.42 * h);
+    ctx.stroke();
+
+    ctx.globalAlpha = 0.8;
+    ctx.fillStyle = EGG_PALETTE.glow;
+    ctx.beginPath();
+    ctx.ellipse(CX + 0.5, centerY, 1.1, 3, 0.15, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.globalAlpha = 1;
+  }
+}
+
+const HATCHLING_PALETTE = {
+  body: "#8fbf9a",
+  bodyLight: "#b9dcc0",
+  bodyDark: "#5f9470",
+  eye: "#2a2420",
+  blush: "#ffa8ba",
+  outline: "#31513a",
+};
+
+function drawHatchling(ctx: CanvasRenderingContext2D) {
+  const pal = HATCHLING_PALETTE;
+  const shellW = 17;
+  const shellH = 8;
+  drawGroundShadow(ctx, shellW + 2);
+
+  const bodyW = 11;
+  const bodyH = 9;
+  const bodyX = CX - bodyW / 2;
+  const bodyY = GROUND_Y - shellH * 0.55 - bodyH * 0.6;
+  const headW = 9;
+  const headH = 8;
+  const headX = CX - headW / 2;
+  const headY = bodyY - headH + 2;
+
+  // stubby arms resting on the shell rim
+  px(ctx, bodyX - 3, bodyY + bodyH * 0.4, 3, 3, pal.bodyDark);
+  px(ctx, bodyX + bodyW, bodyY + bodyH * 0.4, 3, 3, pal.bodyDark);
+
+  // torso (mostly hidden behind the shell rim, drawn first)
+  px(ctx, bodyX - 1, bodyY - 1, bodyW + 2, bodyH + 2, pal.outline);
+  px(ctx, bodyX, bodyY, bodyW, bodyH, pal.body);
+
+  // head
+  px(ctx, headX - 1, headY - 1, headW + 2, headH + 2, pal.outline);
+  px(ctx, headX, headY, headW, headH, pal.body);
+  px(ctx, headX + 1, headY + 1, headW * 0.3, headH - 2, pal.bodyLight);
+
+  // blush
+  ctx.globalAlpha = 0.7;
+  ctx.fillStyle = pal.blush;
+  ctx.beginPath();
+  ctx.ellipse(headX + headW * 0.22, headY + headH * 0.62, headW * 0.14, headH * 0.1, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.globalAlpha = 1;
+
+  // big eyes with shine
+  const eyeY = headY + headH * 0.38;
+  for (const eyeX of [headX + headW * 0.28, headX + headW * 0.64]) {
+    ctx.fillStyle = "#f5f0e1";
+    ctx.beginPath();
+    ctx.ellipse(eyeX, eyeY, 1.7, 1.9, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = pal.eye;
+    ctx.beginPath();
+    ctx.ellipse(eyeX + 0.3, eyeY + 0.3, 0.9, 1.05, 0, 0, Math.PI * 2);
+    ctx.fill();
+    px(ctx, eyeX - 0.3, eyeY - 0.9, 0.7, 0.7, "#ffffff");
+  }
+
+  // smile
+  ctx.strokeStyle = pal.outline;
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(headX + headW * 0.36, headY + headH * 0.78);
+  ctx.quadraticCurveTo(headX + headW * 0.5, headY + headH * 0.95, headX + headW * 0.64, headY + headH * 0.78);
+  ctx.stroke();
+
+  // broken shell "cup" drawn last so its front rim occludes the lower torso
+  const shellCenterY = GROUND_Y - shellH * 0.35;
+  ctx.fillStyle = EGG_PALETTE.shell;
+  ctx.strokeStyle = EGG_PALETTE.outline;
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.ellipse(CX, shellCenterY, shellW / 2, shellH / 2, 0, 0, Math.PI);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+
+  // jagged notches along the broken rim
+  ctx.fillStyle = "#0000";
+  const notches: [number, number][] = [
+    [-0.32, -0.9],
+    [-0.05, -1.05],
+    [0.2, -0.85],
+    [0.4, -0.6],
+  ];
+  for (const [ox, oy] of notches) {
+    ctx.save();
+    ctx.globalCompositeOperation = "destination-out";
+    ctx.beginPath();
+    ctx.moveTo(CX + ox * shellW, shellCenterY + oy * shellH * 0.5);
+    ctx.lineTo(CX + ox * shellW - 1, shellCenterY + oy * shellH * 0.5 - 1.4);
+    ctx.lineTo(CX + ox * shellW + 1, shellCenterY + oy * shellH * 0.5 - 1.4);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  }
+}
+
+interface PathPalette {
+  body: string;
+  bodyLight: string;
+  bodyDark: string;
+  belly: string;
+  eye: string;
+  outline: string;
+  accent: string;
+  accentLight: string;
+}
+
+const PATH_PALETTES: Record<PathId, PathPalette> = {
+  titan: { body: "#8a7360", bodyLight: "#ab9075", bodyDark: "#5f4d3d", belly: "#c9b896", eye: "#ff7a33", outline: "#2e2620", accent: "#6b5b48", accentLight: "#8f7c65" },
+  warden: { body: "#4a5568", bodyLight: "#6b7a91", bodyDark: "#2f3946", belly: "#8fa3bd", eye: "#4fc3ff", outline: "#1c232c", accent: "#cbd5e1", accentLight: "#eef2f7" },
+  emperor: { body: "#5b3a73", bodyLight: "#7d55a0", bodyDark: "#3a2350", belly: "#caa9ff", eye: "#ffd166", outline: "#24122e", accent: "#ffd75e", accentLight: "#fff0b0" },
+};
+
+function drawTitanAccessories(ctx: CanvasRenderingContext2D, t: number, pal: PathPalette, geo: BodyGeometry) {
+  const hornLen = 2 + t * 2.5;
+  ctx.fillStyle = pal.accent;
+  for (const side of [-1, 1]) {
+    const hx = geo.headX + geo.headW / 2 + side * geo.headW * 0.32;
+    const hy = geo.headY + 1;
+    ctx.beginPath();
+    ctx.moveTo(hx - 1.1, hy);
+    ctx.lineTo(hx + 1.1, hy);
+    ctx.lineTo(hx + side * 0.3, hy - hornLen);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  const spotCount = 2 + Math.round(t * 3);
+  ctx.fillStyle = pal.accentLight;
+  for (let i = 0; i < spotCount; i++) {
+    const frac = i / Math.max(1, spotCount - 1);
+    px(ctx, geo.bodyX + 1 + frac * (geo.bodyW - 2), geo.bodyY + geo.bodyH * 0.55 + (i % 2) * 2, 1.2, 1.2, pal.accentLight);
+  }
+}
+
+function drawWardenAccessories(ctx: CanvasRenderingContext2D, t: number, pal: PathPalette, geo: BodyGeometry) {
+  // chest plate
+  const plateH = 3 + t * 1.5;
+  px(ctx, geo.bodyX + 1, geo.bodyY + geo.bodyH * 0.15, geo.bodyW - 2, plateH, pal.accent);
+  px(ctx, geo.bodyX + geo.bodyW / 2 - 0.5, geo.bodyY + geo.bodyH * 0.15, 1, plateH, pal.accentLight);
+
+  // shoulder pads
+  const padW = 3 + t;
+  px(ctx, geo.bodyX - padW * 0.4, geo.bodyY, padW, 2 + t, pal.accent);
+  px(ctx, geo.bodyX + geo.bodyW - padW * 0.6, geo.bodyY, padW, 2 + t, pal.accent);
+
+  // visor
+  px(ctx, geo.headX + geo.headW * 0.18, geo.headY + geo.headH * 0.3, geo.headW * 0.64, 1.4, pal.accent);
+}
+
+function drawEmperorAccessories(ctx: CanvasRenderingContext2D, t: number, pal: PathPalette, geo: BodyGeometry) {
+  // cape, drawn behind the body footprint
+  const capeW = geo.bodyW * 0.9;
+  const capeH = geo.bodyH * (0.9 + t * 0.6);
+  ctx.fillStyle = pal.bodyDark;
+  ctx.beginPath();
+  ctx.moveTo(geo.bodyX + geo.bodyW * 0.5 - capeW * 0.5, geo.bodyY + 1);
+  ctx.lineTo(geo.bodyX + geo.bodyW * 0.5 + capeW * 0.5, geo.bodyY + 1);
+  ctx.lineTo(geo.bodyX + geo.bodyW * 0.5 + capeW * 0.35, geo.bodyY + capeH);
+  ctx.lineTo(geo.bodyX + geo.bodyW * 0.5 - capeW * 0.35, geo.bodyY + capeH);
+  ctx.closePath();
+  ctx.fill();
+}
+
+interface BodyGeometry {
+  bodyX: number;
+  bodyY: number;
+  bodyW: number;
+  bodyH: number;
+  headX: number;
+  headY: number;
+  headW: number;
+  headH: number;
+}
+
+function drawEvolvedCreature(ctx: CanvasRenderingContext2D, stage: number, pathId: PathId) {
+  const t = (Math.max(3, Math.min(5, stage)) - 3) / 2;
+  const pal = PATH_PALETTES[pathId];
+
+  const bodyW = Math.round(14 + t * 4);
+  const bodyH = Math.round(11 + t * 3);
+  const legH = Math.round(4 + t * 2);
+  const legW = Math.round(4 + t);
+  const headW = Math.round(bodyW * 0.6);
+  const headH = Math.round(headW * 0.86);
+  const armW = 3 + Math.round(t);
+  const armH = 5 + Math.round(t * 2);
+
+  const legY = GROUND_Y - legH;
+  const bodyY = legY - bodyH;
+  const bodyX = CX - bodyW / 2;
+  const headY = bodyY - headH + 2;
+  const headX = CX - headW / 2;
+  const geo: BodyGeometry = { bodyX, bodyY, bodyW, bodyH, headX, headY, headW, headH };
+
+  drawGroundShadow(ctx, bodyW + 4);
+
+  function block(x: number, y: number, w: number, h: number, color: string) {
+    px(ctx, x - 1, y - 1, w + 2, h + 2, pal.outline);
     px(ctx, x, y, w, h, color);
   }
 
-  // fake rounded corners by nibbling the outline block's corner pixels
-  function roundCorners(x: number, y: number, w: number, h: number, amount = 1) {
-    ctx.clearRect(x - 1, y - 1, amount, amount);
-    ctx.clearRect(x + w + 1 - amount, y - 1, amount, amount);
-    ctx.clearRect(x - 1, y + h + 1 - amount, amount, amount);
-    ctx.clearRect(x + w + 1 - amount, y + h + 1 - amount, amount, amount);
-  }
+  if (pathId === "emperor") drawEmperorAccessories(ctx, t, pal, geo);
 
-  ctx.clearRect(0, 0, GRID, GRID);
+  // legs
+  block(bodyX + 1, legY, legW, legH, pal.bodyDark);
+  block(bodyX + bodyW - legW - 1, legY, legW, legH, pal.bodyDark);
 
-  const groundY = GRID - 3;
-  const bodyW = Math.round(10 + t * 8);
-  const bodyH = Math.round(7 + t * 6);
-  const legH = Math.round(2 + t * 2);
-  const legW = Math.round(3 + t * 2);
-  const headScale = 0.9 - t * 0.12; // chibi: head stays big relative to body at every stage
-  const headW = Math.round(bodyW * headScale);
-  const headH = Math.round(headW * 0.86);
-  const snoutW = Math.max(2, Math.round(headW * 0.3));
-  const snoutH = Math.max(2, Math.round(headH * 0.28));
-  const armW = 2 + Math.round(t);
-  const armH = 2 + Math.round(t * 2);
-  const tailLen = Math.round(4 + t * 6);
-  const spikeCount = 2 + s;
+  // body
+  block(bodyX, bodyY, bodyW, bodyH, pal.body);
+  px(ctx, bodyX + 1, bodyY + 1, bodyW * 0.2, bodyH - 2, pal.bodyLight);
+  px(ctx, bodyX + bodyW - bodyW * 0.16 - 1, bodyY + 1, bodyW * 0.16, bodyH - 2, pal.bodyDark);
 
-  // idle animation: soft breathing bob + occasional blink
-  const bob = Math.sin(time * 2.1) * 0.7;
-  const blinkCycle = time % 3.6;
-  const blinking = blinkCycle > 3.35 && blinkCycle < 3.5;
-
-  const cx = GRID / 2;
-  const legY = groundY - legH;
-
-  // ground shadow stays put; the creature bobs above it
-  ctx.globalAlpha = 0.22;
-  px(ctx, cx - bodyW / 2, groundY, bodyW + 2, 2, "#000000");
-  ctx.globalAlpha = 1;
-
-  ctx.save();
-  ctx.translate(0, bob);
-
-  const bodyY = legY - bodyH;
-  const bodyX = cx - bodyW / 2;
-  const headY = bodyY - headH + 2;
-  const headX = cx - headW / 2;
-
-  // tail: short and curled, rounded ball tip for a cute flourish
-  const tailSegs = 3;
-  for (let i = tailSegs - 1; i >= 0; i--) {
-    const segLen = tailLen / tailSegs;
-    const segX = bodyX + bodyW - 2 + i * segLen;
-    const segH = Math.max(2, bodyH * 0.4 * (1 - i / (tailSegs + 1)));
-    const segY = legY - segH - i * 0.8;
-    part(segX, segY, segLen + 1, segH, i === 0 ? pal.bodyDark : pal.body);
-    roundCorners(segX, segY, segLen + 1, segH, 1);
-  }
-
-  // stubby back legs
-  const leg1X = bodyX + 1;
-  const leg2X = bodyX + bodyW - legW - 1;
-  part(leg1X, legY, legW, legH, pal.bodyDark);
-  part(leg2X, legY, legW, legH, pal.bodyDark);
-  roundCorners(leg1X, legY, legW, legH, 1);
-  roundCorners(leg2X, legY, legW, legH, 1);
-
-  // round body with soft highlight / shadow shading
-  part(bodyX, bodyY, bodyW, bodyH, pal.body);
-  roundCorners(bodyX, bodyY, bodyW, bodyH, 2);
-  px(ctx, bodyX + 1, bodyY + 1, Math.max(1, bodyW * 0.2), bodyH - 2, pal.bodyLight);
-  px(ctx, bodyX + bodyW - Math.max(1, bodyW * 0.16) - 1, bodyY + 1, Math.max(1, bodyW * 0.16), bodyH - 2, pal.bodyDark);
-
-  // round belly
-  const bellyX = cx - bodyW * 0.22;
-  const bellyY = bodyY + bodyH * 0.34;
-  const bellyW = bodyW * 0.46;
-  const bellyH = bodyH * 0.56;
+  // belly
   ctx.fillStyle = pal.belly;
   ctx.beginPath();
-  ctx.ellipse(bellyX + bellyW / 2, bellyY + bellyH / 2, bellyW / 2, bellyH / 2, 0, 0, Math.PI * 2);
+  ctx.ellipse(CX, bodyY + bodyH * 0.62, bodyW * 0.24, bodyH * 0.28, 0, 0, Math.PI * 2);
   ctx.fill();
-  px(ctx, bellyX, bellyY + bellyH * 0.6, bellyW, Math.max(1, bellyH * 0.15), pal.bellyDark);
 
-  // stubby little arms
-  const armX1 = bodyX - armW + 1;
-  const armX2 = bodyX + bodyW - 1;
-  const armY = bodyY + bodyH * 0.35;
-  part(armX1, armY, armW, armH, pal.bodyDark);
-  part(armX2, armY, armW, armH, pal.bodyDark);
-  roundCorners(armX1, armY, armW, armH, 1);
-  roundCorners(armX2, armY, armW, armH, 1);
+  // arms
+  block(bodyX - armW + 1, bodyY + bodyH * 0.35, armW, armH, pal.bodyDark);
+  block(bodyX + bodyW - 1, bodyY + bodyH * 0.35, armW, armH, pal.bodyDark);
 
-  // big round chibi head with highlight
-  part(headX, headY, headW, headH, pal.body);
-  roundCorners(headX, headY, headW, headH, 2);
-  px(ctx, headX + 1, headY + 1, Math.max(1, headW * 0.26), headH - 2, pal.bodyLight);
+  // head
+  block(headX, headY, headW, headH, pal.body);
+  px(ctx, headX + 1, headY + 1, headW * 0.26, headH - 2, pal.bodyLight);
 
-  // tiny crown for the max evolution
-  if (pal.crown) {
-    const crownW = headW * 0.5;
-    const crownX = headX + headW * 0.28;
-    const crownY = headY - 2.5;
-    ctx.fillStyle = "#ffd75e";
+  // eyes: glowing, flat monster face (no snout)
+  const eyeY = headY + headH * 0.42;
+  const eyeSize = Math.max(1.6, headW * 0.2);
+  for (const eyeX of [headX + headW * 0.3, headX + headW * 0.66]) {
+    ctx.save();
+    ctx.shadowColor = pal.eye;
+    ctx.shadowBlur = 2.5;
+    ctx.fillStyle = pal.eye;
+    ctx.beginPath();
+    ctx.ellipse(eyeX, eyeY, eyeSize / 2, eyeSize / 2, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  // mouth
+  px(ctx, headX + headW * 0.35, headY + headH * 0.75, headW * 0.3, 1, pal.outline);
+
+  if (pathId === "titan") drawTitanAccessories(ctx, t, pal, geo);
+  if (pathId === "warden") drawWardenAccessories(ctx, t, pal, geo);
+  if (pathId === "emperor") {
+    // trim + crown drawn after the body so they sit on top of it
+    px(ctx, bodyX + 1, bodyY + bodyH * 0.5, bodyW - 2, 1, pal.accent);
+    const crownW = headW * 0.6;
+    const crownX = headX + headW * 0.2;
+    const crownY = headY - 1.5 - t * 1.5;
+    ctx.fillStyle = pal.accent;
     ctx.beginPath();
     ctx.moveTo(crownX, crownY + 2.5);
     ctx.lineTo(crownX, crownY);
@@ -160,88 +350,25 @@ export function drawKaiju(ctx: CanvasRenderingContext2D, stage: number, time = 0
     ctx.closePath();
     ctx.fill();
   }
+}
 
-  // rounded snout: plain fill (no outline ring, since it sits mostly inside the
-  // head) with just a soft shadow underneath to read as a muzzle, not a seam
-  const snoutX = headX + headW * 0.68;
-  const snoutY = headY + headH * 0.5;
-  px(ctx, snoutX, snoutY, snoutW, snoutH, pal.body);
-  px(ctx, snoutX, snoutY + snoutH - 1, snoutW, 1, pal.bodyDark);
-  px(ctx, snoutX + snoutW * 0.55, snoutY + snoutH * 0.25, 1, 1, outline);
+/**
+ * Draws the kaiju at the given growth stage (0-5): an egg that cracks, hatches,
+ * then (from stage 3 on) evolves along the chosen path — Titan, Warden, or
+ * Emperor. `time` (seconds) drives a gentle idle bob.
+ */
+export function drawKaiju(ctx: CanvasRenderingContext2D, stage: number, pathId: PathId | null, time = 0) {
+  const s = Math.max(0, Math.min(5, stage));
+  ctx.clearRect(0, 0, GRID, GRID);
 
-  // friendly smile, with a tiny nub tooth peeking for a playful (not fierce) grin
-  ctx.strokeStyle = outline;
-  ctx.lineWidth = 1;
-  ctx.beginPath();
-  ctx.moveTo(snoutX + snoutW * 0.05, snoutY + snoutH * 0.85);
-  ctx.quadraticCurveTo(snoutX + snoutW * 0.4, snoutY + snoutH * 1.35, snoutX + snoutW * 0.75, snoutY + snoutH * 0.85);
-  ctx.stroke();
-  if (s >= 2) {
-    px(ctx, snoutX + snoutW * 0.38, snoutY + snoutH * 0.85, 1, 1.1, "#f5f0e1");
-  }
+  const bob = Math.sin(time * 2.1) * 0.7;
+  ctx.save();
+  ctx.translate(0, bob);
 
-  // cheek blush
-  ctx.fillStyle = pal.blush;
-  ctx.globalAlpha = 0.7;
-  ctx.beginPath();
-  ctx.ellipse(headX + headW * 0.22, headY + headH * 0.62, headW * 0.13, headH * 0.09, 0, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.globalAlpha = 1;
-
-  // big sparkly eye with white shine, or a happy closed-eye arc when blinking
-  const eyeSize = Math.max(2.2, headW * 0.34);
-  const eyeX = headX + headW * 0.46;
-  const eyeY = headY + headH * 0.32;
-  if (blinking) {
-    ctx.strokeStyle = outline;
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.arc(eyeX + eyeSize * 0.4, eyeY + eyeSize * 0.45, eyeSize * 0.45, Math.PI * 0.15, Math.PI * 0.85);
-    ctx.stroke();
-  } else {
-    ctx.fillStyle = "#f5f0e1";
-    ctx.beginPath();
-    ctx.ellipse(eyeX + eyeSize * 0.4, eyeY + eyeSize * 0.4, eyeSize * 0.52, eyeSize * 0.58, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = pal.eye;
-    ctx.beginPath();
-    ctx.ellipse(eyeX + eyeSize * 0.46, eyeY + eyeSize * 0.46, eyeSize * 0.3, eyeSize * 0.34, 0, 0, Math.PI * 2);
-    ctx.fill();
-    // shine dot for sparkle
-    px(ctx, eyeX + eyeSize * 0.22, eyeY + eyeSize * 0.12, Math.max(1, eyeSize * 0.16), Math.max(1, eyeSize * 0.16), SHINE);
-
-    if (pal.sparkle) {
-      const twinkle = (Math.sin(time * 3 + s) + 1) / 2;
-      ctx.globalAlpha = 0.5 + twinkle * 0.5;
-      ctx.fillStyle = SHINE;
-      const spX = eyeX + eyeSize * 1.5;
-      const spY = eyeY - eyeSize * 0.3;
-      ctx.fillRect(spX - 1.5, spY, 3, 0.8);
-      ctx.fillRect(spX, spY - 1.5, 0.8, 3);
-      ctx.globalAlpha = 1;
-    }
-  }
-
-  // back plates: small rounded scallops (dark base, light tip) running from the
-  // back of the head, over the top of the body, to the base of the tail —
-  // staying clear of the face, which sits on the head's right/front side
-  const spikeStartX = headX + headW * 0.15;
-  const spikeEndX = bodyX + bodyW * 0.92;
-  const headRightEdge = headX + headW;
-  for (let i = 0; i < spikeCount; i++) {
-    const frac = i / (spikeCount - 1 || 1);
-    const sx = spikeStartX + frac * (spikeEndX - spikeStartX);
-    const baseY = sx < headRightEdge ? headY + 1 : bodyY + 1;
-    const r = 1.1 + t * 0.9 + Math.sin(frac * Math.PI) * 0.6;
-    ctx.fillStyle = pal.spike;
-    ctx.beginPath();
-    ctx.arc(sx, baseY, r, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = pal.spikeLight;
-    ctx.beginPath();
-    ctx.arc(sx - r * 0.25, baseY - r * 0.25, r * 0.45, 0, Math.PI * 2);
-    ctx.fill();
-  }
+  if (s === 0) drawEgg(ctx, false);
+  else if (s === 1) drawEgg(ctx, true);
+  else if (s === 2) drawHatchling(ctx);
+  else drawEvolvedCreature(ctx, s, pathId ?? "titan");
 
   ctx.restore();
 }

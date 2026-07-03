@@ -51,8 +51,8 @@ function App() {
     setSettings((prev) => ({ ...prev, targetCalories: value }));
   }
 
-  function changeCharacter(id: string) {
-    setSettings((prev) => ({ ...prev, characterId: id }));
+  function changePath(id: string) {
+    setSettings((prev) => ({ ...prev, pathId: id }));
   }
 
   function changeBorder(id: string) {
@@ -84,13 +84,13 @@ function App() {
         streak={streak}
         stage={stage}
         target={settings.targetCalories}
-        characterId={settings.characterId}
+        pathId={settings.pathId}
         borderId={settings.borderId}
         totalDaysLogged={totalDaysLogged}
         levelIndex={levelIndex}
         seenLevelIndex={settings.seenLevelIndex}
         onChangeTarget={changeTarget}
-        onChangeCharacter={changeCharacter}
+        onChangePath={changePath}
         onChangeBorder={changeBorder}
         onAcknowledgeLevelUp={acknowledgeLevelUp}
       />
