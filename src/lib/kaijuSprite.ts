@@ -84,12 +84,12 @@ function drawEgg(ctx: CanvasRenderingContext2D, cracked: boolean) {
 }
 
 const HATCHLING_PALETTE = {
-  body: "#8fbf9a",
-  bodyLight: "#b9dcc0",
-  bodyDark: "#5f9470",
+  body: "#c9cdd1",
+  bodyLight: "#e8eaec",
+  bodyDark: "#9a9fa5",
   eye: "#2a2420",
   blush: "#ffa8ba",
-  outline: "#31513a",
+  outline: "#4a4d51",
 };
 
 function drawHatchling(ctx: CanvasRenderingContext2D) {
