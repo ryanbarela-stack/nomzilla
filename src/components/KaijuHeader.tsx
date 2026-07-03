@@ -49,6 +49,13 @@ export function KaijuHeader({
   const nextBorder = getNextBorder(totalDaysLogged);
   const leveledUp = levelIndex > seenLevelIndex;
 
+  const stageProgressPct = next
+    ? Math.min(100, Math.max(0, ((streak - stage.minStreak) / (next.minStreak - stage.minStreak)) * 100))
+    : 100;
+  const levelProgressPct = nextBorder
+    ? Math.min(100, Math.max(0, ((totalDaysLogged - currentLevelBorder.minDays) / (nextBorder.minDays - currentLevelBorder.minDays)) * 100))
+    : 100;
+
   function commitTarget() {
     const val = Number(draft);
     if (val > 0) onChangeTarget(Math.round(val));
@@ -109,14 +116,34 @@ export function KaijuHeader({
         )}
 
         <div className="flex-1 w-full flex flex-col gap-2 text-center sm:text-left">
-          <div className="flex items-center justify-center sm:justify-start gap-2 flex-wrap">
-            <h1 className="text-xl font-bold text-[#e6edf3] font-pixel">{stage.name}</h1>
-            <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-900 text-emerald-300 border border-emerald-700">
-              Stage {stage.index + 1}/{GROWTH_STAGES.length}
-            </span>
-            <span className="text-xs px-2 py-0.5 rounded-full bg-indigo-900 text-indigo-300 border border-indigo-700">
-              Level {levelIndex + 1}/{BORDERS.length}
-            </span>
+          <h1 className="text-xl font-bold text-[#e6edf3] font-pixel">{stage.name}</h1>
+
+          <div className="flex flex-col gap-1.5 items-center sm:items-start">
+            <div className="flex flex-col gap-0.5 w-full max-w-xs">
+              <div className="flex items-center justify-between text-xs text-gray-400">
+                <span>Stage {stage.index + 1}/{GROWTH_STAGES.length}</span>
+                <span>{next ? `${daysToNext}d to go` : "Max"}</span>
+              </div>
+              <div className="h-2 w-full bg-[#0d1117] border border-[#30363d] rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-emerald-500 rounded-full transition-[width]"
+                  style={{ width: `${stageProgressPct}%` }}
+                />
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-0.5 w-full max-w-xs">
+              <div className="flex items-center justify-between text-xs text-gray-400">
+                <span>Level {levelIndex + 1}/{BORDERS.length}</span>
+                <span>{nextBorder ? `${nextBorder.minDays - totalDaysLogged}d to go` : "Max"}</span>
+              </div>
+              <div className="h-2 w-full bg-[#0d1117] border border-[#30363d] rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-indigo-500 rounded-full transition-[width]"
+                  style={{ width: `${levelProgressPct}%` }}
+                />
+              </div>
+            </div>
           </div>
 
           <div className="text-sm text-gray-400">
