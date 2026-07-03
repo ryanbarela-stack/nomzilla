@@ -15,7 +15,16 @@ export function KaijuCanvas({ stage, size = 220 }: Props) {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
     ctx.imageSmoothingEnabled = false;
-    drawKaiju(ctx, stage);
+
+    const start = performance.now();
+    let frame: number;
+    const tick = (now: number) => {
+      drawKaiju(ctx, stage, (now - start) / 1000);
+      frame = requestAnimationFrame(tick);
+    };
+    frame = requestAnimationFrame(tick);
+
+    return () => cancelAnimationFrame(frame);
   }, [stage]);
 
   return (
