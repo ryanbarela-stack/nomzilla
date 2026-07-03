@@ -1,25 +1,53 @@
 import { useState } from "react";
 import { KaijuCanvas } from "./KaijuCanvas";
 import { CharacterPicker } from "./CharacterPicker";
+import { BorderPicker } from "./BorderPicker";
 import { GROWTH_STAGES, getNextStage, type GrowthStage } from "../lib/streak";
 import { getCharacter } from "../lib/characters";
+import { BORDERS, getBorderById, getNextBorder, isBorderUnlocked } from "../lib/borders";
 
 interface Props {
   streak: number;
   stage: GrowthStage;
   target: number;
   characterId: string;
+  borderId: string;
+  totalDaysLogged: number;
+  levelIndex: number;
+  seenLevelIndex: number;
   onChangeTarget: (value: number) => void;
   onChangeCharacter: (id: string) => void;
+  onChangeBorder: (id: string) => void;
+  onAcknowledgeLevelUp: () => void;
 }
 
-export function KaijuHeader({ streak, stage, target, characterId, onChangeTarget, onChangeCharacter }: Props) {
+export function KaijuHeader({
+  streak,
+  stage,
+  target,
+  characterId,
+  borderId,
+  totalDaysLogged,
+  levelIndex,
+  seenLevelIndex,
+  onChangeTarget,
+  onChangeCharacter,
+  onChangeBorder,
+  onAcknowledgeLevelUp,
+}: Props) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(String(target));
-  const [pickerOpen, setPickerOpen] = useState(false);
+  const [characterPickerOpen, setCharacterPickerOpen] = useState(false);
+  const [borderPickerOpen, setBorderPickerOpen] = useState(false);
   const next = getNextStage(stage);
   const daysToNext = next ? Math.max(0, next.minStreak - streak) : null;
   const character = getCharacter(characterId);
+
+  const selectedBorder = getBorderById(borderId);
+  const frameBorder = isBorderUnlocked(selectedBorder, totalDaysLogged) ? selectedBorder : BORDERS[0];
+  const currentLevelBorder = BORDERS[levelIndex];
+  const nextBorder = getNextBorder(totalDaysLogged);
+  const leveledUp = levelIndex > seenLevelIndex;
 
   function commitTarget() {
     const val = Number(draft);
@@ -29,62 +57,108 @@ export function KaijuHeader({ streak, stage, target, characterId, onChangeTarget
   }
 
   return (
-    <div className="bg-[#161b22] border border-[#30363d] rounded-lg p-4 flex flex-col sm:flex-row items-center gap-4">
-      <div className="flex flex-col items-center gap-1">
-        <div className="bg-[#0d1117] border border-[#30363d] rounded-lg p-2 inline-flex items-end justify-center">
-          <KaijuCanvas stage={stage.index} characterId={characterId} size={128} />
+    <div className="flex flex-col gap-3">
+      {leveledUp && (
+        <div className="bg-indigo-950 border border-indigo-700 rounded-md px-3 py-2 text-sm text-indigo-200 flex items-center justify-between gap-2">
+          <span>
+            🎉 Level {levelIndex + 1} reached — <strong>{currentLevelBorder.name}</strong> border unlocked!
+          </span>
+          <button onClick={onAcknowledgeLevelUp} className="text-indigo-300 hover:text-white text-xs underline shrink-0">
+            Dismiss
+          </button>
         </div>
-        <button
-          onClick={() => setPickerOpen(true)}
-          className="text-xs text-gray-400 hover:text-emerald-400 underline decoration-dotted"
-        >
-          {character.kind === "sprite" ? character.name : "Change look"}
-        </button>
-      </div>
-
-      {pickerOpen && (
-        <CharacterPicker selectedId={characterId} onSelect={onChangeCharacter} onClose={() => setPickerOpen(false)} />
       )}
 
-      <div className="flex-1 w-full flex flex-col gap-2 text-center sm:text-left">
-        <div className="flex items-center justify-center sm:justify-start gap-2">
-          <h1 className="text-xl font-bold text-[#e6edf3] font-pixel">{stage.name}</h1>
-          <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-900 text-emerald-300 border border-emerald-700">
-            Stage {stage.index + 1}/{GROWTH_STAGES.length}
-          </span>
-        </div>
-
-        <div className="text-sm text-gray-400">
-          🔥 <span className="text-orange-400 font-semibold">{streak}</span> day logging streak
-          {next && (
-            <span> — log {daysToNext} more day{daysToNext === 1 ? "" : "s"} to reach <span className="text-gray-300">{next.name}</span></span>
-          )}
-          {!next && <span className="text-emerald-400"> — max evolution reached!</span>}
-        </div>
-
-        <div className="flex items-center justify-center sm:justify-start gap-2 text-sm">
-          <span className="text-gray-400">Daily target:</span>
-          {editing ? (
-            <input
-              autoFocus
-              type="number"
-              value={draft}
-              onChange={(e) => setDraft(e.target.value)}
-              onBlur={commitTarget}
-              onKeyDown={(e) => e.key === "Enter" && commitTarget()}
-              className="w-24 bg-[#0d1117] border border-emerald-600 rounded px-2 py-1 text-[#e6edf3] focus:outline-none"
-            />
-          ) : (
+      <div className="bg-[#161b22] border border-[#30363d] rounded-lg p-4 flex flex-col sm:flex-row items-center gap-4">
+        <div className="flex flex-col items-center gap-1">
+          <div className={`bg-[#0d1117] rounded-lg p-2 inline-flex items-end justify-center ${frameBorder.className}`}>
+            <KaijuCanvas stage={stage.index} characterId={characterId} size={128} />
+          </div>
+          <div className="flex items-center gap-2">
             <button
-              onClick={() => {
-                setDraft(String(target));
-                setEditing(true);
-              }}
-              className="text-emerald-400 font-semibold underline decoration-dotted"
+              onClick={() => setCharacterPickerOpen(true)}
+              className="text-xs text-gray-400 hover:text-emerald-400 underline decoration-dotted"
             >
-              {target} kcal
+              {character.kind === "sprite" ? character.name : "Change look"}
             </button>
-          )}
+            <span className="text-gray-600">·</span>
+            <button
+              onClick={() => setBorderPickerOpen(true)}
+              className="text-xs text-gray-400 hover:text-indigo-400 underline decoration-dotted"
+            >
+              Frame: {selectedBorder.name}
+            </button>
+          </div>
+        </div>
+
+        {characterPickerOpen && (
+          <CharacterPicker
+            selectedId={characterId}
+            onSelect={onChangeCharacter}
+            onClose={() => setCharacterPickerOpen(false)}
+          />
+        )}
+
+        {borderPickerOpen && (
+          <BorderPicker
+            selectedId={borderId}
+            totalDaysLogged={totalDaysLogged}
+            onSelect={onChangeBorder}
+            onClose={() => setBorderPickerOpen(false)}
+          />
+        )}
+
+        <div className="flex-1 w-full flex flex-col gap-2 text-center sm:text-left">
+          <div className="flex items-center justify-center sm:justify-start gap-2 flex-wrap">
+            <h1 className="text-xl font-bold text-[#e6edf3] font-pixel">{stage.name}</h1>
+            <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-900 text-emerald-300 border border-emerald-700">
+              Stage {stage.index + 1}/{GROWTH_STAGES.length}
+            </span>
+            <span className="text-xs px-2 py-0.5 rounded-full bg-indigo-900 text-indigo-300 border border-indigo-700">
+              Level {levelIndex + 1}/{BORDERS.length}
+            </span>
+          </div>
+
+          <div className="text-sm text-gray-400">
+            🔥 <span className="text-orange-400 font-semibold">{streak}</span> day logging streak
+            {next && (
+              <span> — log {daysToNext} more day{daysToNext === 1 ? "" : "s"} to reach <span className="text-gray-300">{next.name}</span></span>
+            )}
+            {!next && <span className="text-emerald-400"> — max evolution reached!</span>}
+          </div>
+
+          <div className="text-xs text-gray-500">
+            {totalDaysLogged} day{totalDaysLogged === 1 ? "" : "s"} logged in total
+            {nextBorder && (
+              <span> — {nextBorder.minDays - totalDaysLogged} more to unlock the <span className="text-gray-400">{nextBorder.name}</span> border</span>
+            )}
+            {!nextBorder && <span className="text-indigo-400"> — every border unlocked!</span>}
+          </div>
+
+          <div className="flex items-center justify-center sm:justify-start gap-2 text-sm">
+            <span className="text-gray-400">Daily target:</span>
+            {editing ? (
+              <input
+                autoFocus
+                type="number"
+                value={draft}
+                onChange={(e) => setDraft(e.target.value)}
+                onBlur={commitTarget}
+                onKeyDown={(e) => e.key === "Enter" && commitTarget()}
+                className="w-24 bg-[#0d1117] border border-emerald-600 rounded px-2 py-1 text-[#e6edf3] focus:outline-none"
+              />
+            ) : (
+              <button
+                onClick={() => {
+                  setDraft(String(target));
+                  setEditing(true);
+                }}
+                className="text-emerald-400 font-semibold underline decoration-dotted"
+              >
+                {target} kcal
+              </button>
+            )}
+          </div>
         </div>
       </div>
     </div>

@@ -4,7 +4,8 @@ import { DayPanel } from "./components/DayPanel";
 import { Calendar } from "./components/Calendar";
 import { loadLogs, saveLogs, loadSettings, saveSettings } from "./lib/storage";
 import { todayISO, fromISODate } from "./lib/date";
-import { computeStreak, getStageForStreak } from "./lib/streak";
+import { computeStreak, computeTotalDaysLogged, getStageForStreak } from "./lib/streak";
+import { getCurrentLevelIndex } from "./lib/borders";
 import type { LogsByDate, Settings } from "./lib/types";
 
 function App() {
@@ -18,6 +19,8 @@ function App() {
 
   const streak = useMemo(() => computeStreak(logs, todayISO()), [logs]);
   const stage = useMemo(() => getStageForStreak(streak), [streak]);
+  const totalDaysLogged = useMemo(() => computeTotalDaysLogged(logs), [logs]);
+  const levelIndex = useMemo(() => getCurrentLevelIndex(totalDaysLogged), [totalDaysLogged]);
   const selectedLog = logs[selectedDate] ?? { date: selectedDate, entries: [] };
 
   function addEntry(name: string, calories: number) {
@@ -52,6 +55,14 @@ function App() {
     setSettings((prev) => ({ ...prev, characterId: id }));
   }
 
+  function changeBorder(id: string) {
+    setSettings((prev) => ({ ...prev, borderId: id }));
+  }
+
+  function acknowledgeLevelUp() {
+    setSettings((prev) => ({ ...prev, seenLevelIndex: levelIndex }));
+  }
+
   function changeMonth(delta: number) {
     setViewDate((prev) => new Date(prev.getFullYear(), prev.getMonth() + delta, 1));
   }
@@ -74,8 +85,14 @@ function App() {
         stage={stage}
         target={settings.targetCalories}
         characterId={settings.characterId}
+        borderId={settings.borderId}
+        totalDaysLogged={totalDaysLogged}
+        levelIndex={levelIndex}
+        seenLevelIndex={settings.seenLevelIndex}
         onChangeTarget={changeTarget}
         onChangeCharacter={changeCharacter}
+        onChangeBorder={changeBorder}
+        onAcknowledgeLevelUp={acknowledgeLevelUp}
       />
 
       <DayPanel

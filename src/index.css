@@ -42,3 +42,16 @@ body {
   background: #30363d;
   border-radius: 4px;
 }
+
+@keyframes border-legendary-cycle {
+  0% { border-color: #ff5f6d; box-shadow: 0 0 10px rgba(255, 95, 109, 0.6); }
+  20% { border-color: #ffc371; box-shadow: 0 0 10px rgba(255, 195, 113, 0.6); }
+  40% { border-color: #6dffb0; box-shadow: 0 0 10px rgba(109, 255, 176, 0.6); }
+  60% { border-color: #5fd0ff; box-shadow: 0 0 10px rgba(95, 208, 255, 0.6); }
+  80% { border-color: #c07bff; box-shadow: 0 0 10px rgba(192, 123, 255, 0.6); }
+  100% { border-color: #ff5f6d; box-shadow: 0 0 10px rgba(255, 95, 109, 0.6); }
+}
+
+.border-legendary {
+  animation: border-legendary-cycle 4s linear infinite;
+}

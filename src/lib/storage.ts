@@ -6,6 +6,8 @@ const SETTINGS_KEY = "nomzilla:settings";
 export const DEFAULT_SETTINGS: Settings = {
   targetCalories: 2000,
   characterId: "kaiju",
+  borderId: "default",
+  seenLevelIndex: 0,
 };
 
 export function loadLogs(): LogsByDate {
