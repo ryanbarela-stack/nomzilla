@@ -11,9 +11,9 @@ export interface EvolutionPath {
 }
 
 export const PATHS: EvolutionPath[] = [
-  { id: "titan", name: "Titan", tagline: "Rock-hewn and unstoppable", stageNames: ["Young Titan", "Titan", "Ancient Titan"] },
-  { id: "warden", name: "Warden", tagline: "Armored guardian", stageNames: ["Young Warden", "Warden", "Grand Warden"] },
-  { id: "emperor", name: "Emperor", tagline: "Regal and resplendent", stageNames: ["Young Emperor", "Emperor", "Emperor Eternal"] },
+  { id: "titan", name: "Titan", tagline: "Atomic-age colossus", stageNames: ["Young Titan", "Titan", "Ancient Titan"] },
+  { id: "warden", name: "Warden", tagline: "Guardian of light and wind", stageNames: ["Young Warden", "Warden", "Grand Warden"] },
+  { id: "emperor", name: "Emperor", tagline: "Three-headed golden dragon", stageNames: ["Young Emperor", "Emperor", "Emperor Eternal"] },
 ];
 
 export function getPath(id: string | null): EvolutionPath | null {

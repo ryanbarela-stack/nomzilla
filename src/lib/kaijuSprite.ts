@@ -182,113 +182,58 @@ function drawHatchling(ctx: CanvasRenderingContext2D) {
   }
 }
 
-interface PathPalette {
-  body: string;
-  bodyLight: string;
-  bodyDark: string;
-  belly: string;
-  eye: string;
-  outline: string;
-  accent: string;
-  accentLight: string;
-}
+// --- Titan: an atomic-age reptilian colossus ---
 
-const PATH_PALETTES: Record<PathId, PathPalette> = {
-  titan: { body: "#8a7360", bodyLight: "#ab9075", bodyDark: "#5f4d3d", belly: "#c9b896", eye: "#ff7a33", outline: "#2e2620", accent: "#6b5b48", accentLight: "#8f7c65" },
-  warden: { body: "#4a5568", bodyLight: "#6b7a91", bodyDark: "#2f3946", belly: "#8fa3bd", eye: "#4fc3ff", outline: "#1c232c", accent: "#cbd5e1", accentLight: "#eef2f7" },
-  emperor: { body: "#5b3a73", bodyLight: "#7d55a0", bodyDark: "#3a2350", belly: "#caa9ff", eye: "#ffd166", outline: "#24122e", accent: "#ffd75e", accentLight: "#fff0b0" },
+const TITAN_PALETTE = {
+  body: "#46614c",
+  bodyLight: "#6f9573",
+  bodyDark: "#2c4030",
+  belly: "#cdbf8a",
+  bellyDark: "#b3a374",
+  spike: "#e3dcb0",
+  spikeDark: "#a89a5f",
+  eye: "#bff0ff",
+  outline: "#16241a",
+  teeth: "#f5f0e1",
 };
 
-function drawTitanAccessories(ctx: CanvasRenderingContext2D, t: number, pal: PathPalette, geo: BodyGeometry) {
-  const hornLen = 2 + t * 2.5;
-  ctx.fillStyle = pal.accent;
-  for (const side of [-1, 1]) {
-    const hx = geo.headX + geo.headW / 2 + side * geo.headW * 0.32;
-    const hy = geo.headY + 1;
-    ctx.beginPath();
-    ctx.moveTo(hx - 1.1, hy);
-    ctx.lineTo(hx + 1.1, hy);
-    ctx.lineTo(hx + side * 0.3, hy - hornLen);
-    ctx.closePath();
-    ctx.fill();
-  }
-
-  const spotCount = 2 + Math.round(t * 3);
-  ctx.fillStyle = pal.accentLight;
-  for (let i = 0; i < spotCount; i++) {
-    const frac = i / Math.max(1, spotCount - 1);
-    px(ctx, geo.bodyX + 1 + frac * (geo.bodyW - 2), geo.bodyY + geo.bodyH * 0.55 + (i % 2) * 2, 1.2, 1.2, pal.accentLight);
-  }
-}
-
-function drawWardenAccessories(ctx: CanvasRenderingContext2D, t: number, pal: PathPalette, geo: BodyGeometry) {
-  // chest plate
-  const plateH = 3 + t * 1.5;
-  px(ctx, geo.bodyX + 1, geo.bodyY + geo.bodyH * 0.15, geo.bodyW - 2, plateH, pal.accent);
-  px(ctx, geo.bodyX + geo.bodyW / 2 - 0.5, geo.bodyY + geo.bodyH * 0.15, 1, plateH, pal.accentLight);
-
-  // shoulder pads
-  const padW = 3 + t;
-  px(ctx, geo.bodyX - padW * 0.4, geo.bodyY, padW, 2 + t, pal.accent);
-  px(ctx, geo.bodyX + geo.bodyW - padW * 0.6, geo.bodyY, padW, 2 + t, pal.accent);
-
-  // visor
-  px(ctx, geo.headX + geo.headW * 0.18, geo.headY + geo.headH * 0.3, geo.headW * 0.64, 1.4, pal.accent);
-}
-
-function drawEmperorAccessories(ctx: CanvasRenderingContext2D, t: number, pal: PathPalette, geo: BodyGeometry) {
-  // cape, drawn behind the body footprint
-  const capeW = geo.bodyW * 0.9;
-  const capeH = geo.bodyH * (0.9 + t * 0.6);
-  ctx.fillStyle = pal.bodyDark;
-  ctx.beginPath();
-  ctx.moveTo(geo.bodyX + geo.bodyW * 0.5 - capeW * 0.5, geo.bodyY + 1);
-  ctx.lineTo(geo.bodyX + geo.bodyW * 0.5 + capeW * 0.5, geo.bodyY + 1);
-  ctx.lineTo(geo.bodyX + geo.bodyW * 0.5 + capeW * 0.35, geo.bodyY + capeH);
-  ctx.lineTo(geo.bodyX + geo.bodyW * 0.5 - capeW * 0.35, geo.bodyY + capeH);
-  ctx.closePath();
-  ctx.fill();
-}
-
-interface BodyGeometry {
-  bodyX: number;
-  bodyY: number;
-  bodyW: number;
-  bodyH: number;
-  headX: number;
-  headY: number;
-  headW: number;
-  headH: number;
-}
-
-function drawEvolvedCreature(ctx: CanvasRenderingContext2D, stage: number, pathId: PathId) {
-  const t = (Math.max(3, Math.min(5, stage)) - 3) / 2;
-  const pal = PATH_PALETTES[pathId];
-
-  const bodyW = Math.round(14 + t * 4);
-  const bodyH = Math.round(11 + t * 3);
+function drawTitan(ctx: CanvasRenderingContext2D, t: number) {
+  const pal = TITAN_PALETTE;
+  const bodyW = Math.round(11 + t * 5);
+  const bodyH = Math.round(9 + t * 4);
   const legH = Math.round(4 + t * 2);
   const legW = Math.round(4 + t);
-  const headW = Math.round(bodyW * 0.6);
-  const headH = Math.round(headW * 0.86);
-  const armW = 3 + Math.round(t);
-  const armH = 5 + Math.round(t * 2);
+  const headW = Math.round(bodyW * 0.5);
+  const headH = Math.round(headW * 0.8);
+  const snoutW = Math.max(2, Math.round(headW * 0.42));
+  const snoutH = Math.max(2, Math.round(headH * 0.36));
+  const armW = 2 + Math.round(t);
+  const armH = 4 + Math.round(t * 2);
+  const tailLen = Math.round(6 + t * 6);
+  const spikeCount = 3 + Math.round(t * 3);
 
   const legY = GROUND_Y - legH;
   const bodyY = legY - bodyH;
   const bodyX = CX - bodyW / 2;
-  const headY = bodyY - headH + 2;
+  const headY = bodyY - headH + 1;
   const headX = CX - headW / 2;
-  const geo: BodyGeometry = { bodyX, bodyY, bodyW, bodyH, headX, headY, headW, headH };
 
-  drawGroundShadow(ctx, bodyW + 4);
+  drawGroundShadow(ctx, bodyW + tailLen * 0.6);
 
   function block(x: number, y: number, w: number, h: number, color: string) {
     px(ctx, x - 1, y - 1, w + 2, h + 2, pal.outline);
     px(ctx, x, y, w, h, color);
   }
 
-  if (pathId === "emperor") drawEmperorAccessories(ctx, t, pal, geo);
+  // tapering tail, drawn back-to-front so the base overlaps cleanly
+  const tailSegs = 4;
+  for (let i = tailSegs - 1; i >= 0; i--) {
+    const segLen = tailLen / tailSegs;
+    const segX = bodyX + bodyW - 2 + i * segLen;
+    const segH = Math.max(2, bodyH * 0.45 * (1 - i / (tailSegs + 1)));
+    const segY = legY - segH - i * 0.7;
+    block(segX, segY, segLen + 1, segH, pal.bodyDark);
+  }
 
   // legs
   block(bodyX + 1, legY, legW, legH, pal.bodyDark);
@@ -299,57 +244,291 @@ function drawEvolvedCreature(ctx: CanvasRenderingContext2D, stage: number, pathI
   px(ctx, bodyX + 1, bodyY + 1, bodyW * 0.2, bodyH - 2, pal.bodyLight);
   px(ctx, bodyX + bodyW - bodyW * 0.16 - 1, bodyY + 1, bodyW * 0.16, bodyH - 2, pal.bodyDark);
 
-  // belly
+  // belly plates
   ctx.fillStyle = pal.belly;
   ctx.beginPath();
-  ctx.ellipse(CX, bodyY + bodyH * 0.62, bodyW * 0.24, bodyH * 0.28, 0, 0, Math.PI * 2);
+  ctx.ellipse(CX, bodyY + bodyH * 0.62, bodyW * 0.24, bodyH * 0.3, 0, 0, Math.PI * 2);
+  ctx.fill();
+  px(ctx, CX - bodyW * 0.16, bodyY + bodyH * 0.75, bodyW * 0.32, 1, pal.bellyDark);
+
+  // small stubby arms
+  block(bodyX - armW + 1, bodyY + bodyH * 0.4, armW, armH, pal.bodyDark);
+  block(bodyX + bodyW - 1, bodyY + bodyH * 0.4, armW, armH, pal.bodyDark);
+
+  // head with a heavy jaw
+  block(headX, headY, headW, headH, pal.body);
+  px(ctx, headX + 1, headY + 1, headW * 0.28, headH - 2, pal.bodyLight);
+
+  const snoutX = headX + headW * 0.7;
+  const snoutY = headY + headH * 0.5;
+  block(snoutX, snoutY, snoutW, snoutH, pal.body);
+  ctx.fillStyle = pal.teeth;
+  ctx.beginPath();
+  ctx.moveTo(snoutX + snoutW * 0.1, snoutY + snoutH);
+  ctx.lineTo(snoutX + snoutW * 0.55, snoutY + snoutH);
+  ctx.lineTo(snoutX + snoutW * 0.32, snoutY + snoutH + 1.6);
+  ctx.closePath();
   ctx.fill();
 
-  // arms
-  block(bodyX - armW + 1, bodyY + bodyH * 0.35, armW, armH, pal.bodyDark);
-  block(bodyX + bodyW - 1, bodyY + bodyH * 0.35, armW, armH, pal.bodyDark);
+  // glowing slit eye — a crisp solid core with only a faint halo, since a big
+  // shadowBlur at this resolution turns into a blown-out blob once upscaled
+  const eyeY = headY + headH * 0.32;
+  const eyeX = headX + headW * 0.42;
+  const eyeSize = Math.max(1, headW * 0.16);
+  ctx.save();
+  ctx.shadowColor = pal.eye;
+  ctx.shadowBlur = 1.2;
+  ctx.fillStyle = pal.eye;
+  px(ctx, eyeX - eyeSize / 2, eyeY - eyeSize / 2, eyeSize, eyeSize * 0.7, pal.eye);
+  ctx.restore();
 
-  // head
-  block(headX, headY, headW, headH, pal.body);
-  px(ctx, headX + 1, headY + 1, headW * 0.26, headH - 2, pal.bodyLight);
-
-  // eyes: glowing, flat monster face (no snout)
-  const eyeY = headY + headH * 0.42;
-  const eyeSize = Math.max(1.6, headW * 0.2);
-  for (const eyeX of [headX + headW * 0.3, headX + headW * 0.66]) {
-    ctx.save();
-    ctx.shadowColor = pal.eye;
-    ctx.shadowBlur = 2.5;
-    ctx.fillStyle = pal.eye;
+  // jagged two-tone back plates running from the back of the head, over the
+  // body, toward the tail — staying clear of the face on the head's right side
+  const spikeStartX = headX + headW * 0.12;
+  const spikeEndX = bodyX + bodyW * 0.92;
+  const headRightEdge = headX + headW;
+  for (let i = 0; i < spikeCount; i++) {
+    const frac = i / (spikeCount - 1 || 1);
+    const sx = spikeStartX + frac * (spikeEndX - spikeStartX);
+    const baseY = sx < headRightEdge ? headY + 1 : bodyY + 1;
+    const h = Math.round(1.5 + t * 2 + Math.sin(frac * Math.PI) * 1.5);
+    ctx.fillStyle = pal.spikeDark;
     ctx.beginPath();
-    ctx.ellipse(eyeX, eyeY, eyeSize / 2, eyeSize / 2, 0, 0, Math.PI * 2);
+    ctx.moveTo(sx - 1.4, baseY);
+    ctx.lineTo(sx + 1.4, baseY);
+    ctx.lineTo(sx, baseY - h);
+    ctx.closePath();
     ctx.fill();
-    ctx.restore();
-  }
-
-  // mouth
-  px(ctx, headX + headW * 0.35, headY + headH * 0.75, headW * 0.3, 1, pal.outline);
-
-  if (pathId === "titan") drawTitanAccessories(ctx, t, pal, geo);
-  if (pathId === "warden") drawWardenAccessories(ctx, t, pal, geo);
-  if (pathId === "emperor") {
-    // trim + crown drawn after the body so they sit on top of it
-    px(ctx, bodyX + 1, bodyY + bodyH * 0.5, bodyW - 2, 1, pal.accent);
-    const crownW = headW * 0.6;
-    const crownX = headX + headW * 0.2;
-    const crownY = headY - 1.5 - t * 1.5;
-    ctx.fillStyle = pal.accent;
+    ctx.fillStyle = pal.spike;
     ctx.beginPath();
-    ctx.moveTo(crownX, crownY + 2.5);
-    ctx.lineTo(crownX, crownY);
-    ctx.lineTo(crownX + crownW * 0.25, crownY + 1.3);
-    ctx.lineTo(crownX + crownW * 0.5, crownY);
-    ctx.lineTo(crownX + crownW * 0.75, crownY + 1.3);
-    ctx.lineTo(crownX + crownW, crownY);
-    ctx.lineTo(crownX + crownW, crownY + 2.5);
+    ctx.moveTo(sx - 0.6, baseY - h * 0.35);
+    ctx.lineTo(sx + 0.6, baseY - h * 0.35);
+    ctx.lineTo(sx, baseY - h);
     ctx.closePath();
     ctx.fill();
   }
+}
+
+// --- Warden: a guardian moth wreathed in light ---
+
+const WARDEN_PALETTE = {
+  body: "#cdb37a",
+  bodyDark: "#a68f5c",
+  stripe: "#8a744a",
+  wing: "#7ecbe0",
+  wingDark: "#5aa8c2",
+  spotPink: "#ffb6c1",
+  spotYellow: "#ffe082",
+  outline: "#3a2f1f",
+  eye: "#241c12",
+};
+
+function drawWardenWing(ctx: CanvasRenderingContext2D, side: 1 | -1, t: number, thoraxX: number, thoraxY: number) {
+  const pal = WARDEN_PALETTE;
+  const span = 11 + t * 7;
+  const h = 8 + t * 3;
+
+  ctx.fillStyle = pal.outline;
+  ctx.beginPath();
+  ctx.moveTo(thoraxX, thoraxY - h * 0.15);
+  ctx.lineTo(thoraxX + side * span * 1.02, thoraxY - h * 0.62);
+  ctx.lineTo(thoraxX + side * span * 0.62, thoraxY + h * 0.85);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.fillStyle = pal.wing;
+  ctx.beginPath();
+  ctx.moveTo(thoraxX, thoraxY - h * 0.1);
+  ctx.lineTo(thoraxX + side * span, thoraxY - h * 0.55);
+  ctx.lineTo(thoraxX + side * span * 0.6, thoraxY + h * 0.75);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.fillStyle = pal.wingDark;
+  ctx.beginPath();
+  ctx.ellipse(thoraxX + side * span * 0.4, thoraxY - h * 0.05, span * 0.22, h * 0.3, side * 0.5, 0, Math.PI * 2);
+  ctx.fill();
+
+  // eyespot
+  ctx.fillStyle = pal.spotYellow;
+  ctx.beginPath();
+  ctx.ellipse(thoraxX + side * span * 0.62, thoraxY - h * 0.18, span * 0.14, h * 0.16, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = pal.spotPink;
+  ctx.beginPath();
+  ctx.ellipse(thoraxX + side * span * 0.62, thoraxY - h * 0.18, span * 0.07, h * 0.08, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  if (t > 0.4) {
+    ctx.fillStyle = pal.spotPink;
+    ctx.beginPath();
+    ctx.ellipse(thoraxX + side * span * 0.3, thoraxY + h * 0.3, span * 0.08, h * 0.1, 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
+function drawWarden(ctx: CanvasRenderingContext2D, t: number) {
+  const pal = WARDEN_PALETTE;
+  const bodyW = Math.round(5 + t * 2);
+  const bodyH = Math.round(9 + t * 2);
+  const headSize = Math.round(3.5 + t);
+
+  const bodyY = GROUND_Y - bodyH;
+  const thoraxX = CX;
+  const thoraxY = bodyY + bodyH * 0.3;
+
+  drawGroundShadow(ctx, 8 + t * 5);
+
+  // wings, drawn behind the body
+  drawWardenWing(ctx, -1, t, thoraxX, thoraxY);
+  drawWardenWing(ctx, 1, t, thoraxX, thoraxY);
+
+  // fuzzy segmented abdomen
+  px(ctx, CX - bodyW / 2 - 1, bodyY - 1, bodyW + 2, bodyH + 2, pal.outline);
+  px(ctx, CX - bodyW / 2, bodyY, bodyW, bodyH, pal.body);
+  for (let i = 0; i < 3; i++) {
+    px(ctx, CX - bodyW / 2, bodyY + bodyH * 0.35 + i * bodyH * 0.2, bodyW, 1, pal.stripe);
+  }
+
+  // head with curled antennae
+  const headX = CX - headSize / 2;
+  const headY = bodyY - headSize + 1;
+  px(ctx, headX - 1, headY - 1, headSize + 2, headSize + 2, pal.outline);
+  px(ctx, headX, headY, headSize, headSize, pal.body);
+
+  ctx.strokeStyle = pal.outline;
+  ctx.lineWidth = 0.8;
+  for (const side of [-1, 1]) {
+    ctx.beginPath();
+    ctx.moveTo(CX + side * headSize * 0.3, headY);
+    ctx.quadraticCurveTo(CX + side * (headSize * 0.9 + t), headY - 3 - t, CX + side * (headSize * 1.6 + t * 1.5), headY - 2 - t);
+    ctx.stroke();
+  }
+
+  // tiny eyes
+  px(ctx, headX + headSize * 0.2, headY + headSize * 0.35, 0.9, 0.9, pal.eye);
+  px(ctx, headX + headSize * 0.65, headY + headSize * 0.35, 0.9, 0.9, pal.eye);
+}
+
+// --- Emperor: a three-headed golden dragon ---
+
+const EMPEROR_PALETTE = {
+  body: "#b8952e",
+  bodyDark: "#7a5f1f",
+  head: "#d9b23c",
+  horn: "#fff2b0",
+  wing: "#4a2b52",
+  wingBone: "#6b3f6e",
+  eye: "#ff5c33",
+  outline: "#241c0a",
+};
+
+function drawEmperorNeck(ctx: CanvasRenderingContext2D, baseX: number, baseY: number, tipX: number, tipY: number, headSize: number) {
+  const pal = EMPEROR_PALETTE;
+  ctx.strokeStyle = pal.outline;
+  ctx.lineWidth = 2.6;
+  ctx.beginPath();
+  ctx.moveTo(baseX, baseY);
+  ctx.lineTo(tipX, tipY);
+  ctx.stroke();
+  ctx.strokeStyle = pal.body;
+  ctx.lineWidth = 1.6;
+  ctx.beginPath();
+  ctx.moveTo(baseX, baseY);
+  ctx.lineTo(tipX, tipY);
+  ctx.stroke();
+
+  // head
+  px(ctx, tipX - headSize / 2 - 0.6, tipY - headSize / 2 - 0.6, headSize + 1.2, headSize + 1.2, pal.outline);
+  px(ctx, tipX - headSize / 2, tipY - headSize / 2, headSize, headSize, pal.head);
+
+  // horns
+  ctx.fillStyle = pal.horn;
+  ctx.beginPath();
+  ctx.moveTo(tipX - headSize * 0.3, tipY - headSize * 0.4);
+  ctx.lineTo(tipX - headSize * 0.55, tipY - headSize * 1.1);
+  ctx.lineTo(tipX - headSize * 0.05, tipY - headSize * 0.35);
+  ctx.closePath();
+  ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(tipX + headSize * 0.3, tipY - headSize * 0.4);
+  ctx.lineTo(tipX + headSize * 0.55, tipY - headSize * 1.1);
+  ctx.lineTo(tipX + headSize * 0.05, tipY - headSize * 0.35);
+  ctx.closePath();
+  ctx.fill();
+
+  // glowing eye
+  ctx.save();
+  ctx.shadowColor = pal.eye;
+  ctx.shadowBlur = 2;
+  ctx.fillStyle = pal.eye;
+  px(ctx, tipX - headSize * 0.12, tipY - headSize * 0.05, headSize * 0.3, headSize * 0.3, pal.eye);
+  ctx.restore();
+}
+
+function drawEmperor(ctx: CanvasRenderingContext2D, t: number) {
+  const pal = EMPEROR_PALETTE;
+  const bodyW = Math.round(9 + t * 3);
+  const bodyH = Math.round(6 + t * 2);
+  const legH = Math.round(3 + t);
+  const legW = Math.round(3 + t);
+  const wingSpan = 9 + t * 5;
+  const centerNeckLen = 8 + t * 5;
+  const sideNeckLen = 6 + t * 3.5;
+  const headSize = 2.6 + t * 1.3;
+
+  const legY = GROUND_Y - legH;
+  const bodyY = legY - bodyH;
+  const bodyX = CX - bodyW / 2;
+  const shoulderY = bodyY + bodyH * 0.2;
+
+  drawGroundShadow(ctx, bodyW + wingSpan * 0.5);
+
+  function block(x: number, y: number, w: number, h: number, color: string) {
+    px(ctx, x - 1, y - 1, w + 2, h + 2, pal.outline);
+    px(ctx, x, y, w, h, color);
+  }
+
+  // wings, drawn behind the body
+  for (const side of [-1, 1] as const) {
+    ctx.fillStyle = pal.wing;
+    ctx.beginPath();
+    ctx.moveTo(CX, shoulderY);
+    ctx.lineTo(CX + side * wingSpan, shoulderY - wingSpan * 0.5);
+    ctx.lineTo(CX + side * wingSpan * 0.5, shoulderY + wingSpan * 0.3);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = pal.wingBone;
+    ctx.lineWidth = 0.8;
+    ctx.beginPath();
+    ctx.moveTo(CX, shoulderY);
+    ctx.lineTo(CX + side * wingSpan * 0.85, shoulderY - wingSpan * 0.3);
+    ctx.stroke();
+  }
+
+  // tail
+  block(bodyX + bodyW - 2, bodyY + bodyH * 0.4, 5 + t * 3, 2, pal.bodyDark);
+
+  // legs
+  block(bodyX + 1, legY, legW, legH, pal.bodyDark);
+  block(bodyX + bodyW - legW - 1, legY, legW, legH, pal.bodyDark);
+
+  // body
+  block(bodyX, bodyY, bodyW, bodyH, pal.body);
+  px(ctx, bodyX + 1, bodyY + 1, bodyW * 0.22, bodyH - 2, pal.head);
+  px(ctx, bodyX + bodyW - bodyW * 0.18 - 1, bodyY + 1, bodyW * 0.18, bodyH - 2, pal.bodyDark);
+
+  // three necks: center, and two flanking outward like a trident
+  drawEmperorNeck(ctx, CX, shoulderY, CX, shoulderY - centerNeckLen, headSize * 1.1);
+  drawEmperorNeck(ctx, CX - bodyW * 0.2, shoulderY, CX - sideNeckLen * 0.85, shoulderY - sideNeckLen * 0.75, headSize);
+  drawEmperorNeck(ctx, CX + bodyW * 0.2, shoulderY, CX + sideNeckLen * 0.85, shoulderY - sideNeckLen * 0.75, headSize);
+}
+
+function drawEvolvedCreature(ctx: CanvasRenderingContext2D, stage: number, pathId: PathId) {
+  const t = (Math.max(3, Math.min(5, stage)) - 3) / 2;
+  if (pathId === "titan") drawTitan(ctx, t);
+  else if (pathId === "warden") drawWarden(ctx, t);
+  else drawEmperor(ctx, t);
 }
 
 /**
