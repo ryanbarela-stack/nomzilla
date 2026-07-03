@@ -312,15 +312,15 @@ function drawTitan(ctx: CanvasRenderingContext2D, t: number) {
 // --- Warden: a guardian moth wreathed in light ---
 
 const WARDEN_PALETTE = {
-  body: "#cdb37a",
-  bodyDark: "#a68f5c",
-  stripe: "#8a744a",
+  body: "#4a2e5c",
+  bodyDark: "#331f40",
+  stripe: "#2e1b3d",
   wing: "#7ecbe0",
   wingDark: "#5aa8c2",
   spotPink: "#ffb6c1",
   spotYellow: "#ffe082",
-  outline: "#3a2f1f",
-  eye: "#241c12",
+  outline: "#1c1124",
+  eye: "#f0e6f7",
 };
 
 function drawWardenWing(ctx: CanvasRenderingContext2D, side: 1 | -1, t: number, thoraxX: number, thoraxY: number) {
