@@ -374,22 +374,19 @@ function drawTitan(ctx: CanvasRenderingContext2D, t: number) {
   block(backThighX - legW * 0.1, legY + thighH, legW, shinH, pal.bodyDark, 1.2 * S);
   block(backThighX - legW * 0.1, legY + thighH + shinH - 1 * S, footLen * 0.7, 2.2 * S, pal.bodyDark, 1 * S);
 
-  // --- body: a wide, squat torso with three-tone shading ---
+  // --- body: a wide, squat torso with soft directional shading (one highlight,
+  // one shadow corner) instead of even vertical stripes, which read as ribs ---
   block(bodyX, bodyY, bodyW, bodyH, pal.body, 2 * S);
-  px(ctx, bodyX + bodyW * 0.06, bodyY + bodyH * 0.1, bodyW * 0.22, bodyH * 0.82, pal.bodyLight);
-  px(ctx, bodyX + bodyW * 0.32, bodyY + bodyH * 0.1, bodyW * 0.2, bodyH * 0.82, pal.bodyMid);
-  px(ctx, bodyX + bodyW * 0.8, bodyY + bodyH * 0.1, bodyW * 0.16, bodyH * 0.84, pal.bodyDark);
+  px(ctx, bodyX + bodyW * 0.08, bodyY + bodyH * 0.12, bodyW * 0.26, bodyH * 0.42, pal.bodyLight);
+  px(ctx, bodyX + bodyW * 0.72, bodyY + bodyH * 0.4, bodyW * 0.22, bodyH * 0.5, pal.bodyDark);
 
-  // chest/belly patch — flush with the body's bottom edge, rounded only at the top
+  // chest/belly patch — a plain flat panel flush with the bottom edge, no
+  // separate rounded cap (that read as an extra lump stuck onto the torso)
   const bellyX = bodyX + bodyW * 0.4;
   const bellyW = bodyW * 0.44;
-  const bellyTopY = bodyY + bodyH * 0.42;
-  ctx.fillStyle = pal.belly;
-  ctx.beginPath();
-  ctx.ellipse(bellyX + bellyW / 2, bellyTopY + bellyW * 0.3, bellyW / 2, bellyW * 0.3, 0, Math.PI, Math.PI * 2);
-  ctx.fill();
-  px(ctx, bellyX, bellyTopY + bellyW * 0.3, bellyW, bodyY + bodyH - (bellyTopY + bellyW * 0.3), pal.belly);
-  px(ctx, bellyX, bodyY + bodyH * 0.62, bellyW, 0.8 * S, pal.bellyDark);
+  const bellyTopY = bodyY + bodyH * 0.48;
+  px(ctx, bellyX, bellyTopY, bellyW, bodyY + bodyH - bellyTopY, pal.belly);
+  px(ctx, bellyX, bodyY + bodyH * 0.66, bellyW, 0.8 * S, pal.bellyDark);
 
   // --- front leg, bigger and in front, with toe claws ---
   const frontThighX = hipX + bodyW * 0.02;
