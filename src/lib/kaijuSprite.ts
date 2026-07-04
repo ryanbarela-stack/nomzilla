@@ -814,25 +814,28 @@ function drawEmperorNeck(
   px(ctx, snoutX, snoutY, snoutW, snoutH, pal.head);
   px(ctx, tipX - snoutW * 0.5, tipY + headSize * 0.22, snoutW, headSize * 0.16, pal.head);
 
-  // nostril
-  px(ctx, tipX + snoutW * 0.12, snoutY + snoutH * 0.25, 0.6 * S, 0.6 * S, pal.outline);
+  // nostrils, symmetric around the center line
+  px(ctx, tipX - snoutW * 0.16, snoutY + snoutH * 0.25, 0.6 * S, 0.6 * S, pal.outline);
+  px(ctx, tipX + snoutW * 0.08, snoutY + snoutH * 0.25, 0.6 * S, 0.6 * S, pal.outline);
 
-  // a single fang peeking from the jaw
+  // a centered fang peeking from the jaw
   ctx.fillStyle = pal.bodyLight;
   ctx.beginPath();
-  ctx.moveTo(tipX - snoutW * 0.22, snoutY + snoutH);
-  ctx.lineTo(tipX + snoutW * 0.02, snoutY + snoutH);
-  ctx.lineTo(tipX - snoutW * 0.1, snoutY + snoutH + 0.9 * S);
+  ctx.moveTo(tipX - snoutW * 0.12, snoutY + snoutH);
+  ctx.lineTo(tipX + snoutW * 0.12, snoutY + snoutH);
+  ctx.lineTo(tipX, snoutY + snoutH + 0.9 * S);
   ctx.closePath();
   ctx.fill();
 
-  // two glowing eyes
+  // two glowing eyes, symmetric around the head's center line
+  const eyeSize = headSize * 0.22;
+  const eyeGap = headSize * 0.06;
   ctx.save();
   ctx.shadowColor = pal.eye;
   ctx.shadowBlur = 1.6 * S;
   ctx.fillStyle = pal.eye;
-  px(ctx, tipX - headSize * 0.34, tipY - headSize * 0.08, headSize * 0.22, headSize * 0.22, pal.eye);
-  px(ctx, tipX + headSize * 0.12, tipY - headSize * 0.08, headSize * 0.22, headSize * 0.22, pal.eye);
+  px(ctx, tipX - eyeGap - eyeSize, tipY - headSize * 0.08, eyeSize, eyeSize, pal.eye);
+  px(ctx, tipX + eyeGap, tipY - headSize * 0.08, eyeSize, eyeSize, pal.eye);
   ctx.restore();
 }
 
