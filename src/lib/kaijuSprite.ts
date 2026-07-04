@@ -919,16 +919,76 @@ function drawEmperor(ctx: CanvasRenderingContext2D, t: number) {
     ctx.stroke();
   }
 
-  // tail with a small spiked tip
-  const tailW = 5 * S + t * 3 * S;
-  block(bodyX + bodyW - 2 * S, bodyY + bodyH * 0.4, tailW, 2 * S, pal.bodyDark, 1 * S);
-  ctx.fillStyle = pal.horn;
+  // tail: a tapered, gently curving chain ending in a spiked mace-ball
+  const tailBaseX = bodyX + bodyW - 2 * S;
+  const tailBaseY = bodyY + bodyH * 0.4;
+  const tailLen = 9 * S + t * 4 * S;
+  const tailBaseR = 1.8 * S + t * 0.7 * S;
+  const tailEndX = tailBaseX + tailLen;
+  const tailEndY = tailBaseY + 1 * S;
+  const tailMidX = tailBaseX + tailLen * 0.5;
+  const tailMidY = tailBaseY + tailLen * 0.32;
+  const tailSegCount = 7;
+  const tailChain: { x: number; y: number; r: number }[] = [];
+  for (let i = 0; i <= tailSegCount; i++) {
+    const u = i / tailSegCount;
+    tailChain.push({
+      x: (1 - u) * (1 - u) * tailBaseX + 2 * (1 - u) * u * tailMidX + u * u * tailEndX,
+      y: (1 - u) * (1 - u) * tailBaseY + 2 * (1 - u) * u * tailMidY + u * u * tailEndY,
+      r: tailBaseR * (1 - u * 0.55),
+    });
+  }
+  for (const p of tailChain) {
+    ctx.fillStyle = pal.outline;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.r + 0.5 * S, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  for (let i = 0; i < tailChain.length; i++) {
+    const p = tailChain[i];
+    ctx.fillStyle = i % 3 === 0 ? pal.bodyDark : pal.body;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // spiked ball at the very tip
+  const ballR = tailBaseR * 1.8;
+  ctx.fillStyle = pal.outline;
   ctx.beginPath();
-  ctx.moveTo(bodyX + bodyW - 2 * S + tailW, bodyY + bodyH * 0.4);
-  ctx.lineTo(bodyX + bodyW - 2 * S + tailW, bodyY + bodyH * 0.4 + 2 * S);
-  ctx.lineTo(bodyX + bodyW - 2 * S + tailW + 1.6 * S, bodyY + bodyH * 0.4 + 1 * S);
-  ctx.closePath();
+  ctx.arc(tailEndX, tailEndY, ballR + 0.6 * S, 0, Math.PI * 2);
   ctx.fill();
+  ctx.fillStyle = pal.bodyDark;
+  ctx.beginPath();
+  ctx.arc(tailEndX, tailEndY, ballR, 0, Math.PI * 2);
+  ctx.fill();
+
+  const ballSpikeCount = 6;
+  for (let i = 0; i < ballSpikeCount; i++) {
+    const angle = (i / ballSpikeCount) * Math.PI * 2;
+    const dx = Math.cos(angle);
+    const dy = Math.sin(angle);
+    const perpX = -dy;
+    const perpY = dx;
+    const spikeLen = ballR * 0.85;
+    const baseHalf = ballR * 0.26;
+    const bx = tailEndX + dx * ballR * 0.5;
+    const by = tailEndY + dy * ballR * 0.5;
+    ctx.fillStyle = pal.outline;
+    ctx.beginPath();
+    ctx.moveTo(bx - perpX * (baseHalf + 0.4 * S), by - perpY * (baseHalf + 0.4 * S));
+    ctx.lineTo(bx + perpX * (baseHalf + 0.4 * S), by + perpY * (baseHalf + 0.4 * S));
+    ctx.lineTo(bx + dx * (spikeLen + 0.4 * S), by + dy * (spikeLen + 0.4 * S));
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = pal.horn;
+    ctx.beginPath();
+    ctx.moveTo(bx - perpX * baseHalf, by - perpY * baseHalf);
+    ctx.lineTo(bx + perpX * baseHalf, by + perpY * baseHalf);
+    ctx.lineTo(bx + dx * spikeLen, by + dy * spikeLen);
+    ctx.closePath();
+    ctx.fill();
+  }
 
   // legs with small clawed feet
   block(bodyX + 1 * S, legY, legW, legH, pal.bodyDark, 1 * S);
