@@ -314,13 +314,13 @@ function drawTitan(ctx: CanvasRenderingContext2D, t: number) {
     ctx.fill();
   }
 
-  const bodyW = Math.round(15 * S + t * 5 * S);
-  const bodyH = Math.round(8.5 * S + t * 3 * S);
+  const bodyW = Math.round(11.5 * S + t * 4 * S);
+  const bodyH = Math.round(7 * S + t * 2.5 * S);
   const legW = Math.round(4.5 * S + t * 1.5 * S);
   const thighH = Math.round(4.5 * S + t * 1.7 * S);
   const shinH = Math.round(4 * S + t * 1.5 * S);
   const footLen = Math.round(5.5 * S + t * 2 * S);
-  const headW = Math.round(bodyW * 0.48);
+  const headW = Math.round(bodyW * 0.58);
   const headH = Math.round(headW * 0.85);
   const armW = Math.round(3 * S + t * S);
   const armH = Math.round(6 * S + t * 2 * S);
