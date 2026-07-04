@@ -7,13 +7,41 @@ export interface Attribute {
   name: string;
   /** The daily habit that grows this attribute. */
   habitLabel: string;
+  /** Solid fill color used for this attribute's progress bar. */
+  barClassName: string;
+  /** Classes for the habit-toggle button when active. */
+  activeButtonClassName: string;
 }
 
 export const ATTRIBUTES: Attribute[] = [
-  { id: "strength", name: "Strength", habitLabel: "Weight training" },
-  { id: "endurance", name: "Endurance", habitLabel: "Cardio" },
-  { id: "intelligence", name: "Intelligence", habitLabel: "Reading / learning" },
-  { id: "wisdom", name: "Wisdom", habitLabel: "Self-care" },
+  {
+    id: "strength",
+    name: "Strength",
+    habitLabel: "Weight training",
+    barClassName: "bg-red-500",
+    activeButtonClassName: "bg-red-950 border-red-600 text-red-200",
+  },
+  {
+    id: "endurance",
+    name: "Endurance",
+    habitLabel: "Cardio",
+    barClassName: "bg-green-500",
+    activeButtonClassName: "bg-green-950 border-green-600 text-green-200",
+  },
+  {
+    id: "intelligence",
+    name: "Intelligence",
+    habitLabel: "Reading / learning",
+    barClassName: "bg-blue-500",
+    activeButtonClassName: "bg-blue-950 border-blue-600 text-blue-200",
+  },
+  {
+    id: "wisdom",
+    name: "Wisdom",
+    habitLabel: "Self-care",
+    barClassName: "bg-yellow-500",
+    activeButtonClassName: "bg-yellow-950 border-yellow-600 text-yellow-200",
+  },
 ];
 
 export interface AttributeTier {
@@ -21,15 +49,14 @@ export interface AttributeTier {
   name: string;
   /** Total (lifetime) days that habit was logged required to reach this tier. */
   minCount: number;
-  barClassName: string;
 }
 
 export const ATTRIBUTE_TIERS: AttributeTier[] = [
-  { index: 0, name: "Untrained", minCount: 0, barClassName: "bg-gray-600" },
-  { index: 1, name: "Novice", minCount: 5, barClassName: "bg-[#a9744f]" },
-  { index: 2, name: "Trained", minCount: 15, barClassName: "bg-[#c9d1d9]" },
-  { index: 3, name: "Veteran", minCount: 30, barClassName: "bg-[#e3b341]" },
-  { index: 4, name: "Master", minCount: 60, barClassName: "bg-[#2ea043]" },
+  { index: 0, name: "Untrained", minCount: 0 },
+  { index: 1, name: "Novice", minCount: 5 },
+  { index: 2, name: "Trained", minCount: 15 },
+  { index: 3, name: "Veteran", minCount: 30 },
+  { index: 4, name: "Master", minCount: 60 },
 ];
 
 /** Total lifetime days a given habit was logged. */

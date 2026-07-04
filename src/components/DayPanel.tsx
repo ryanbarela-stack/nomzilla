@@ -71,7 +71,7 @@ export function DayPanel({ log, target, onAddEntry, onRemoveEntry, onToggleHabit
               onClick={() => onToggleHabit(attr.id)}
               className={`flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs transition-colors ${
                 active
-                  ? "bg-emerald-950 border-emerald-600 text-emerald-200"
+                  ? attr.activeButtonClassName
                   : "bg-[#0d1117] border-[#30363d] text-gray-400 hover:border-gray-500"
               }`}
             >

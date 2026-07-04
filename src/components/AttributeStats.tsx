@@ -43,7 +43,7 @@ export function AttributeStats({ logs, seenAttributeTiers, onAcknowledgeTier }: 
               <span>{next ? `${next.minCount - count} more` : "Max"}</span>
             </div>
             <div className="h-2 w-full bg-[#0d1117] border border-[#30363d] rounded-full overflow-hidden">
-              <div className={`h-full ${tier.barClassName} rounded-full transition-[width]`} style={{ width: `${pct}%` }} />
+              <div className={`h-full ${attr.barClassName} rounded-full transition-[width]`} style={{ width: `${pct}%` }} />
             </div>
           </div>
         );
