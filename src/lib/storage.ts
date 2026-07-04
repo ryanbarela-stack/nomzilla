@@ -8,6 +8,7 @@ export const DEFAULT_SETTINGS: Settings = {
   pathId: null,
   borderId: "default",
   seenLevelIndex: 0,
+  seenAttributeTiers: {},
 };
 
 export function loadLogs(): LogsByDate {

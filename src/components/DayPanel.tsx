@@ -1,4 +1,6 @@
 import { useState } from "react";
+import type { AttributeId } from "../lib/attributes";
+import { ATTRIBUTES } from "../lib/attributes";
 import type { DayLog } from "../lib/types";
 import { formatFriendly, todayISO } from "../lib/date";
 
@@ -7,10 +9,11 @@ interface Props {
   target: number;
   onAddEntry: (name: string, calories: number) => void;
   onRemoveEntry: (id: string) => void;
+  onToggleHabit: (id: AttributeId) => void;
   onJumpToday: () => void;
 }
 
-export function DayPanel({ log, target, onAddEntry, onRemoveEntry, onJumpToday }: Props) {
+export function DayPanel({ log, target, onAddEntry, onRemoveEntry, onToggleHabit, onJumpToday }: Props) {
   const [name, setName] = useState("");
   const [calories, setCalories] = useState("");
 
@@ -55,6 +58,27 @@ export function DayPanel({ log, target, onAddEntry, onRemoveEntry, onJumpToday }
           className={`h-full ${total > target ? "bg-red-500" : "bg-emerald-500"}`}
           style={{ width: `${pct}%` }}
         />
+      </div>
+
+      <div className="flex flex-wrap gap-2">
+        {ATTRIBUTES.map((attr) => {
+          const active = log.habits?.[attr.id] ?? false;
+          return (
+            <button
+              key={attr.id}
+              type="button"
+              onClick={() => onToggleHabit(attr.id)}
+              className={`flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs transition-colors ${
+                active
+                  ? "bg-emerald-950 border-emerald-600 text-emerald-200"
+                  : "bg-[#0d1117] border-[#30363d] text-gray-400 hover:border-gray-500"
+              }`}
+            >
+              <span>{attr.emoji}</span>
+              <span>{attr.habitLabel}</span>
+            </button>
+          );
+        })}
       </div>
 
       <form onSubmit={handleSubmit} className="flex gap-2 flex-wrap">

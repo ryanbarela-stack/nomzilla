@@ -1,11 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 import { KaijuHeader } from "./components/KaijuHeader";
 import { DayPanel } from "./components/DayPanel";
+import { AttributeStats } from "./components/AttributeStats";
 import { Calendar } from "./components/Calendar";
 import { loadLogs, saveLogs, loadSettings, saveSettings } from "./lib/storage";
 import { todayISO, fromISODate } from "./lib/date";
 import { computeStreak, computeTotalDaysLogged, getStageForStreak } from "./lib/streak";
 import { getCurrentLevelIndex } from "./lib/borders";
+import { computeAttributeCount, getAttributeTier, type AttributeId } from "./lib/attributes";
 import type { LogsByDate, Settings } from "./lib/types";
 
 function App() {
@@ -47,6 +49,20 @@ function App() {
     });
   }
 
+  function toggleHabit(id: AttributeId) {
+    setLogs((prev) => {
+      const existing = prev[selectedDate] ?? { date: selectedDate, entries: [] };
+      const habits = {
+        strength: existing.habits?.strength ?? false,
+        endurance: existing.habits?.endurance ?? false,
+        intelligence: existing.habits?.intelligence ?? false,
+        wisdom: existing.habits?.wisdom ?? false,
+      };
+      habits[id] = !habits[id];
+      return { ...prev, [selectedDate]: { ...existing, habits } };
+    });
+  }
+
   function changeTarget(value: number) {
     setSettings((prev) => ({ ...prev, targetCalories: value }));
   }
@@ -61,6 +77,15 @@ function App() {
 
   function acknowledgeLevelUp() {
     setSettings((prev) => ({ ...prev, seenLevelIndex: levelIndex }));
+  }
+
+  function acknowledgeAttributeTier(id: AttributeId) {
+    const count = computeAttributeCount(logs, id);
+    const tier = getAttributeTier(count);
+    setSettings((prev) => ({
+      ...prev,
+      seenAttributeTiers: { ...prev.seenAttributeTiers, [id]: tier.index },
+    }));
   }
 
   function changeMonth(delta: number) {
@@ -100,7 +125,14 @@ function App() {
         target={settings.targetCalories}
         onAddEntry={addEntry}
         onRemoveEntry={removeEntry}
+        onToggleHabit={toggleHabit}
         onJumpToday={jumpToday}
+      />
+
+      <AttributeStats
+        logs={logs}
+        seenAttributeTiers={settings.seenAttributeTiers}
+        onAcknowledgeTier={acknowledgeAttributeTier}
       />
 
       <Calendar
