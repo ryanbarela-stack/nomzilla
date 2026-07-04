@@ -785,9 +785,10 @@ function drawEmperorNeck(
   // head
   px(ctx, tipX - headSize / 2 - 0.6 * S, tipY - headSize / 2 - 0.6 * S, headSize + 1.2 * S, headSize + 1.2 * S, pal.outline);
   px(ctx, tipX - headSize / 2, tipY - headSize / 2, headSize, headSize, pal.head);
+  px(ctx, tipX - headSize * 0.42, tipY - headSize * 0.42, headSize * 0.32, headSize * 0.3, pal.bodyLight);
 
-  // brow ridge shading above the eye
-  px(ctx, tipX - headSize * 0.35, tipY - headSize * 0.3, headSize * 0.7, headSize * 0.16, pal.bodyDark);
+  // brow ridge shading above the eyes
+  px(ctx, tipX - headSize * 0.4, tipY - headSize * 0.28, headSize * 0.8, headSize * 0.14, pal.bodyDark);
 
   // horns
   ctx.fillStyle = pal.horn;
@@ -804,12 +805,34 @@ function drawEmperorNeck(
   ctx.closePath();
   ctx.fill();
 
-  // glowing eye
+  // snout/muzzle, extending down from the head — patched to fuse the seam
+  const snoutW = headSize * 0.56;
+  const snoutH = headSize * 0.34;
+  const snoutX = tipX - snoutW / 2;
+  const snoutY = tipY + headSize * 0.34;
+  px(ctx, snoutX - 0.5 * S, snoutY - 0.5 * S, snoutW + 1 * S, snoutH + 1 * S, pal.outline);
+  px(ctx, snoutX, snoutY, snoutW, snoutH, pal.head);
+  px(ctx, tipX - snoutW * 0.5, tipY + headSize * 0.22, snoutW, headSize * 0.16, pal.head);
+
+  // nostril
+  px(ctx, tipX + snoutW * 0.12, snoutY + snoutH * 0.25, 0.6 * S, 0.6 * S, pal.outline);
+
+  // a single fang peeking from the jaw
+  ctx.fillStyle = pal.bodyLight;
+  ctx.beginPath();
+  ctx.moveTo(tipX - snoutW * 0.22, snoutY + snoutH);
+  ctx.lineTo(tipX + snoutW * 0.02, snoutY + snoutH);
+  ctx.lineTo(tipX - snoutW * 0.1, snoutY + snoutH + 0.9 * S);
+  ctx.closePath();
+  ctx.fill();
+
+  // two glowing eyes
   ctx.save();
   ctx.shadowColor = pal.eye;
-  ctx.shadowBlur = 2 * S;
+  ctx.shadowBlur = 1.6 * S;
   ctx.fillStyle = pal.eye;
-  px(ctx, tipX - headSize * 0.12, tipY - headSize * 0.05, headSize * 0.3, headSize * 0.3, pal.eye);
+  px(ctx, tipX - headSize * 0.34, tipY - headSize * 0.08, headSize * 0.22, headSize * 0.22, pal.eye);
+  px(ctx, tipX + headSize * 0.12, tipY - headSize * 0.08, headSize * 0.22, headSize * 0.22, pal.eye);
   ctx.restore();
 }
 
