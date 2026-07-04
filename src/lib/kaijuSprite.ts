@@ -114,119 +114,6 @@ function drawEgg(ctx: CanvasRenderingContext2D, cracked: boolean) {
   }
 }
 
-const HATCHLING_PALETTE = {
-  body: "#c9cdd1",
-  bodyLight: "#e8eaec",
-  bodyDark: "#9a9fa5",
-  eye: "#2a2420",
-  blush: "#ffa8ba",
-  outline: "#4a4d51",
-};
-
-function drawHatchling(ctx: CanvasRenderingContext2D) {
-  const pal = HATCHLING_PALETTE;
-  const shellW = 17 * S;
-  const shellH = 8 * S;
-  drawGroundShadow(ctx, shellW + 2 * S);
-
-  const bodyW = 11 * S;
-  const bodyH = 9 * S;
-  const bodyX = CX - bodyW / 2;
-  const bodyY = GROUND_Y - shellH * 0.55 - bodyH * 0.6;
-  const headW = 9 * S;
-  const headH = 8 * S;
-  const headX = CX - headW / 2;
-  const headY = bodyY - headH + 2 * S;
-
-  // stubby arms resting on the shell rim
-  px(ctx, bodyX - 3 * S, bodyY + bodyH * 0.4, 3 * S, 3 * S, pal.bodyDark);
-  px(ctx, bodyX + bodyW, bodyY + bodyH * 0.4, 3 * S, 3 * S, pal.bodyDark);
-
-  // torso (mostly hidden behind the shell rim, drawn first)
-  px(ctx, bodyX - S, bodyY - S, bodyW + 2 * S, bodyH + 2 * S, pal.outline);
-  px(ctx, bodyX, bodyY, bodyW, bodyH, pal.body);
-  px(ctx, bodyX + bodyW * 0.6, bodyY + 1 * S, bodyW * 0.3, bodyH - 2 * S, pal.bodyDark);
-
-  // head
-  px(ctx, headX - S, headY - S, headW + 2 * S, headH + 2 * S, pal.outline);
-  px(ctx, headX, headY, headW, headH, pal.body);
-  px(ctx, headX + 1 * S, headY + 1 * S, headW * 0.3, headH - 2 * S, pal.bodyLight);
-
-  // blush
-  ctx.globalAlpha = 0.7;
-  ctx.fillStyle = pal.blush;
-  ctx.beginPath();
-  ctx.ellipse(headX + headW * 0.22, headY + headH * 0.62, headW * 0.14, headH * 0.1, 0, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.globalAlpha = 1;
-
-  // big eyes with shine
-  const eyeY = headY + headH * 0.38;
-  for (const eyeX of [headX + headW * 0.28, headX + headW * 0.64]) {
-    ctx.fillStyle = "#f5f0e1";
-    ctx.beginPath();
-    ctx.ellipse(eyeX, eyeY, 1.7 * S, 1.9 * S, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = pal.eye;
-    ctx.beginPath();
-    ctx.ellipse(eyeX + 0.3 * S, eyeY + 0.3 * S, 0.9 * S, 1.05 * S, 0, 0, Math.PI * 2);
-    ctx.fill();
-    px(ctx, eyeX - 0.3 * S, eyeY - 0.9 * S, 0.7 * S, 0.7 * S, "#ffffff");
-  }
-
-  // smile
-  ctx.strokeStyle = pal.outline;
-  ctx.lineWidth = 1 * S;
-  ctx.beginPath();
-  ctx.moveTo(headX + headW * 0.36, headY + headH * 0.78);
-  ctx.quadraticCurveTo(headX + headW * 0.5, headY + headH * 0.95, headX + headW * 0.64, headY + headH * 0.78);
-  ctx.stroke();
-
-  // broken shell "cup" drawn last so its front rim occludes the lower torso
-  const shellCenterY = GROUND_Y - shellH * 0.35;
-  ctx.fillStyle = EGG_PALETTE.shell;
-  ctx.strokeStyle = EGG_PALETTE.outline;
-  ctx.lineWidth = 1 * S;
-  ctx.beginPath();
-  ctx.ellipse(CX, shellCenterY, shellW / 2, shellH / 2, 0, 0, Math.PI);
-  ctx.closePath();
-  ctx.fill();
-  ctx.stroke();
-
-  // subtle shell-surface texture lines
-  ctx.strokeStyle = EGG_PALETTE.shellDark;
-  ctx.lineWidth = 0.5 * S;
-  ctx.globalAlpha = 0.6;
-  ctx.beginPath();
-  ctx.moveTo(CX - shellW * 0.3, shellCenterY - shellH * 0.05);
-  ctx.lineTo(CX - shellW * 0.15, shellCenterY + shellH * 0.15);
-  ctx.stroke();
-  ctx.beginPath();
-  ctx.moveTo(CX + shellW * 0.18, shellCenterY - shellH * 0.1);
-  ctx.lineTo(CX + shellW * 0.3, shellCenterY + shellH * 0.1);
-  ctx.stroke();
-  ctx.globalAlpha = 1;
-
-  // jagged notches along the broken rim
-  const notches: [number, number][] = [
-    [-0.32, -0.9],
-    [-0.05, -1.05],
-    [0.2, -0.85],
-    [0.4, -0.6],
-  ];
-  for (const [ox, oy] of notches) {
-    ctx.save();
-    ctx.globalCompositeOperation = "destination-out";
-    ctx.beginPath();
-    ctx.moveTo(CX + ox * shellW, shellCenterY + oy * shellH * 0.5);
-    ctx.lineTo(CX + ox * shellW - 1 * S, shellCenterY + oy * shellH * 0.5 - 1.4 * S);
-    ctx.lineTo(CX + ox * shellW + 1 * S, shellCenterY + oy * shellH * 0.5 - 1.4 * S);
-    ctx.closePath();
-    ctx.fill();
-    ctx.restore();
-  }
-}
-
 // --- Evolved forms: rendered from hand-painted sprite sheets rather than
 // procedural drawing. Each sheet is a 4-row grid of idle-animation frames;
 // columns sweep through a single creature's charge-up/burst cycle, so a
@@ -266,7 +153,7 @@ function drawEvolvedCreature(ctx: CanvasRenderingContext2D, stage: number, pathI
   const img = getSpriteImage(pathId);
   if (!img.complete || img.naturalWidth === 0) return;
 
-  const col = stage <= 3 ? sheet.young : stage === 4 ? sheet.mid : sheet.grand;
+  const col = stage <= 2 ? sheet.young : stage === 3 ? sheet.mid : sheet.grand;
   const row = Math.floor(time * IDLE_FPS) % SPRITE_ROWS;
 
   drawGroundShadow(ctx, GRID * 0.5);
@@ -278,12 +165,12 @@ function drawEvolvedCreature(ctx: CanvasRenderingContext2D, stage: number, pathI
 }
 
 /**
- * Draws the kaiju at the given growth stage (0-5): an egg that cracks, hatches,
- * then (from stage 3 on) evolves along the chosen path — Titan, Warden, or
+ * Draws the kaiju at the given growth stage (0-4): an egg that cracks, then
+ * (from stage 2 on) evolves along the chosen path — Titan, Warden, or
  * Emperor. `time` (seconds) drives a gentle idle bob.
  */
 export function drawKaiju(ctx: CanvasRenderingContext2D, stage: number, pathId: PathId | null, time = 0) {
-  const s = Math.max(0, Math.min(5, stage));
+  const s = Math.max(0, Math.min(4, stage));
   ctx.clearRect(0, 0, GRID, GRID);
 
   const bob = Math.sin(time * 2.1) * 0.7 * S;
@@ -292,7 +179,6 @@ export function drawKaiju(ctx: CanvasRenderingContext2D, stage: number, pathId: 
 
   if (s === 0) drawEgg(ctx, false);
   else if (s === 1) drawEgg(ctx, true);
-  else if (s === 2) drawHatchling(ctx);
   else drawEvolvedCreature(ctx, s, pathId ?? "titan", time);
 
   ctx.restore();

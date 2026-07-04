@@ -6,7 +6,7 @@ export interface EvolutionPath {
   id: PathId;
   name: string;
   tagline: string;
-  /** Display names for stage index 3, 4, and 5. */
+  /** Display names for stage index 2, 3, and 4. */
   stageNames: [string, string, string];
 }
 
@@ -22,16 +22,16 @@ export function getPath(id: string | null): EvolutionPath | null {
 
 /** The name to show for the current stage, accounting for the (possibly still unchosen) evolution path. */
 export function getStageDisplayName(stage: GrowthStage, pathId: string | null): string {
-  if (stage.index < 3) return stage.name;
+  if (stage.index < 2) return stage.name;
   const path = getPath(pathId);
   if (!path) return "Choose Your Path!";
-  return path.stageNames[stage.index - 3];
+  return path.stageNames[stage.index - 2];
 }
 
 /** Name to use when previewing an upcoming (not-yet-reached) stage, e.g. in "log N more days to reach X". */
 export function getStagePreviewName(stage: GrowthStage, pathId: string | null): string {
-  if (stage.index < 3) return stage.name;
+  if (stage.index < 2) return stage.name;
   const path = getPath(pathId);
   if (!path) return "your evolved form";
-  return path.stageNames[stage.index - 3];
+  return path.stageNames[stage.index - 2];
 }
