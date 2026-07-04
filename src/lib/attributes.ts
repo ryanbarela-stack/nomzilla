@@ -5,16 +5,15 @@ export type AttributeId = keyof HabitFlags;
 export interface Attribute {
   id: AttributeId;
   name: string;
-  emoji: string;
   /** The daily habit that grows this attribute. */
   habitLabel: string;
 }
 
 export const ATTRIBUTES: Attribute[] = [
-  { id: "strength", name: "Strength", emoji: "💪", habitLabel: "Weight training" },
-  { id: "endurance", name: "Endurance", emoji: "🏃", habitLabel: "Cardio" },
-  { id: "intelligence", name: "Intelligence", emoji: "📖", habitLabel: "Reading / learning" },
-  { id: "wisdom", name: "Wisdom", emoji: "🧘", habitLabel: "Self-care" },
+  { id: "strength", name: "Strength", habitLabel: "Weight training" },
+  { id: "endurance", name: "Endurance", habitLabel: "Cardio" },
+  { id: "intelligence", name: "Intelligence", habitLabel: "Reading / learning" },
+  { id: "wisdom", name: "Wisdom", habitLabel: "Self-care" },
 ];
 
 export interface AttributeTier {

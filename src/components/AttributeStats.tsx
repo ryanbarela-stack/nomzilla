@@ -26,7 +26,7 @@ export function AttributeStats({ logs, seenAttributeTiers, onAcknowledgeTier }: 
             {tieredUp && (
               <div className="bg-indigo-950 border border-indigo-700 rounded-md px-3 py-1.5 text-xs text-indigo-200 flex items-center justify-between gap-2">
                 <span>
-                  {attr.emoji} {attr.name} tier up — <strong>{tier.name}</strong>!
+                  {attr.name} tier up — <strong>{tier.name}</strong>!
                 </span>
                 <button
                   onClick={() => onAcknowledgeTier(attr.id)}
@@ -38,7 +38,7 @@ export function AttributeStats({ logs, seenAttributeTiers, onAcknowledgeTier }: 
             )}
             <div className="flex items-center justify-between text-xs text-gray-400">
               <span>
-                {attr.emoji} {attr.name} — <span className="text-gray-300">{tier.name}</span>
+                {attr.name} — <span className="text-gray-300">{tier.name}</span>
               </span>
               <span>{next ? `${next.minCount - count} more` : "Max"}</span>
             </div>
