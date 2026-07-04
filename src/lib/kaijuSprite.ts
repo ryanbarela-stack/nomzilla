@@ -281,9 +281,37 @@ function drawGlowSpike(ctx: CanvasRenderingContext2D, anchor: SpikeAnchor) {
 function drawTitan(ctx: CanvasRenderingContext2D, t: number) {
   const pal = TITAN_PALETTE;
 
-  function block(x: number, y: number, w: number, h: number, color: string) {
+  function block(x: number, y: number, w: number, h: number, color: string, round = 0) {
     px(ctx, x - S, y - S, w + 2 * S, h + 2 * S, pal.outline);
     px(ctx, x, y, w, h, color);
+    if (round > 0) {
+      ctx.clearRect(x - S, y - S, round, round);
+      ctx.clearRect(x + w + S - round, y - S, round, round);
+      ctx.clearRect(x - S, y + h + S - round, round, round);
+      ctx.clearRect(x + w + S - round, y + h + S - round, round, round);
+    }
+  }
+
+  function drawClaw(x: number, y: number, size: number, angleDeg: number) {
+    const rad = (angleDeg * Math.PI) / 180;
+    const dx = Math.cos(rad);
+    const dy = Math.sin(rad);
+    const perpX = -dy;
+    const perpY = dx;
+    ctx.fillStyle = pal.outline;
+    ctx.beginPath();
+    ctx.moveTo(x - perpX * size * 0.4, y - perpY * size * 0.4);
+    ctx.lineTo(x + perpX * size * 0.4, y + perpY * size * 0.4);
+    ctx.lineTo(x + dx * (size + 0.6 * S), y + dy * (size + 0.6 * S));
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = pal.claw;
+    ctx.beginPath();
+    ctx.moveTo(x - perpX * size * 0.3, y - perpY * size * 0.3);
+    ctx.lineTo(x + perpX * size * 0.3, y + perpY * size * 0.3);
+    ctx.lineTo(x + dx * size, y + dy * size);
+    ctx.closePath();
+    ctx.fill();
   }
 
   const bodyW = Math.round(15 * S + t * 5 * S);
@@ -342,12 +370,12 @@ function drawTitan(ctx: CanvasRenderingContext2D, t: number) {
 
   // --- back leg (partially behind the body, suggesting a walking stride) ---
   const backThighX = hipX - bodyW * 0.36;
-  block(backThighX, legY, legW, thighH, pal.bodyDark);
-  block(backThighX - legW * 0.1, legY + thighH, legW, shinH, pal.bodyDark);
-  block(backThighX - legW * 0.1, legY + thighH + shinH - 1 * S, footLen * 0.7, 2.2 * S, pal.bodyDark);
+  block(backThighX, legY, legW, thighH, pal.bodyDark, 1.4 * S);
+  block(backThighX - legW * 0.1, legY + thighH, legW, shinH, pal.bodyDark, 1.2 * S);
+  block(backThighX - legW * 0.1, legY + thighH + shinH - 1 * S, footLen * 0.7, 2.2 * S, pal.bodyDark, 1 * S);
 
   // --- body: a wide, squat torso with three-tone shading ---
-  block(bodyX, bodyY, bodyW, bodyH, pal.body);
+  block(bodyX, bodyY, bodyW, bodyH, pal.body, 2 * S);
   px(ctx, bodyX + bodyW * 0.06, bodyY + bodyH * 0.1, bodyW * 0.22, bodyH * 0.82, pal.bodyLight);
   px(ctx, bodyX + bodyW * 0.32, bodyY + bodyH * 0.1, bodyW * 0.2, bodyH * 0.82, pal.bodyMid);
   px(ctx, bodyX + bodyW * 0.8, bodyY + bodyH * 0.1, bodyW * 0.16, bodyH * 0.84, pal.bodyDark);
@@ -365,31 +393,29 @@ function drawTitan(ctx: CanvasRenderingContext2D, t: number) {
 
   // --- front leg, bigger and in front, with toe claws ---
   const frontThighX = hipX + bodyW * 0.02;
-  block(frontThighX, legY, legW * 1.1, thighH, pal.bodyMid);
-  block(frontThighX + legW * 0.25, legY + thighH, legW * 1.1, shinH, pal.body);
-  block(frontThighX + legW * 0.25, legY + thighH + shinH - 1 * S, footLen, 2.6 * S, pal.body);
+  block(frontThighX, legY, legW * 1.1, thighH, pal.bodyMid, 1.6 * S);
+  block(frontThighX + legW * 0.25, legY + thighH, legW * 1.1, shinH, pal.body, 1.3 * S);
+  block(frontThighX + legW * 0.25, legY + thighH + shinH - 1 * S, footLen, 2.6 * S, pal.body, 1 * S);
   for (let c = 0; c < 3; c++) {
-    px(
-      ctx,
-      frontThighX + legW * 0.25 + footLen * 0.35 + c * (footLen * 0.24),
-      legY + thighH + shinH + 0.6 * S,
-      footLen * 0.2,
-      1.1 * S,
-      pal.claw,
+    drawClaw(
+      frontThighX + legW * 0.25 + footLen * 0.5 + c * (footLen * 0.22),
+      legY + thighH + shinH + 1.6 * S,
+      1.6 * S,
+      75 + c * 5,
     );
   }
 
   // --- small clawed arm hanging in front of the chest ---
   const armX = bodyX + bodyW * 0.68;
   const armY = bodyY + bodyH * 0.5;
-  block(armX, armY, armW, armH * 0.6, pal.bodyDark);
-  block(armX + armW * 0.3, armY + armH * 0.55, armW, armH * 0.55, pal.bodyDark);
+  block(armX, armY, armW, armH * 0.6, pal.bodyDark, 1 * S);
+  block(armX + armW * 0.3, armY + armH * 0.55, armW, armH * 0.55, pal.bodyDark, 1 * S);
   for (let c = 0; c < 3; c++) {
-    px(ctx, armX + armW * 0.3 + c * armW * 0.32, armY + armH - 0.4 * S, armW * 0.24, 1 * S, pal.claw);
+    drawClaw(armX + armW * 0.3 + c * armW * 0.32, armY + armH, 1.3 * S, 100 + c * 15);
   }
 
   // --- head with a short attached jaw, in profile ---
-  block(headX, headY, headW, headH, pal.body);
+  block(headX, headY, headW, headH, pal.body, 1.8 * S);
 
   // neck patch: paints over the head/body outline seam in their overlap zone
   // so the two shapes read as one continuous silhouette instead of two
@@ -406,7 +432,11 @@ function drawTitan(ctx: CanvasRenderingContext2D, t: number) {
   const jawH = headH * 0.3;
   const jawX = headX + headW * 0.72;
   const jawY = headY + headH * 0.48;
-  block(jawX, jawY, jawW, jawH, pal.body);
+  block(jawX, jawY, jawW, jawH, pal.body, 1 * S);
+
+  // jaw patch: same seam-fusing trick as the neck patch, for the head/jaw joint
+  px(ctx, jawX - 1 * S, headY + headH * 0.4, headX + headW - jawX + 2 * S, jawH * 0.35, pal.body);
+
   px(ctx, jawX + jawW * 0.8, jawY + jawH * 0.15, 0.9 * S, 0.9 * S, pal.outline);
   ctx.fillStyle = pal.teeth;
   ctx.beginPath();
