@@ -589,6 +589,33 @@ function drawWardenWing(ctx: CanvasRenderingContext2D, side: 1 | -1, t: number, 
 
 function drawWarden(ctx: CanvasRenderingContext2D, t: number) {
   const pal = WARDEN_PALETTE;
+
+  function block(x: number, y: number, w: number, h: number, color: string, round = 0) {
+    px(ctx, x - S, y - S, w + 2 * S, h + 2 * S, pal.outline);
+    px(ctx, x, y, w, h, color);
+    if (round > 0) {
+      ctx.clearRect(x - S, y - S, round, round);
+      ctx.clearRect(x + w + S - round, y - S, round, round);
+      ctx.clearRect(x - S, y + h + S - round, round, round);
+      ctx.clearRect(x + w + S - round, y + h + S - round, round, round);
+    }
+  }
+
+  function drawLegClaw(x: number, y: number, size: number, angleDeg: number) {
+    const rad = (angleDeg * Math.PI) / 180;
+    const dx = Math.cos(rad);
+    const dy = Math.sin(rad);
+    const perpX = -dy;
+    const perpY = dx;
+    ctx.fillStyle = pal.outline;
+    ctx.beginPath();
+    ctx.moveTo(x - perpX * size * 0.35, y - perpY * size * 0.35);
+    ctx.lineTo(x + perpX * size * 0.35, y + perpY * size * 0.35);
+    ctx.lineTo(x + dx * (size + 0.5 * S), y + dy * (size + 0.5 * S));
+    ctx.closePath();
+    ctx.fill();
+  }
+
   const bodyW = Math.round(5 * S + t * 2 * S);
   const bodyH = Math.round(9 * S + t * 2 * S);
   const headSize = Math.round(3.5 * S + t * S);
@@ -603,16 +630,17 @@ function drawWarden(ctx: CanvasRenderingContext2D, t: number) {
   drawWardenWing(ctx, -1, t, thoraxX, thoraxY);
   drawWardenWing(ctx, 1, t, thoraxX, thoraxY);
 
-  // tiny legs
-  px(ctx, CX - bodyW * 0.6, GROUND_Y - 1.2 * S, 1 * S, 1.2 * S, pal.bodyDark);
-  px(ctx, CX + bodyW * 0.6 - 1 * S, GROUND_Y - 1.2 * S, 1 * S, 1.2 * S, pal.bodyDark);
+  // small clawed legs
+  for (const side of [-1, 1] as const) {
+    px(ctx, CX + side * bodyW * 0.6 - 0.5 * S, GROUND_Y - 2 * S, 1 * S, 2 * S, pal.bodyDark);
+    drawLegClaw(CX + side * bodyW * 0.6, GROUND_Y, 1.4 * S, 75 + side * 15);
+  }
 
-  // fuzzy segmented abdomen
-  px(ctx, CX - bodyW / 2 - S, bodyY - S, bodyW + 2 * S, bodyH + 2 * S, pal.outline);
-  px(ctx, CX - bodyW / 2, bodyY, bodyW, bodyH, pal.body);
+  // fuzzy segmented abdomen, rounded rather than a hard-edged box
+  block(CX - bodyW / 2, bodyY, bodyW, bodyH, pal.body, 1.6 * S);
   px(ctx, CX - bodyW / 2, bodyY + 1 * S, bodyW * 0.3, bodyH - 2 * S, pal.bodyLight);
-  for (let i = 0; i < 4; i++) {
-    px(ctx, CX - bodyW / 2, bodyY + bodyH * 0.25 + i * bodyH * 0.16, bodyW, 0.8 * S, pal.stripe);
+  for (let i = 0; i < 3; i++) {
+    px(ctx, CX - bodyW / 2, bodyY + bodyH * 0.28 + i * bodyH * 0.2, bodyW, 0.8 * S, pal.stripe);
   }
   // fuzzy edge ticks
   for (let i = 0; i < 3; i++) {
@@ -624,8 +652,7 @@ function drawWarden(ctx: CanvasRenderingContext2D, t: number) {
   // head with curled antennae
   const headX = CX - headSize / 2;
   const headY = bodyY - headSize + 1 * S;
-  px(ctx, headX - S, headY - S, headSize + 2 * S, headSize + 2 * S, pal.outline);
-  px(ctx, headX, headY, headSize, headSize, pal.body);
+  block(headX, headY, headSize, headSize, pal.body, 1.2 * S);
 
   ctx.strokeStyle = pal.outline;
   ctx.lineWidth = 0.8 * S;
@@ -639,11 +666,24 @@ function drawWarden(ctx: CanvasRenderingContext2D, t: number) {
       headY - 2 * S - t * S,
     );
     ctx.stroke();
+    px(
+      ctx,
+      CX + side * (headSize * 1.6 + t * 1.5 * S) - 0.5 * S,
+      headY - 2 * S - t * S - 0.5 * S,
+      1 * S,
+      1 * S,
+      pal.outline,
+    );
   }
 
-  // tiny eyes
+  // tiny glowing eyes — a guardian's watchful gaze
+  ctx.save();
+  ctx.shadowColor = pal.eye;
+  ctx.shadowBlur = 1 * S;
+  ctx.fillStyle = pal.eye;
   px(ctx, headX + headSize * 0.2, headY + headSize * 0.35, 0.9 * S, 0.9 * S, pal.eye);
   px(ctx, headX + headSize * 0.65, headY + headSize * 0.35, 0.9 * S, 0.9 * S, pal.eye);
+  ctx.restore();
 }
 
 // --- Emperor: a three-headed golden dragon ---
@@ -725,20 +765,56 @@ function drawEmperor(ctx: CanvasRenderingContext2D, t: number) {
 
   drawGroundShadow(ctx, bodyW + wingSpan * 0.5);
 
-  function block(x: number, y: number, w: number, h: number, color: string) {
+  function block(x: number, y: number, w: number, h: number, color: string, round = 0) {
     px(ctx, x - S, y - S, w + 2 * S, h + 2 * S, pal.outline);
     px(ctx, x, y, w, h, color);
+    if (round > 0) {
+      ctx.clearRect(x - S, y - S, round, round);
+      ctx.clearRect(x + w + S - round, y - S, round, round);
+      ctx.clearRect(x - S, y + h + S - round, round, round);
+      ctx.clearRect(x + w + S - round, y + h + S - round, round, round);
+    }
   }
 
-  // wings, drawn behind the body
+  function drawFootClaw(x: number, y: number, size: number, angleDeg: number) {
+    const rad = (angleDeg * Math.PI) / 180;
+    const dx = Math.cos(rad);
+    const dy = Math.sin(rad);
+    const perpX = -dy;
+    const perpY = dx;
+    ctx.fillStyle = pal.outline;
+    ctx.beginPath();
+    ctx.moveTo(x - perpX * size * 0.35, y - perpY * size * 0.35);
+    ctx.lineTo(x + perpX * size * 0.35, y + perpY * size * 0.35);
+    ctx.lineTo(x + dx * (size + 0.5 * S), y + dy * (size + 0.5 * S));
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = pal.horn;
+    ctx.beginPath();
+    ctx.moveTo(x - perpX * size * 0.25, y - perpY * size * 0.25);
+    ctx.lineTo(x + perpX * size * 0.25, y + perpY * size * 0.25);
+    ctx.lineTo(x + dx * size, y + dy * size);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  // wings, drawn behind the body — a scalloped bat-wing membrane with two bone struts
   for (const side of [-1, 1] as const) {
     ctx.fillStyle = pal.wing;
     ctx.beginPath();
     ctx.moveTo(CX, shoulderY);
     ctx.lineTo(CX + side * wingSpan, shoulderY - wingSpan * 0.5);
-    ctx.lineTo(CX + side * wingSpan * 0.5, shoulderY + wingSpan * 0.3);
+    ctx.lineTo(CX + side * wingSpan * 0.78, shoulderY - wingSpan * 0.08);
+    ctx.lineTo(CX + side * wingSpan * 0.55, shoulderY + wingSpan * 0.15);
+    ctx.lineTo(CX + side * wingSpan * 0.32, shoulderY + wingSpan * 0.02);
     ctx.closePath();
     ctx.fill();
+
+    ctx.fillStyle = pal.wingBone;
+    ctx.beginPath();
+    ctx.ellipse(CX + side * wingSpan * 0.55, shoulderY - wingSpan * 0.12, wingSpan * 0.16, wingSpan * 0.1, side * 0.4, 0, Math.PI * 2);
+    ctx.fill();
+
     ctx.strokeStyle = pal.wingBone;
     ctx.lineWidth = 0.8 * S;
     ctx.beginPath();
@@ -753,7 +829,7 @@ function drawEmperor(ctx: CanvasRenderingContext2D, t: number) {
 
   // tail with a small spiked tip
   const tailW = 5 * S + t * 3 * S;
-  block(bodyX + bodyW - 2 * S, bodyY + bodyH * 0.4, tailW, 2 * S, pal.bodyDark);
+  block(bodyX + bodyW - 2 * S, bodyY + bodyH * 0.4, tailW, 2 * S, pal.bodyDark, 1 * S);
   ctx.fillStyle = pal.horn;
   ctx.beginPath();
   ctx.moveTo(bodyX + bodyW - 2 * S + tailW, bodyY + bodyH * 0.4);
@@ -762,12 +838,14 @@ function drawEmperor(ctx: CanvasRenderingContext2D, t: number) {
   ctx.closePath();
   ctx.fill();
 
-  // legs
-  block(bodyX + 1 * S, legY, legW, legH, pal.bodyDark);
-  block(bodyX + bodyW - legW - 1 * S, legY, legW, legH, pal.bodyDark);
+  // legs with small clawed feet
+  block(bodyX + 1 * S, legY, legW, legH, pal.bodyDark, 1 * S);
+  block(bodyX + bodyW - legW - 1 * S, legY, legW, legH, pal.bodyDark, 1 * S);
+  drawFootClaw(bodyX + 1 * S + legW / 2, GROUND_Y, 1.4 * S, 100);
+  drawFootClaw(bodyX + bodyW - legW / 2 - 1 * S, GROUND_Y, 1.4 * S, 80);
 
-  // body with scale texture
-  block(bodyX, bodyY, bodyW, bodyH, pal.body);
+  // body with scale texture, rounded rather than a hard box
+  block(bodyX, bodyY, bodyW, bodyH, pal.body, 1.6 * S);
   px(ctx, bodyX + 1 * S, bodyY + 1 * S, bodyW * 0.22, bodyH - 2 * S, pal.bodyLight);
   px(ctx, bodyX + bodyW - bodyW * 0.18 - 1 * S, bodyY + 1 * S, bodyW * 0.18, bodyH - 2 * S, pal.bodyDark);
   const scaleSpots: [number, number][] = [
