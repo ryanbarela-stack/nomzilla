@@ -11,7 +11,7 @@ export interface DayLog {
 
 export interface Settings {
   targetCalories: number;
-  /** Chosen evolution path ("titan" | "warden" | "emperor"), or null before stage 3 is reached. */
+  /** Chosen evolution path ("titan" | "emperor" | "quetzacoatl" | "mothman"), or null before stage 1 (Baby) is reached. */
   pathId: string | null;
   borderId: string;
   /** Highest level the player has already been shown a level-up banner for. */

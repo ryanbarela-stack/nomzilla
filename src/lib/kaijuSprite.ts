@@ -1,6 +1,6 @@
-import type { PathId } from "./paths";
+import { PATHS, getPath, type PathId, type SpriteSize } from "./paths";
 
-export const GRID = 48;
+export const GRID = 96;
 // Scale factor from the original 32px design — every absolute pixel measurement
 // below is written as "base-at-32px * S" so the whole cast gained more canvas
 // real estate (and therefore room for finer detail) without changing proportions.
@@ -19,208 +19,35 @@ function drawGroundShadow(ctx: CanvasRenderingContext2D, width: number) {
   ctx.globalAlpha = 1;
 }
 
-const EGG_PALETTE = {
-  shell: "#f2ede0",
-  shellLight: "#ffffff",
-  shellMid: "#e6e0d0",
-  shellDark: "#d8d2c2",
-  speckle: "#b8b2a4",
-  outline: "#8f8b82",
-  glow: "#ffe9a8",
-};
+const EGG_SPRITE = "/sprites/egg/south.png";
+const EGG_SPRITE_SIZE: SpriteSize = { width: 92, height: 92 };
 
-function drawEggBody(ctx: CanvasRenderingContext2D, w: number, h: number) {
-  const centerY = GROUND_Y - h / 2;
-  ctx.lineWidth = 1 * S;
-  ctx.fillStyle = EGG_PALETTE.shell;
-  ctx.strokeStyle = EGG_PALETTE.outline;
-  ctx.beginPath();
-  ctx.ellipse(CX, centerY, w / 2, h / 2, 0, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.stroke();
+// Sprite images are loaded once and cached by src; the idle rAF loop in
+// KaijuCanvas naturally picks them up on a later frame once they finish loading.
+const spriteImageCache = new Map<string, HTMLImageElement>();
 
-  // mid-tone band for a smoother rounded gradient, then the brighter highlight and darker shadow on top
-  ctx.fillStyle = EGG_PALETTE.shellMid;
-  ctx.beginPath();
-  ctx.ellipse(CX + w * 0.08, centerY + h * 0.05, w * 0.32, h * 0.36, 0.1, 0, Math.PI * 2);
-  ctx.fill();
-
-  ctx.fillStyle = EGG_PALETTE.shellLight;
-  ctx.beginPath();
-  ctx.ellipse(CX - w * 0.18, centerY - h * 0.22, w * 0.22, h * 0.28, -0.3, 0, Math.PI * 2);
-  ctx.fill();
-
-  ctx.fillStyle = EGG_PALETTE.shellDark;
-  ctx.beginPath();
-  ctx.ellipse(CX + w * 0.2, centerY + h * 0.2, w * 0.18, h * 0.24, 0.3, 0, Math.PI * 2);
-  ctx.fill();
-
-  // faint hairline texture strokes to break up the flat shell surface
-  ctx.strokeStyle = EGG_PALETTE.shellDark;
-  ctx.lineWidth = 0.6 * S;
-  ctx.globalAlpha = 0.5;
-  ctx.beginPath();
-  ctx.moveTo(CX - w * 0.3, centerY - h * 0.15);
-  ctx.quadraticCurveTo(CX - w * 0.15, centerY - h * 0.02, CX - w * 0.22, centerY + h * 0.2);
-  ctx.stroke();
-  ctx.beginPath();
-  ctx.moveTo(CX + w * 0.05, centerY - h * 0.32);
-  ctx.quadraticCurveTo(CX + w * 0.18, centerY - h * 0.18, CX + w * 0.12, centerY - h * 0.02);
-  ctx.stroke();
-  ctx.globalAlpha = 1;
-
-  const speckles: [number, number][] = [
-    [-0.2, -0.05],
-    [0.18, 0.12],
-    [0.02, -0.32],
-    [-0.12, 0.3],
-    [0.28, -0.1],
-    [-0.3, 0.12],
-    [0.1, 0.34],
-    [0.32, 0.18],
-  ];
-  for (const [ox, oy] of speckles) {
-    px(ctx, CX + ox * w - 0.65 * S, centerY + oy * h - 0.65 * S, 1.3 * S, 1.3 * S, EGG_PALETTE.speckle);
+function getSpriteImage(src: string): HTMLImageElement {
+  let img = spriteImageCache.get(src);
+  if (!img) {
+    img = new Image();
+    img.src = src;
+    spriteImageCache.set(src, img);
   }
-  return centerY;
+  return img;
 }
 
-function drawEgg(ctx: CanvasRenderingContext2D, cracked: boolean) {
-  const w = 15 * S;
-  const h = 19 * S;
-  drawGroundShadow(ctx, w + 2 * S);
-  const centerY = drawEggBody(ctx, w, h);
+/** Draws a pre-rendered PNG sprite (egg / baby forms), bottom-anchored above the ground shadow. */
+function drawSprite(ctx: CanvasRenderingContext2D, src: string, size: SpriteSize) {
+  const targetH = GRID * 0.78;
+  const scale = targetH / size.height;
+  const w = size.width * scale;
+  const h = targetH;
 
-  if (cracked) {
-    ctx.strokeStyle = EGG_PALETTE.outline;
-    ctx.lineWidth = 1.1 * S;
-    ctx.beginPath();
-    ctx.moveTo(CX + 0.5 * S, centerY - h * 0.42);
-    ctx.lineTo(CX + 2 * S, centerY - h * 0.18);
-    ctx.lineTo(CX - 1.5 * S, centerY + 0.05 * h);
-    ctx.lineTo(CX + 1.5 * S, centerY + 0.28 * h);
-    ctx.lineTo(CX, centerY + 0.42 * h);
-    ctx.stroke();
+  drawGroundShadow(ctx, w * 0.75);
 
-    ctx.globalAlpha = 0.8;
-    ctx.fillStyle = EGG_PALETTE.glow;
-    ctx.beginPath();
-    ctx.ellipse(CX + 0.5 * S, centerY, 1.1 * S, 3 * S, 0.15, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.globalAlpha = 1;
-  }
-}
-
-const HATCHLING_PALETTE = {
-  body: "#c9cdd1",
-  bodyLight: "#e8eaec",
-  bodyDark: "#9a9fa5",
-  eye: "#2a2420",
-  blush: "#ffa8ba",
-  outline: "#4a4d51",
-};
-
-function drawHatchling(ctx: CanvasRenderingContext2D) {
-  const pal = HATCHLING_PALETTE;
-  const shellW = 17 * S;
-  const shellH = 8 * S;
-  drawGroundShadow(ctx, shellW + 2 * S);
-
-  const bodyW = 11 * S;
-  const bodyH = 9 * S;
-  const bodyX = CX - bodyW / 2;
-  const bodyY = GROUND_Y - shellH * 0.55 - bodyH * 0.6;
-  const headW = 9 * S;
-  const headH = 8 * S;
-  const headX = CX - headW / 2;
-  const headY = bodyY - headH + 2 * S;
-
-  // stubby arms resting on the shell rim
-  px(ctx, bodyX - 3 * S, bodyY + bodyH * 0.4, 3 * S, 3 * S, pal.bodyDark);
-  px(ctx, bodyX + bodyW, bodyY + bodyH * 0.4, 3 * S, 3 * S, pal.bodyDark);
-
-  // torso (mostly hidden behind the shell rim, drawn first)
-  px(ctx, bodyX - S, bodyY - S, bodyW + 2 * S, bodyH + 2 * S, pal.outline);
-  px(ctx, bodyX, bodyY, bodyW, bodyH, pal.body);
-  px(ctx, bodyX + bodyW * 0.6, bodyY + 1 * S, bodyW * 0.3, bodyH - 2 * S, pal.bodyDark);
-
-  // head
-  px(ctx, headX - S, headY - S, headW + 2 * S, headH + 2 * S, pal.outline);
-  px(ctx, headX, headY, headW, headH, pal.body);
-  px(ctx, headX + 1 * S, headY + 1 * S, headW * 0.3, headH - 2 * S, pal.bodyLight);
-
-  // blush
-  ctx.globalAlpha = 0.7;
-  ctx.fillStyle = pal.blush;
-  ctx.beginPath();
-  ctx.ellipse(headX + headW * 0.22, headY + headH * 0.62, headW * 0.14, headH * 0.1, 0, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.globalAlpha = 1;
-
-  // big eyes with shine
-  const eyeY = headY + headH * 0.38;
-  for (const eyeX of [headX + headW * 0.28, headX + headW * 0.64]) {
-    ctx.fillStyle = "#f5f0e1";
-    ctx.beginPath();
-    ctx.ellipse(eyeX, eyeY, 1.7 * S, 1.9 * S, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = pal.eye;
-    ctx.beginPath();
-    ctx.ellipse(eyeX + 0.3 * S, eyeY + 0.3 * S, 0.9 * S, 1.05 * S, 0, 0, Math.PI * 2);
-    ctx.fill();
-    px(ctx, eyeX - 0.3 * S, eyeY - 0.9 * S, 0.7 * S, 0.7 * S, "#ffffff");
-  }
-
-  // smile
-  ctx.strokeStyle = pal.outline;
-  ctx.lineWidth = 1 * S;
-  ctx.beginPath();
-  ctx.moveTo(headX + headW * 0.36, headY + headH * 0.78);
-  ctx.quadraticCurveTo(headX + headW * 0.5, headY + headH * 0.95, headX + headW * 0.64, headY + headH * 0.78);
-  ctx.stroke();
-
-  // broken shell "cup" drawn last so its front rim occludes the lower torso
-  const shellCenterY = GROUND_Y - shellH * 0.35;
-  ctx.fillStyle = EGG_PALETTE.shell;
-  ctx.strokeStyle = EGG_PALETTE.outline;
-  ctx.lineWidth = 1 * S;
-  ctx.beginPath();
-  ctx.ellipse(CX, shellCenterY, shellW / 2, shellH / 2, 0, 0, Math.PI);
-  ctx.closePath();
-  ctx.fill();
-  ctx.stroke();
-
-  // subtle shell-surface texture lines
-  ctx.strokeStyle = EGG_PALETTE.shellDark;
-  ctx.lineWidth = 0.5 * S;
-  ctx.globalAlpha = 0.6;
-  ctx.beginPath();
-  ctx.moveTo(CX - shellW * 0.3, shellCenterY - shellH * 0.05);
-  ctx.lineTo(CX - shellW * 0.15, shellCenterY + shellH * 0.15);
-  ctx.stroke();
-  ctx.beginPath();
-  ctx.moveTo(CX + shellW * 0.18, shellCenterY - shellH * 0.1);
-  ctx.lineTo(CX + shellW * 0.3, shellCenterY + shellH * 0.1);
-  ctx.stroke();
-  ctx.globalAlpha = 1;
-
-  // jagged notches along the broken rim
-  const notches: [number, number][] = [
-    [-0.32, -0.9],
-    [-0.05, -1.05],
-    [0.2, -0.85],
-    [0.4, -0.6],
-  ];
-  for (const [ox, oy] of notches) {
-    ctx.save();
-    ctx.globalCompositeOperation = "destination-out";
-    ctx.beginPath();
-    ctx.moveTo(CX + ox * shellW, shellCenterY + oy * shellH * 0.5);
-    ctx.lineTo(CX + ox * shellW - 1 * S, shellCenterY + oy * shellH * 0.5 - 1.4 * S);
-    ctx.lineTo(CX + ox * shellW + 1 * S, shellCenterY + oy * shellH * 0.5 - 1.4 * S);
-    ctx.closePath();
-    ctx.fill();
-    ctx.restore();
+  const img = getSpriteImage(src);
+  if (img.complete && img.naturalWidth > 0) {
+    ctx.drawImage(img, CX - w / 2, GROUND_Y - h * 0.92, w, h);
   }
 }
 
@@ -501,220 +328,6 @@ function drawTitan(ctx: CanvasRenderingContext2D, t: number) {
     });
   }
   for (const anchor of spikeAnchors) drawGlowSpike(ctx, anchor);
-}
-
-// --- Warden: a guardian moth wreathed in light ---
-
-const WARDEN_PALETTE = {
-  body: "#4a2e5c",
-  bodyDark: "#331f40",
-  bodyLight: "#5e3d73",
-  stripe: "#2e1b3d",
-  wing: "#8fd6ec",
-  wingTip: "#4a7fb0",
-  wingDark: "#5aa8c2",
-  wingVein: "#3f7d92",
-  wingBorder: "#c9a8e6",
-  spotPink: "#ffb6c1",
-  spotYellow: "#ffe082",
-  outline: "#1c1124",
-  eye: "#f0e6f7",
-};
-
-function drawWardenWing(ctx: CanvasRenderingContext2D, side: 1 | -1, t: number, thoraxX: number, thoraxY: number) {
-  const pal = WARDEN_PALETTE;
-  const span = 11 * S + t * 7 * S;
-  const h = 8 * S + t * 3 * S;
-
-  // wing silhouette at a given scale (0-1), centered on the thorax attachment
-  // point — used to build concentric bands: dark rim -> border stripe -> fill
-  function wingPath(scale: number) {
-    ctx.beginPath();
-    ctx.moveTo(thoraxX, thoraxY - h * 0.1 * scale);
-    ctx.lineTo(thoraxX + side * span * scale, thoraxY - h * 0.55 * scale);
-    ctx.lineTo(thoraxX + side * span * 0.6 * scale, thoraxY + h * 0.75 * scale);
-    ctx.closePath();
-  }
-
-  ctx.fillStyle = pal.outline;
-  wingPath(1.04);
-  ctx.fill();
-
-  ctx.fillStyle = pal.wingBorder;
-  wingPath(0.95);
-  ctx.fill();
-
-  const grad = ctx.createLinearGradient(thoraxX, thoraxY, thoraxX + side * span, thoraxY - h * 0.55);
-  grad.addColorStop(0, pal.wing);
-  grad.addColorStop(1, pal.wingTip);
-  ctx.fillStyle = grad;
-  wingPath(0.84);
-  ctx.fill();
-
-  // veins radiating from the thorax, plus a cross-vein arc connecting them
-  // for a stained-glass look
-  ctx.strokeStyle = pal.wingVein;
-  ctx.lineWidth = 0.5 * S;
-  ctx.globalAlpha = 0.7;
-  const veinFracs = [0.25, 0.42, 0.58, 0.74];
-  for (const f of veinFracs) {
-    ctx.beginPath();
-    ctx.moveTo(thoraxX, thoraxY - h * 0.05);
-    ctx.lineTo(thoraxX + side * span * f * 0.82, thoraxY - h * 0.55 * f);
-    ctx.stroke();
-  }
-  ctx.beginPath();
-  ctx.moveTo(thoraxX + side * span * veinFracs[0] * 0.82, thoraxY - h * 0.55 * veinFracs[0]);
-  for (let i = 1; i < veinFracs.length; i++) {
-    const f = veinFracs[i];
-    ctx.lineTo(thoraxX + side * span * f * 0.82, thoraxY - h * 0.55 * f);
-  }
-  ctx.stroke();
-  ctx.globalAlpha = 1;
-
-  ctx.fillStyle = pal.wingDark;
-  ctx.beginPath();
-  ctx.ellipse(thoraxX + side * span * 0.4, thoraxY - h * 0.05, span * 0.2, h * 0.28, side * 0.5, 0, Math.PI * 2);
-  ctx.fill();
-
-  // concentric eyespot: dark ring -> yellow ring -> pink ring -> center dot
-  const spotX = thoraxX + side * span * 0.6;
-  const spotY = thoraxY - h * 0.18;
-  ctx.fillStyle = pal.outline;
-  ctx.beginPath();
-  ctx.ellipse(spotX, spotY, span * 0.17, h * 0.19, 0, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.fillStyle = pal.spotYellow;
-  ctx.beginPath();
-  ctx.ellipse(spotX, spotY, span * 0.13, h * 0.15, 0, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.fillStyle = pal.spotPink;
-  ctx.beginPath();
-  ctx.ellipse(spotX, spotY, span * 0.07, h * 0.08, 0, 0, Math.PI * 2);
-  ctx.fill();
-  px(ctx, spotX - 0.4 * S, spotY - 0.4 * S, 0.8 * S, 0.8 * S, pal.outline);
-
-  // small accent spot lower on the wing, plus a second one once fully grown
-  ctx.fillStyle = pal.spotPink;
-  ctx.beginPath();
-  ctx.ellipse(thoraxX + side * span * 0.28, thoraxY + h * 0.32, span * 0.07, h * 0.09, 0, 0, Math.PI * 2);
-  ctx.fill();
-  if (t > 0.4) {
-    ctx.fillStyle = pal.spotYellow;
-    ctx.beginPath();
-    ctx.ellipse(thoraxX + side * span * 0.72, thoraxY + h * 0.12, span * 0.06, h * 0.07, 0, 0, Math.PI * 2);
-    ctx.fill();
-  }
-
-  // scalloped wing edge texture
-  ctx.strokeStyle = pal.outline;
-  ctx.lineWidth = 0.4 * S;
-  ctx.globalAlpha = 0.5;
-  for (const f of [0.2, 0.45, 0.7, 0.92]) {
-    ctx.beginPath();
-    ctx.arc(thoraxX + side * span * f, thoraxY - h * 0.55 * f + h * 0.1, 1.2 * S, 0, Math.PI);
-    ctx.stroke();
-  }
-  ctx.globalAlpha = 1;
-}
-
-function drawWarden(ctx: CanvasRenderingContext2D, t: number) {
-  const pal = WARDEN_PALETTE;
-
-  function block(x: number, y: number, w: number, h: number, color: string, round = 0) {
-    px(ctx, x - S, y - S, w + 2 * S, h + 2 * S, pal.outline);
-    px(ctx, x, y, w, h, color);
-    if (round > 0) {
-      ctx.clearRect(x - S, y - S, round, round);
-      ctx.clearRect(x + w + S - round, y - S, round, round);
-      ctx.clearRect(x - S, y + h + S - round, round, round);
-      ctx.clearRect(x + w + S - round, y + h + S - round, round, round);
-    }
-  }
-
-  function drawLegClaw(x: number, y: number, size: number, angleDeg: number) {
-    const rad = (angleDeg * Math.PI) / 180;
-    const dx = Math.cos(rad);
-    const dy = Math.sin(rad);
-    const perpX = -dy;
-    const perpY = dx;
-    ctx.fillStyle = pal.outline;
-    ctx.beginPath();
-    ctx.moveTo(x - perpX * size * 0.35, y - perpY * size * 0.35);
-    ctx.lineTo(x + perpX * size * 0.35, y + perpY * size * 0.35);
-    ctx.lineTo(x + dx * (size + 0.5 * S), y + dy * (size + 0.5 * S));
-    ctx.closePath();
-    ctx.fill();
-  }
-
-  const bodyW = Math.round(5 * S + t * 2 * S);
-  const bodyH = Math.round(9 * S + t * 2 * S);
-  const headSize = Math.round(3.5 * S + t * S);
-
-  const bodyY = GROUND_Y - bodyH;
-  const thoraxX = CX;
-  const thoraxY = bodyY + bodyH * 0.3;
-
-  drawGroundShadow(ctx, 8 * S + t * 5 * S);
-
-  // wings, drawn behind the body
-  drawWardenWing(ctx, -1, t, thoraxX, thoraxY);
-  drawWardenWing(ctx, 1, t, thoraxX, thoraxY);
-
-  // small clawed legs
-  for (const side of [-1, 1] as const) {
-    px(ctx, CX + side * bodyW * 0.6 - 0.5 * S, GROUND_Y - 2 * S, 1 * S, 2 * S, pal.bodyDark);
-    drawLegClaw(CX + side * bodyW * 0.6, GROUND_Y, 1.4 * S, 75 + side * 15);
-  }
-
-  // fuzzy segmented abdomen, rounded rather than a hard-edged box
-  block(CX - bodyW / 2, bodyY, bodyW, bodyH, pal.body, 1.6 * S);
-  px(ctx, CX - bodyW / 2, bodyY + 1 * S, bodyW * 0.3, bodyH - 2 * S, pal.bodyLight);
-  for (let i = 0; i < 3; i++) {
-    px(ctx, CX - bodyW / 2, bodyY + bodyH * 0.28 + i * bodyH * 0.2, bodyW, 0.8 * S, pal.stripe);
-  }
-  // fuzzy edge ticks
-  for (let i = 0; i < 3; i++) {
-    const fy = bodyY + bodyH * (0.2 + i * 0.28);
-    px(ctx, CX - bodyW / 2 - 1.2 * S, fy, 1 * S, 0.6 * S, pal.bodyDark);
-    px(ctx, CX + bodyW / 2 + 0.2 * S, fy, 1 * S, 0.6 * S, pal.bodyDark);
-  }
-
-  // head with curled antennae
-  const headX = CX - headSize / 2;
-  const headY = bodyY - headSize + 1 * S;
-  block(headX, headY, headSize, headSize, pal.body, 1.2 * S);
-
-  ctx.strokeStyle = pal.outline;
-  ctx.lineWidth = 0.8 * S;
-  for (const side of [-1, 1]) {
-    ctx.beginPath();
-    ctx.moveTo(CX + side * headSize * 0.3, headY);
-    ctx.quadraticCurveTo(
-      CX + side * (headSize * 0.9 + t * S),
-      headY - 3 * S - t * S,
-      CX + side * (headSize * 1.6 + t * 1.5 * S),
-      headY - 2 * S - t * S,
-    );
-    ctx.stroke();
-    px(
-      ctx,
-      CX + side * (headSize * 1.6 + t * 1.5 * S) - 0.5 * S,
-      headY - 2 * S - t * S - 0.5 * S,
-      1 * S,
-      1 * S,
-      pal.outline,
-    );
-  }
-
-  // tiny glowing eyes — a guardian's watchful gaze
-  ctx.save();
-  ctx.shadowColor = pal.eye;
-  ctx.shadowBlur = 1 * S;
-  ctx.fillStyle = pal.eye;
-  px(ctx, headX + headSize * 0.2, headY + headSize * 0.35, 0.9 * S, 0.9 * S, pal.eye);
-  px(ctx, headX + headSize * 0.65, headY + headSize * 0.35, 0.9 * S, 0.9 * S, pal.eye);
-  ctx.restore();
 }
 
 // --- Emperor: a three-headed golden dragon ---
@@ -1015,30 +628,42 @@ function drawEmperor(ctx: CanvasRenderingContext2D, t: number) {
   drawEmperorNeck(ctx, CX + bodyW * 0.2, shoulderY, CX + sideNeckLen * 0.85, shoulderY - sideNeckLen * 0.75, headSize, 4 * S);
 }
 
-function drawEvolvedCreature(ctx: CanvasRenderingContext2D, stage: number, pathId: PathId) {
-  const t = (Math.max(3, Math.min(5, stage)) - 3) / 2;
-  if (pathId === "titan") drawTitan(ctx, t);
-  else if (pathId === "warden") drawWarden(ctx, t);
-  else drawEmperor(ctx, t);
+/** Stage-2 (final form) rendering. Titan and Emperor have dedicated adult art;
+ * the rest fall back to their baby sprite, scaled up, until final-form art
+ * is produced for them. */
+function drawFinalForm(ctx: CanvasRenderingContext2D, pathId: PathId) {
+  if (pathId === "titan") {
+    drawTitan(ctx, 1);
+    return;
+  }
+  if (pathId === "emperor") {
+    drawEmperor(ctx, 1);
+    return;
+  }
+  const path = getPath(pathId);
+  if (path) drawSprite(ctx, path.finalSprite ?? path.babySprite, path.finalSpriteSize ?? path.babySpriteSize);
 }
 
 /**
- * Draws the kaiju at the given growth stage (0-5): an egg that cracks, hatches,
- * then (from stage 3 on) evolves along the chosen path — Titan, Warden, or
- * Emperor. `time` (seconds) drives a gentle idle bob.
+ * Draws the kaiju at the given growth stage (0 = Egg, 1 = Baby, 2 = Final Form).
+ * `time` (seconds) drives a gentle idle bob.
  */
 export function drawKaiju(ctx: CanvasRenderingContext2D, stage: number, pathId: PathId | null, time = 0) {
-  const s = Math.max(0, Math.min(5, stage));
+  const s = Math.max(0, Math.min(2, stage));
   ctx.clearRect(0, 0, GRID, GRID);
 
   const bob = Math.sin(time * 2.1) * 0.7 * S;
   ctx.save();
   ctx.translate(0, bob);
 
-  if (s === 0) drawEgg(ctx, false);
-  else if (s === 1) drawEgg(ctx, true);
-  else if (s === 2) drawHatchling(ctx);
-  else drawEvolvedCreature(ctx, s, pathId ?? "titan");
+  if (s === 0) {
+    drawSprite(ctx, EGG_SPRITE, EGG_SPRITE_SIZE);
+  } else if (s === 1) {
+    const path = getPath(pathId) ?? PATHS[0];
+    drawSprite(ctx, path.babySprite, path.babySpriteSize);
+  } else {
+    drawFinalForm(ctx, pathId ?? "titan");
+  }
 
   ctx.restore();
 }

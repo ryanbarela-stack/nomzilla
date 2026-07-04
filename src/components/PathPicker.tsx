@@ -20,7 +20,7 @@ export function PathPicker({ selectedId, onSelect, onClose }: Props) {
           </button>
         </div>
 
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-2 gap-3">
           {PATHS.map((path) => (
             <button
               key={path.id}

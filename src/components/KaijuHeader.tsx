@@ -49,8 +49,8 @@ export function KaijuHeader({
   const leveledUp = levelIndex > seenLevelIndex;
 
   const currentPath = getPath(pathId);
-  const readyToChoosePath = stage.index >= 3 && !currentPath;
-  const canChangePath = stage.index >= 3;
+  const readyToChoosePath = stage.index >= 1 && !currentPath;
+  const canChangePath = stage.index >= 1;
 
   const stageProgressPct = next
     ? Math.min(100, Math.max(0, ((streak - stage.minStreak) / (next.minStreak - stage.minStreak)) * 100))
