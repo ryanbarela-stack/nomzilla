@@ -224,133 +224,208 @@ function drawHatchling(ctx: CanvasRenderingContext2D) {
   }
 }
 
-// --- Titan: an atomic-age reptilian colossus ---
+// --- Titan: an atomic-age reptilian colossus, in side profile ---
 
 const TITAN_PALETTE = {
-  body: "#46614c",
-  bodyLight: "#6f9573",
-  bodyMid: "#557a5c",
-  bodyDark: "#2c4030",
-  belly: "#cdbf8a",
-  bellyDark: "#b3a374",
-  spike: "#e3dcb0",
-  spikeDark: "#a89a5f",
-  scale: "#365140",
-  claw: "#d8d2c2",
-  eye: "#bff0ff",
-  outline: "#16241a",
-  teeth: "#f5f0e1",
+  body: "#3f5057",
+  bodyLight: "#5c7079",
+  bodyMid: "#4c6068",
+  bodyDark: "#28353a",
+  belly: "#8a9aa0",
+  bellyDark: "#6b7b81",
+  claw: "#e8ecee",
+  eye: "#7ff2ff",
+  spikeBase: "#155863",
+  spikeTip: "#c6fbff",
+  outline: "#12181a",
+  teeth: "#f0eee8",
 };
+
+interface SpikeAnchor {
+  x: number;
+  y: number;
+  nx: number;
+  ny: number;
+  len: number;
+}
+
+function drawGlowSpike(ctx: CanvasRenderingContext2D, anchor: SpikeAnchor) {
+  const pal = TITAN_PALETTE;
+  const { x, y, nx, ny, len } = anchor;
+  const tipX = x + nx * len;
+  const tipY = y + ny * len;
+  const perpX = -ny;
+  const perpY = nx;
+  const baseHalf = Math.max(0.7 * S, len * 0.16);
+
+  ctx.fillStyle = pal.outline;
+  ctx.beginPath();
+  ctx.moveTo(x - perpX * (baseHalf + 0.6 * S), y - perpY * (baseHalf + 0.6 * S));
+  ctx.lineTo(x + perpX * (baseHalf + 0.6 * S), y + perpY * (baseHalf + 0.6 * S));
+  ctx.lineTo(tipX + nx * 0.6 * S, tipY + ny * 0.6 * S);
+  ctx.closePath();
+  ctx.fill();
+
+  const grad = ctx.createLinearGradient(x, y, tipX, tipY);
+  grad.addColorStop(0, pal.spikeBase);
+  grad.addColorStop(1, pal.spikeTip);
+  ctx.fillStyle = grad;
+  ctx.beginPath();
+  ctx.moveTo(x - perpX * baseHalf, y - perpY * baseHalf);
+  ctx.lineTo(x + perpX * baseHalf, y + perpY * baseHalf);
+  ctx.lineTo(tipX, tipY);
+  ctx.closePath();
+  ctx.fill();
+}
 
 function drawTitan(ctx: CanvasRenderingContext2D, t: number) {
   const pal = TITAN_PALETTE;
-  const bodyW = Math.round(11 * S + t * 5 * S);
-  const bodyH = Math.round(9 * S + t * 4 * S);
-  const legH = Math.round(4 * S + t * 2 * S);
-  const legW = Math.round(4 * S + t * S);
-  const headW = Math.round(bodyW * 0.5);
-  const headH = Math.round(headW * 0.8);
-  const snoutW = Math.max(2 * S, Math.round(headW * 0.42));
-  const snoutH = Math.max(2 * S, Math.round(headH * 0.36));
-  const armW = 2 * S + Math.round(t * S);
-  const armH = 4 * S + Math.round(t * 2 * S);
-  const tailLen = Math.round(6 * S + t * 6 * S);
-  const spikeCount = 3 + Math.round(t * 3);
-
-  const legY = GROUND_Y - legH;
-  const bodyY = legY - bodyH;
-  const bodyX = CX - bodyW / 2;
-  const headY = bodyY - headH + 1 * S;
-  const headX = CX - headW / 2;
-
-  drawGroundShadow(ctx, bodyW + tailLen * 0.6);
 
   function block(x: number, y: number, w: number, h: number, color: string) {
     px(ctx, x - S, y - S, w + 2 * S, h + 2 * S, pal.outline);
     px(ctx, x, y, w, h, color);
   }
 
-  // tapering tail, drawn back-to-front so the base overlaps cleanly
-  const tailSegs = 4;
-  for (let i = tailSegs - 1; i >= 0; i--) {
-    const segLen = tailLen / tailSegs;
-    const segX = bodyX + bodyW - 2 * S + i * segLen;
-    const segH = Math.max(2 * S, bodyH * 0.45 * (1 - i / (tailSegs + 1)));
-    const segY = legY - segH - i * 0.7 * S;
-    block(segX, segY, segLen + 1 * S, segH, pal.bodyDark);
-    if (i === 0) {
-      // small tail-tip spike
-      ctx.fillStyle = pal.spikeDark;
-      ctx.beginPath();
-      ctx.moveTo(segX + segLen * 0.3, segY);
-      ctx.lineTo(segX + segLen * 0.9, segY);
-      ctx.lineTo(segX + segLen * 0.6, segY - 2 * S);
-      ctx.closePath();
-      ctx.fill();
-    }
+  const bodyW = Math.round(15 * S + t * 5 * S);
+  const bodyH = Math.round(8.5 * S + t * 3 * S);
+  const legW = Math.round(4.5 * S + t * 1.5 * S);
+  const thighH = Math.round(4.5 * S + t * 1.7 * S);
+  const shinH = Math.round(4 * S + t * 1.5 * S);
+  const footLen = Math.round(5.5 * S + t * 2 * S);
+  const headW = Math.round(bodyW * 0.48);
+  const headH = Math.round(headW * 0.85);
+  const armW = Math.round(3 * S + t * S);
+  const armH = Math.round(6 * S + t * 2 * S);
+  const tailBaseR = 3 * S + t * 1.1 * S;
+
+  // anchor the hips right-of-center so the tail has room to curl on the left
+  const hipX = CX + bodyW * 0.1;
+  const legY = GROUND_Y - (thighH + shinH);
+  const bodyY = legY - bodyH;
+  const bodyX = hipX - bodyW * 0.55;
+  const headX = bodyX + bodyW * 0.66;
+  const headY = bodyY - headH * 0.42;
+
+  drawGroundShadow(ctx, bodyW * 1.7);
+
+  // --- curled tail, coiling behind the body ---
+  const curlCenterX = bodyX - bodyW * 0.18;
+  const curlCenterY = bodyY + bodyH * 0.95;
+  const curlBaseRadius = 7 * S + t * 2.6 * S;
+  const tailSegCount = 11;
+  const tailPoints: { x: number; y: number; r: number }[] = [];
+  for (let i = 0; i < tailSegCount; i++) {
+    const frac = i / (tailSegCount - 1);
+    const angleDeg = 5 + frac * 250;
+    const angle = (angleDeg * Math.PI) / 180;
+    const radius = curlBaseRadius * (1 - frac * 0.72);
+    tailPoints.push({
+      x: curlCenterX + Math.cos(angle) * radius,
+      y: curlCenterY + Math.sin(angle) * radius * 0.85,
+      r: Math.max(1.1 * S, tailBaseR * (1 - frac * 0.75)),
+    });
+  }
+  for (let i = tailPoints.length - 1; i >= 0; i--) {
+    const p = tailPoints[i];
+    ctx.fillStyle = pal.outline;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.r + 0.8 * S, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  for (let i = tailPoints.length - 1; i >= 0; i--) {
+    const p = tailPoints[i];
+    ctx.fillStyle = i % 2 === 0 ? pal.bodyMid : pal.body;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+    ctx.fill();
   }
 
-  // legs with small clawed toes
-  block(bodyX + 1 * S, legY, legW, legH, pal.bodyDark);
-  block(bodyX + bodyW - legW - 1 * S, legY, legW, legH, pal.bodyDark);
-  for (const lx of [bodyX + 1 * S, bodyX + bodyW - legW - 1 * S]) {
-    for (let c = 0; c < 3; c++) {
-      px(ctx, lx + (c * legW) / 3, GROUND_Y - 0.6 * S, legW / 3 - 0.5 * S, 1 * S, pal.claw);
-    }
-  }
+  // --- back leg (partially behind the body, suggesting a walking stride) ---
+  const backThighX = hipX - bodyW * 0.36;
+  block(backThighX, legY, legW, thighH, pal.bodyDark);
+  block(backThighX - legW * 0.1, legY + thighH, legW, shinH, pal.bodyDark);
+  block(backThighX - legW * 0.1, legY + thighH + shinH - 1 * S, footLen * 0.7, 2.2 * S, pal.bodyDark);
 
-  // body with a three-tone shading gradient
+  // --- body: a wide, squat torso with three-tone shading ---
   block(bodyX, bodyY, bodyW, bodyH, pal.body);
-  px(ctx, bodyX + 1 * S, bodyY + 1 * S, bodyW * 0.2, bodyH - 2 * S, pal.bodyLight);
-  px(ctx, bodyX + bodyW * 0.32, bodyY + 1 * S, bodyW * 0.2, bodyH - 2 * S, pal.bodyMid);
-  px(ctx, bodyX + bodyW - bodyW * 0.16 - 1 * S, bodyY + 1 * S, bodyW * 0.16, bodyH - 2 * S, pal.bodyDark);
+  px(ctx, bodyX + bodyW * 0.06, bodyY + bodyH * 0.1, bodyW * 0.22, bodyH * 0.82, pal.bodyLight);
+  px(ctx, bodyX + bodyW * 0.32, bodyY + bodyH * 0.1, bodyW * 0.2, bodyH * 0.82, pal.bodyMid);
+  px(ctx, bodyX + bodyW * 0.8, bodyY + bodyH * 0.1, bodyW * 0.16, bodyH * 0.84, pal.bodyDark);
 
-  // scattered scale texture across the torso
-  const scaleSpots: [number, number][] = [
-    [0.18, 0.3],
-    [0.42, 0.55],
-    [0.62, 0.25],
-    [0.3, 0.7],
-    [0.72, 0.6],
-  ];
-  for (const [ox, oy] of scaleSpots) {
-    px(ctx, bodyX + ox * bodyW, bodyY + oy * bodyH, 1 * S, 1 * S, pal.scale);
-  }
-
-  // belly plates
+  // chest/belly patch — flush with the body's bottom edge, rounded only at the top
+  const bellyX = bodyX + bodyW * 0.4;
+  const bellyW = bodyW * 0.44;
+  const bellyTopY = bodyY + bodyH * 0.42;
   ctx.fillStyle = pal.belly;
   ctx.beginPath();
-  ctx.ellipse(CX, bodyY + bodyH * 0.62, bodyW * 0.24, bodyH * 0.3, 0, 0, Math.PI * 2);
+  ctx.ellipse(bellyX + bellyW / 2, bellyTopY + bellyW * 0.3, bellyW / 2, bellyW * 0.3, 0, Math.PI, Math.PI * 2);
   ctx.fill();
-  px(ctx, CX - bodyW * 0.16, bodyY + bodyH * 0.75, bodyW * 0.32, 1 * S, pal.bellyDark);
-  px(ctx, CX - bodyW * 0.16, bodyY + bodyH * 0.58, bodyW * 0.32, 0.6 * S, pal.bellyDark);
+  px(ctx, bellyX, bellyTopY + bellyW * 0.3, bellyW, bodyY + bodyH - (bellyTopY + bellyW * 0.3), pal.belly);
+  px(ctx, bellyX, bodyY + bodyH * 0.62, bellyW, 0.8 * S, pal.bellyDark);
 
-  // small stubby arms with tiny claws
-  block(bodyX - armW + 1 * S, bodyY + bodyH * 0.4, armW, armH, pal.bodyDark);
-  block(bodyX + bodyW - 1 * S, bodyY + bodyH * 0.4, armW, armH, pal.bodyDark);
-  px(ctx, bodyX - armW + 0.5 * S, bodyY + bodyH * 0.4 + armH - 0.5 * S, armW, 0.8 * S, pal.claw);
-  px(ctx, bodyX + bodyW - 1.5 * S, bodyY + bodyH * 0.4 + armH - 0.5 * S, armW, 0.8 * S, pal.claw);
+  // --- front leg, bigger and in front, with toe claws ---
+  const frontThighX = hipX + bodyW * 0.02;
+  block(frontThighX, legY, legW * 1.1, thighH, pal.bodyMid);
+  block(frontThighX + legW * 0.25, legY + thighH, legW * 1.1, shinH, pal.body);
+  block(frontThighX + legW * 0.25, legY + thighH + shinH - 1 * S, footLen, 2.6 * S, pal.body);
+  for (let c = 0; c < 3; c++) {
+    px(
+      ctx,
+      frontThighX + legW * 0.25 + footLen * 0.35 + c * (footLen * 0.24),
+      legY + thighH + shinH + 0.6 * S,
+      footLen * 0.2,
+      1.1 * S,
+      pal.claw,
+    );
+  }
 
-  // head with a heavy jaw
+  // --- small clawed arm hanging in front of the chest ---
+  const armX = bodyX + bodyW * 0.68;
+  const armY = bodyY + bodyH * 0.5;
+  block(armX, armY, armW, armH * 0.6, pal.bodyDark);
+  block(armX + armW * 0.3, armY + armH * 0.55, armW, armH * 0.55, pal.bodyDark);
+  for (let c = 0; c < 3; c++) {
+    px(ctx, armX + armW * 0.3 + c * armW * 0.32, armY + armH - 0.4 * S, armW * 0.24, 1 * S, pal.claw);
+  }
+
+  // --- head with a short attached jaw, in profile ---
   block(headX, headY, headW, headH, pal.body);
-  px(ctx, headX + 1 * S, headY + 1 * S, headW * 0.28, headH - 2 * S, pal.bodyLight);
 
-  const snoutX = headX + headW * 0.7;
-  const snoutY = headY + headH * 0.5;
-  block(snoutX, snoutY, snoutW, snoutH, pal.body);
-  px(ctx, snoutX + snoutW * 0.75, snoutY + snoutH * 0.2, 0.8 * S, 0.8 * S, pal.outline);
+  // neck patch: paints over the head/body outline seam in their overlap zone
+  // so the two shapes read as one continuous silhouette instead of two
+  // separately-outlined blocks stacked on top of each other
+  const neckX = headX - 1 * S;
+  const neckY = bodyY - 1 * S;
+  const neckW = bodyX + bodyW - headX + 2 * S;
+  const neckH = headY + headH - bodyY + 2 * S;
+  px(ctx, neckX, neckY, neckW, neckH, pal.body);
+
+  px(ctx, headX + 1 * S, headY + 1 * S, headW * 0.32, headH * 0.7, pal.bodyLight);
+
+  const jawW = headW * 0.5;
+  const jawH = headH * 0.3;
+  const jawX = headX + headW * 0.72;
+  const jawY = headY + headH * 0.48;
+  block(jawX, jawY, jawW, jawH, pal.body);
+  px(ctx, jawX + jawW * 0.8, jawY + jawH * 0.15, 0.9 * S, 0.9 * S, pal.outline);
   ctx.fillStyle = pal.teeth;
   ctx.beginPath();
-  ctx.moveTo(snoutX + snoutW * 0.1, snoutY + snoutH);
-  ctx.lineTo(snoutX + snoutW * 0.55, snoutY + snoutH);
-  ctx.lineTo(snoutX + snoutW * 0.32, snoutY + snoutH + 1.6 * S);
+  ctx.moveTo(jawX + jawW * 0.05, jawY + jawH);
+  ctx.lineTo(jawX + jawW * 0.3, jawY + jawH);
+  ctx.lineTo(jawX + jawW * 0.15, jawY + jawH + 1.6 * S);
+  ctx.closePath();
+  ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(jawX + jawW * 0.4, jawY + jawH);
+  ctx.lineTo(jawX + jawW * 0.63, jawY + jawH);
+  ctx.lineTo(jawX + jawW * 0.5, jawY + jawH + 1.4 * S);
   ctx.closePath();
   ctx.fill();
 
-  // glowing slit eye — a crisp solid core with only a faint halo, since a big
-  // shadowBlur at this resolution turns into a blown-out blob once upscaled
+  // glowing eye — crisp solid core, only a faint halo (a big shadowBlur at this
+  // resolution turns into a blown-out blob once upscaled)
+  const eyeX = headX + headW * 0.48;
   const eyeY = headY + headH * 0.32;
-  const eyeX = headX + headW * 0.42;
   const eyeSize = Math.max(1 * S, headW * 0.16);
   ctx.save();
   ctx.shadowColor = pal.eye;
@@ -359,31 +434,46 @@ function drawTitan(ctx: CanvasRenderingContext2D, t: number) {
   px(ctx, eyeX - eyeSize / 2, eyeY - eyeSize / 2, eyeSize, eyeSize * 0.7, pal.eye);
   ctx.restore();
 
-  // jagged two-tone back plates running from the back of the head, over the
-  // body, toward the tail — staying clear of the face on the head's right side
-  const spikeStartX = headX + headW * 0.12;
-  const spikeEndX = bodyX + bodyW * 0.92;
-  const headRightEdge = headX + headW;
-  for (let i = 0; i < spikeCount; i++) {
-    const frac = i / (spikeCount - 1 || 1);
-    const sx = spikeStartX + frac * (spikeEndX - spikeStartX);
-    const baseY = sx < headRightEdge ? headY + 1 * S : bodyY + 1 * S;
-    const h = Math.round(1.5 * S + t * 2 * S + Math.sin(frac * Math.PI) * 1.5 * S);
-    ctx.fillStyle = pal.spikeDark;
-    ctx.beginPath();
-    ctx.moveTo(sx - 1.4 * S, baseY);
-    ctx.lineTo(sx + 1.4 * S, baseY);
-    ctx.lineTo(sx, baseY - h);
-    ctx.closePath();
-    ctx.fill();
-    ctx.fillStyle = pal.spike;
-    ctx.beginPath();
-    ctx.moveTo(sx - 0.6 * S, baseY - h * 0.35);
-    ctx.lineTo(sx + 0.6 * S, baseY - h * 0.35);
-    ctx.lineTo(sx, baseY - h);
-    ctx.closePath();
-    ctx.fill();
+  // --- continuous glowing spike ridge: head crest -> back -> tail curl ---
+  const spikeAnchors: SpikeAnchor[] = [];
+  const crestCount = 3;
+  for (let i = 0; i < crestCount; i++) {
+    const frac = i / (crestCount - 1);
+    spikeAnchors.push({
+      x: headX + headW * (0.15 + frac * 0.45),
+      y: headY + headH * 0.06,
+      nx: 0,
+      ny: -1,
+      len: (2.2 + frac * 0.8) * S + t * 1.2 * S,
+    });
   }
+  const backCount = 4;
+  for (let i = 0; i < backCount; i++) {
+    const frac = (i + 1) / (backCount + 1);
+    spikeAnchors.push({
+      x: bodyX + bodyW * (0.85 - frac * 0.68),
+      y: bodyY + bodyH * 0.02,
+      nx: 0,
+      ny: -1,
+      len: (3.6 + Math.sin(frac * Math.PI) * 1.6) * S + t * 1.6 * S,
+    });
+  }
+  const tailSpikeCount = 7 + Math.round(t * 2);
+  for (let i = 0; i < tailSpikeCount; i++) {
+    const frac = i / (tailSpikeCount - 1);
+    const tp = tailPoints[Math.min(tailPoints.length - 1, Math.round(frac * (tailPoints.length - 2)))];
+    const dx = tp.x - curlCenterX;
+    const dy = (tp.y - curlCenterY) / 0.85;
+    const dist = Math.max(0.001, Math.hypot(dx, dy));
+    spikeAnchors.push({
+      x: tp.x,
+      y: tp.y,
+      nx: dx / dist,
+      ny: (dy / dist) * 0.85,
+      len: (2.6 - frac * 1.6) * S + t * 0.8 * S,
+    });
+  }
+  for (const anchor of spikeAnchors) drawGlowSpike(ctx, anchor);
 }
 
 // --- Warden: a guardian moth wreathed in light ---
