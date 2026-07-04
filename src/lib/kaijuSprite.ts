@@ -510,9 +510,11 @@ const WARDEN_PALETTE = {
   bodyDark: "#331f40",
   bodyLight: "#5e3d73",
   stripe: "#2e1b3d",
-  wing: "#7ecbe0",
+  wing: "#8fd6ec",
+  wingTip: "#4a7fb0",
   wingDark: "#5aa8c2",
   wingVein: "#3f7d92",
+  wingBorder: "#c9a8e6",
   spotPink: "#ffb6c1",
   spotYellow: "#ffe082",
   outline: "#1c1124",
@@ -524,54 +526,83 @@ function drawWardenWing(ctx: CanvasRenderingContext2D, side: 1 | -1, t: number, 
   const span = 11 * S + t * 7 * S;
   const h = 8 * S + t * 3 * S;
 
+  // wing silhouette at a given scale (0-1), centered on the thorax attachment
+  // point — used to build concentric bands: dark rim -> border stripe -> fill
+  function wingPath(scale: number) {
+    ctx.beginPath();
+    ctx.moveTo(thoraxX, thoraxY - h * 0.1 * scale);
+    ctx.lineTo(thoraxX + side * span * scale, thoraxY - h * 0.55 * scale);
+    ctx.lineTo(thoraxX + side * span * 0.6 * scale, thoraxY + h * 0.75 * scale);
+    ctx.closePath();
+  }
+
   ctx.fillStyle = pal.outline;
-  ctx.beginPath();
-  ctx.moveTo(thoraxX, thoraxY - h * 0.15);
-  ctx.lineTo(thoraxX + side * span * 1.02, thoraxY - h * 0.62);
-  ctx.lineTo(thoraxX + side * span * 0.62, thoraxY + h * 0.85);
-  ctx.closePath();
+  wingPath(1.04);
   ctx.fill();
 
-  ctx.fillStyle = pal.wing;
-  ctx.beginPath();
-  ctx.moveTo(thoraxX, thoraxY - h * 0.1);
-  ctx.lineTo(thoraxX + side * span, thoraxY - h * 0.55);
-  ctx.lineTo(thoraxX + side * span * 0.6, thoraxY + h * 0.75);
-  ctx.closePath();
+  ctx.fillStyle = pal.wingBorder;
+  wingPath(0.95);
   ctx.fill();
 
-  // vein lines radiating from the thorax toward the wing edge
+  const grad = ctx.createLinearGradient(thoraxX, thoraxY, thoraxX + side * span, thoraxY - h * 0.55);
+  grad.addColorStop(0, pal.wing);
+  grad.addColorStop(1, pal.wingTip);
+  ctx.fillStyle = grad;
+  wingPath(0.84);
+  ctx.fill();
+
+  // veins radiating from the thorax, plus a cross-vein arc connecting them
+  // for a stained-glass look
   ctx.strokeStyle = pal.wingVein;
   ctx.lineWidth = 0.5 * S;
   ctx.globalAlpha = 0.7;
-  for (const f of [0.35, 0.6, 0.85]) {
+  const veinFracs = [0.25, 0.42, 0.58, 0.74];
+  for (const f of veinFracs) {
     ctx.beginPath();
     ctx.moveTo(thoraxX, thoraxY - h * 0.05);
-    ctx.lineTo(thoraxX + side * span * f, thoraxY - h * 0.55 * f);
+    ctx.lineTo(thoraxX + side * span * f * 0.82, thoraxY - h * 0.55 * f);
     ctx.stroke();
   }
+  ctx.beginPath();
+  ctx.moveTo(thoraxX + side * span * veinFracs[0] * 0.82, thoraxY - h * 0.55 * veinFracs[0]);
+  for (let i = 1; i < veinFracs.length; i++) {
+    const f = veinFracs[i];
+    ctx.lineTo(thoraxX + side * span * f * 0.82, thoraxY - h * 0.55 * f);
+  }
+  ctx.stroke();
   ctx.globalAlpha = 1;
 
   ctx.fillStyle = pal.wingDark;
   ctx.beginPath();
-  ctx.ellipse(thoraxX + side * span * 0.4, thoraxY - h * 0.05, span * 0.22, h * 0.3, side * 0.5, 0, Math.PI * 2);
+  ctx.ellipse(thoraxX + side * span * 0.4, thoraxY - h * 0.05, span * 0.2, h * 0.28, side * 0.5, 0, Math.PI * 2);
   ctx.fill();
 
-  // eyespot
+  // concentric eyespot: dark ring -> yellow ring -> pink ring -> center dot
+  const spotX = thoraxX + side * span * 0.6;
+  const spotY = thoraxY - h * 0.18;
+  ctx.fillStyle = pal.outline;
+  ctx.beginPath();
+  ctx.ellipse(spotX, spotY, span * 0.17, h * 0.19, 0, 0, Math.PI * 2);
+  ctx.fill();
   ctx.fillStyle = pal.spotYellow;
   ctx.beginPath();
-  ctx.ellipse(thoraxX + side * span * 0.62, thoraxY - h * 0.18, span * 0.14, h * 0.16, 0, 0, Math.PI * 2);
+  ctx.ellipse(spotX, spotY, span * 0.13, h * 0.15, 0, 0, Math.PI * 2);
   ctx.fill();
   ctx.fillStyle = pal.spotPink;
   ctx.beginPath();
-  ctx.ellipse(thoraxX + side * span * 0.62, thoraxY - h * 0.18, span * 0.07, h * 0.08, 0, 0, Math.PI * 2);
+  ctx.ellipse(spotX, spotY, span * 0.07, h * 0.08, 0, 0, Math.PI * 2);
   ctx.fill();
-  px(ctx, thoraxX + side * span * 0.62 - 0.4 * S, thoraxY - h * 0.18 - 0.4 * S, 0.8 * S, 0.8 * S, pal.outline);
+  px(ctx, spotX - 0.4 * S, spotY - 0.4 * S, 0.8 * S, 0.8 * S, pal.outline);
 
+  // small accent spot lower on the wing, plus a second one once fully grown
+  ctx.fillStyle = pal.spotPink;
+  ctx.beginPath();
+  ctx.ellipse(thoraxX + side * span * 0.28, thoraxY + h * 0.32, span * 0.07, h * 0.09, 0, 0, Math.PI * 2);
+  ctx.fill();
   if (t > 0.4) {
-    ctx.fillStyle = pal.spotPink;
+    ctx.fillStyle = pal.spotYellow;
     ctx.beginPath();
-    ctx.ellipse(thoraxX + side * span * 0.3, thoraxY + h * 0.3, span * 0.08, h * 0.1, 0, 0, Math.PI * 2);
+    ctx.ellipse(thoraxX + side * span * 0.72, thoraxY + h * 0.12, span * 0.06, h * 0.07, 0, 0, Math.PI * 2);
     ctx.fill();
   }
 
@@ -701,20 +732,55 @@ const EMPEROR_PALETTE = {
   outline: "#241c0a",
 };
 
-function drawEmperorNeck(ctx: CanvasRenderingContext2D, baseX: number, baseY: number, tipX: number, tipY: number, headSize: number) {
+function drawEmperorNeck(
+  ctx: CanvasRenderingContext2D,
+  baseX: number,
+  baseY: number,
+  tipX: number,
+  tipY: number,
+  headSize: number,
+  curveX: number,
+) {
   const pal = EMPEROR_PALETTE;
-  ctx.strokeStyle = pal.outline;
-  ctx.lineWidth = 2.6 * S;
+
+  // a tapered, gently curved tube (quadratic bezier through overlapping
+  // circles) instead of a flat stroked line, with a subtle scale banding
+  const baseWidth = headSize * 0.5;
+  const segCount = 10;
+  const midX = (baseX + tipX) / 2 + curveX;
+  const midY = (baseY + tipY) / 2;
+  const neckPoints: { x: number; y: number; r: number }[] = [];
+  for (let i = 0; i <= segCount; i++) {
+    const u = i / segCount;
+    neckPoints.push({
+      x: (1 - u) * (1 - u) * baseX + 2 * (1 - u) * u * midX + u * u * tipX,
+      y: (1 - u) * (1 - u) * baseY + 2 * (1 - u) * u * midY + u * u * tipY,
+      r: baseWidth * (1 - u * 0.3),
+    });
+  }
+  // a small collar flare where the neck emerges from the body
+  ctx.fillStyle = pal.outline;
   ctx.beginPath();
-  ctx.moveTo(baseX, baseY);
-  ctx.lineTo(tipX, tipY);
-  ctx.stroke();
-  ctx.strokeStyle = pal.body;
-  ctx.lineWidth = 1.6 * S;
+  ctx.ellipse(baseX, baseY, baseWidth * 1.3, baseWidth * 0.9, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = pal.bodyDark;
   ctx.beginPath();
-  ctx.moveTo(baseX, baseY);
-  ctx.lineTo(tipX, tipY);
-  ctx.stroke();
+  ctx.ellipse(baseX, baseY, baseWidth * 1.05, baseWidth * 0.7, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  for (const p of neckPoints) {
+    ctx.fillStyle = pal.outline;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.r + 0.55 * S, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  for (let i = 0; i < neckPoints.length; i++) {
+    const p = neckPoints[i];
+    ctx.fillStyle = i % 3 === 0 ? pal.bodyDark : pal.body;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+    ctx.fill();
+  }
 
   // head
   px(ctx, tipX - headSize / 2 - 0.6 * S, tipY - headSize / 2 - 0.6 * S, headSize + 1.2 * S, headSize + 1.2 * S, pal.outline);
@@ -858,9 +924,9 @@ function drawEmperor(ctx: CanvasRenderingContext2D, t: number) {
   }
 
   // three necks: center, and two flanking outward like a trident
-  drawEmperorNeck(ctx, CX, shoulderY, CX, shoulderY - centerNeckLen, headSize * 1.1);
-  drawEmperorNeck(ctx, CX - bodyW * 0.2, shoulderY, CX - sideNeckLen * 0.85, shoulderY - sideNeckLen * 0.75, headSize);
-  drawEmperorNeck(ctx, CX + bodyW * 0.2, shoulderY, CX + sideNeckLen * 0.85, shoulderY - sideNeckLen * 0.75, headSize);
+  drawEmperorNeck(ctx, CX, shoulderY, CX, shoulderY - centerNeckLen, headSize * 1.1, 0.6 * S);
+  drawEmperorNeck(ctx, CX - bodyW * 0.2, shoulderY, CX - sideNeckLen * 0.85, shoulderY - sideNeckLen * 0.75, headSize, -4 * S);
+  drawEmperorNeck(ctx, CX + bodyW * 0.2, shoulderY, CX + sideNeckLen * 0.85, shoulderY - sideNeckLen * 0.75, headSize, 4 * S);
 }
 
 function drawEvolvedCreature(ctx: CanvasRenderingContext2D, stage: number, pathId: PathId) {
