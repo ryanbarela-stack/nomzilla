@@ -15,9 +15,8 @@ export interface EvolutionPath {
   finalName: string;
   babySprite: string;
   babySpriteSize: SpriteSize;
-  /** Not yet available — final-form art hasn't been produced yet. Falls back to the baby sprite. */
-  finalSprite?: string;
-  finalSpriteSize?: SpriteSize;
+  finalSprite: string;
+  finalSpriteSize: SpriteSize;
 }
 
 export const PATHS: EvolutionPath[] = [
@@ -29,6 +28,8 @@ export const PATHS: EvolutionPath[] = [
     finalName: "Titan",
     babySprite: "/sprites/titan/baby/south.png",
     babySpriteSize: { width: 92, height: 92 },
+    finalSprite: "/sprites/titan/final/south.png",
+    finalSpriteSize: { width: 92, height: 92 },
   },
   {
     id: "emperor",
@@ -38,6 +39,8 @@ export const PATHS: EvolutionPath[] = [
     finalName: "Emperor",
     babySprite: "/sprites/emperor/baby/south.png",
     babySpriteSize: { width: 92, height: 92 },
+    finalSprite: "/sprites/emperor/final/south.png",
+    finalSpriteSize: { width: 92, height: 92 },
   },
   {
     id: "quetzacoatl",
@@ -47,6 +50,8 @@ export const PATHS: EvolutionPath[] = [
     finalName: "Quetzacoatl",
     babySprite: "/sprites/quetzacoatl/baby/south.png",
     babySpriteSize: { width: 88, height: 88 },
+    finalSprite: "/sprites/quetzacoatl/final/south.png",
+    finalSpriteSize: { width: 92, height: 92 },
   },
   {
     id: "mothman",
@@ -56,6 +61,8 @@ export const PATHS: EvolutionPath[] = [
     finalName: "Mothman",
     babySprite: "/sprites/mothman/baby/south.png",
     babySpriteSize: { width: 92, height: 92 },
+    finalSprite: "/sprites/mothman/final/south.png",
+    finalSpriteSize: { width: 96, height: 96 },
   },
 ];
 
