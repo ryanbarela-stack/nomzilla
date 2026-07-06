@@ -165,6 +165,20 @@ function App() {
 
       {aboutOpen && <AboutModal onClose={() => setAboutOpen(false)} />}
 
+      <ChampionHeader
+        health={championHealth}
+        manaCharges={settings.manaCharges}
+        now={now}
+        logs={logs}
+        titleAttributeId={settings.titleAttributeId}
+        classId={settings.classId}
+        seenAttributeLevels={settings.seenAttributeLevels}
+        onChangeTitle={changeTitle}
+        onChangeClass={changeClass}
+        onAcknowledgeAttributeLevel={acknowledgeAttributeLevel}
+        onActivateMana={activateMana}
+      />
+
       <KaijuHeader
         streak={streak}
         stage={stage}
@@ -178,20 +192,6 @@ function App() {
         onChangePath={changePath}
         onChangeBorder={changeBorder}
         onAcknowledgeLevelUp={acknowledgeLevelUp}
-      />
-
-      <ChampionHeader
-        health={championHealth}
-        manaCharges={settings.manaCharges}
-        now={now}
-        logs={logs}
-        titleAttributeId={settings.titleAttributeId}
-        classId={settings.classId}
-        seenAttributeLevels={settings.seenAttributeLevels}
-        onChangeTitle={changeTitle}
-        onChangeClass={changeClass}
-        onAcknowledgeAttributeLevel={acknowledgeAttributeLevel}
-        onActivateMana={activateMana}
       />
 
       <DayPanel
