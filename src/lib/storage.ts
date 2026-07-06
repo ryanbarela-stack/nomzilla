@@ -11,6 +11,7 @@ export const DEFAULT_SETTINGS: Settings = {
   seenAttributeTiers: {},
   titleAttributeId: null,
   seenChampionStageIndex: 0,
+  classId: null,
 };
 
 export function loadLogs(): LogsByDate {

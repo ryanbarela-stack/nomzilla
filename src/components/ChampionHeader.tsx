@@ -1,7 +1,10 @@
 import { useState } from "react";
+import { ChampionCanvas } from "./ChampionCanvas";
+import { ClassPicker } from "./ClassPicker";
 import { TitlePicker } from "./TitlePicker";
 import { getNextChampionStage, type ChampionStage } from "../lib/championStages";
 import { getDisplayTitle } from "../lib/attributes";
+import { CLASSES, getClass } from "../lib/classes";
 import type { AttributeId, LogsByDate } from "../lib/types";
 
 interface Props {
@@ -10,8 +13,10 @@ interface Props {
   logs: LogsByDate;
   titleAttributeId: AttributeId | null;
   seenStageIndex: number;
+  classId: string | null;
   onChangeTitle: (id: AttributeId | null) => void;
   onAcknowledgeStageUp: () => void;
+  onChangeClass: (id: string) => void;
 }
 
 export function ChampionHeader({
@@ -20,10 +25,13 @@ export function ChampionHeader({
   logs,
   titleAttributeId,
   seenStageIndex,
+  classId,
   onChangeTitle,
   onAcknowledgeStageUp,
+  onChangeClass,
 }: Props) {
   const [titlePickerOpen, setTitlePickerOpen] = useState(false);
+  const [classPickerOpen, setClassPickerOpen] = useState(false);
   const next = getNextChampionStage(stage);
   const daysToNext = next ? Math.max(0, next.minStreak - streak) : null;
   const displayTitle = getDisplayTitle(logs, titleAttributeId);
@@ -32,6 +40,7 @@ export function ChampionHeader({
     ? Math.min(100, Math.max(0, ((streak - stage.minStreak) / (next.minStreak - stage.minStreak)) * 100))
     : 100;
   const stagedUp = stage.index > seenStageIndex;
+  const currentClass = getClass(classId);
 
   return (
     <div className="flex flex-col gap-3">
@@ -46,16 +55,39 @@ export function ChampionHeader({
         </div>
       )}
 
+      {!currentClass && (
+        <div className="bg-emerald-950 border border-emerald-700 rounded-md px-3 py-2 text-sm text-emerald-200 flex items-center justify-between gap-2 flex-wrap">
+          <span>⚔️ Choose your champion's class:</span>
+          <div className="flex gap-2 flex-wrap">
+            {CLASSES.map((champClass) => (
+              <button
+                key={champClass.id}
+                onClick={() => onChangeClass(champClass.id)}
+                className="text-xs px-2 py-1 rounded-md bg-emerald-900 border border-emerald-700 hover:bg-emerald-800 text-emerald-100"
+              >
+                {champClass.name}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       <div className="bg-[#161b22] border border-[#30363d] rounded-lg p-4 flex flex-col sm:flex-row items-center gap-4">
         <div className="flex flex-col items-center gap-1">
-          <div className="w-32 h-32 rounded-lg border-2 border-dashed border-[#30363d] bg-[#0d1117] flex items-center justify-center">
-            <svg viewBox="0 0 24 24" width="56" height="56" fill="none" stroke="#4b5563" strokeWidth="1.5">
-              <circle cx="12" cy="6" r="3.25" />
-              <path d="M4.5 20.5c0-4.14 3.36-7.5 7.5-7.5s7.5 3.36 7.5 7.5" strokeLinecap="round" />
-            </svg>
+          <div className="bg-[#0d1117] rounded-lg p-2 border-2 border-[#30363d] inline-flex items-end justify-center">
+            <ChampionCanvas classId={currentClass?.id ?? null} size={128} />
           </div>
-          <span className="text-[10px] text-gray-500 italic">Art coming soon</span>
+          <button
+            onClick={() => setClassPickerOpen(true)}
+            className="text-xs text-gray-400 hover:text-emerald-400 underline decoration-dotted"
+          >
+            Class: {currentClass ? currentClass.name : "Choose"}
+          </button>
         </div>
+
+        {classPickerOpen && (
+          <ClassPicker selectedId={classId} onSelect={onChangeClass} onClose={() => setClassPickerOpen(false)} />
+        )}
 
         {titlePickerOpen && (
           <TitlePicker

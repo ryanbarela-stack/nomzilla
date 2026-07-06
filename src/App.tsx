@@ -91,6 +91,10 @@ function App() {
     setSettings((prev) => ({ ...prev, borderId: id }));
   }
 
+  function changeClass(id: string) {
+    setSettings((prev) => ({ ...prev, classId: id }));
+  }
+
   function changeTitle(id: AttributeId | null) {
     setSettings((prev) => ({ ...prev, titleAttributeId: id }));
   }
@@ -162,8 +166,10 @@ function App() {
         logs={logs}
         titleAttributeId={settings.titleAttributeId}
         seenStageIndex={settings.seenChampionStageIndex}
+        classId={settings.classId}
         onChangeTitle={changeTitle}
         onAcknowledgeStageUp={acknowledgeChampionStage}
+        onChangeClass={changeClass}
       />
 
       <AttributeStats

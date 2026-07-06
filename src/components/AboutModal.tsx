@@ -59,8 +59,8 @@ export function AboutModal({ onClose }: Props) {
             Alongside food, log your training in the Training log: what you did, which attribute it
             trains, and — optionally — sets, reps, and either weight lifted or time spent. Your champion
             advances through stages (Recruit → Trainee → Champion) based on your current training streak,
-            the same way your kaiju grows from a food-logging streak. Champion art is coming soon — for now
-            it's shown as a placeholder.
+            the same way your kaiju grows from a food-logging streak. Pick a class — Warrior, Barbarian,
+            Monk, Cleric, or Wizard — anytime to change how your champion looks.
           </p>
         </section>
 

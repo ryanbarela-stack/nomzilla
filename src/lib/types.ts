@@ -39,6 +39,8 @@ export interface Settings {
   titleAttributeId: AttributeId | null;
   /** Highest champion stage index already shown a stage-up banner for. */
   seenChampionStageIndex: number;
+  /** Chosen champion class ("warrior" | "cleric" | "monk" | "wizard" | "barbarian"), or null before one is picked. */
+  classId: string | null;
 }
 
 export type LogsByDate = Record<string, DayLog>;
