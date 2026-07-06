@@ -15,6 +15,7 @@ interface Props {
   totalDaysLogged: number;
   levelIndex: number;
   seenLevelIndex: number;
+  topTitle: string | null;
   onChangeTarget: (value: number) => void;
   onChangePath: (id: string) => void;
   onChangeBorder: (id: string) => void;
@@ -30,6 +31,7 @@ export function KaijuHeader({
   totalDaysLogged,
   levelIndex,
   seenLevelIndex,
+  topTitle,
   onChangeTarget,
   onChangePath,
   onChangeBorder,
@@ -133,6 +135,7 @@ export function KaijuHeader({
 
         <div className="flex-1 w-full flex flex-col gap-2 text-center sm:text-left">
           <h1 className="text-xl font-bold text-[#e6edf3] font-pixel">{getStageDisplayName(stage, pathId)}</h1>
+          {topTitle && <p className="text-xs text-indigo-300 italic -mt-1">{topTitle}</p>}
 
           <div className="flex flex-col gap-0.5 w-full max-w-xs mx-auto sm:mx-0">
             <div className="flex items-center justify-between text-xs text-gray-400">

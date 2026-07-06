@@ -8,7 +8,7 @@ import { loadLogs, saveLogs, loadSettings, saveSettings } from "./lib/storage";
 import { todayISO, fromISODate } from "./lib/date";
 import { computeStreak, computeTotalDaysLogged, getStageForStreak } from "./lib/streak";
 import { getCurrentLevelIndex } from "./lib/borders";
-import { computeAttributeCount, getAttributeTier } from "./lib/attributes";
+import { computeAttributeCount, getAttributeTier, getTopAttributeTitle } from "./lib/attributes";
 import type { AttributeId, LogsByDate, Settings } from "./lib/types";
 
 function App() {
@@ -25,6 +25,7 @@ function App() {
   const stage = useMemo(() => getStageForStreak(streak), [streak]);
   const totalDaysLogged = useMemo(() => computeTotalDaysLogged(logs), [logs]);
   const levelIndex = useMemo(() => getCurrentLevelIndex(totalDaysLogged), [totalDaysLogged]);
+  const topTitle = useMemo(() => getTopAttributeTitle(logs), [logs]);
   const selectedLog = logs[selectedDate] ?? { date: selectedDate, entries: [] };
 
   function addEntry(name: string, calories: number) {
@@ -138,6 +139,7 @@ function App() {
         totalDaysLogged={totalDaysLogged}
         levelIndex={levelIndex}
         seenLevelIndex={settings.seenLevelIndex}
+        topTitle={topTitle}
         onChangeTarget={changeTarget}
         onChangePath={changePath}
         onChangeBorder={changeBorder}

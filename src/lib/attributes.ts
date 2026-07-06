@@ -75,3 +75,22 @@ export function getAttributeTier(count: number): AttributeTier {
 export function getNextAttributeTier(tier: AttributeTier): AttributeTier | null {
   return ATTRIBUTE_TIERS[tier.index + 1] ?? null;
 }
+
+/**
+ * The player's earned title, e.g. "Novice Strength" — drawn from whichever
+ * attribute has progressed the furthest. Ties break on raw count, then on
+ * ATTRIBUTES order. Returns null until at least one attribute is past
+ * Untrained.
+ */
+export function getTopAttributeTitle(logs: LogsByDate): string | null {
+  let best: { attr: Attribute; tier: AttributeTier; count: number } | null = null;
+  for (const attr of ATTRIBUTES) {
+    const count = computeAttributeCount(logs, attr.id);
+    const tier = getAttributeTier(count);
+    if (tier.index === 0) continue;
+    if (!best || tier.index > best.tier.index || (tier.index === best.tier.index && count > best.count)) {
+      best = { attr, tier, count };
+    }
+  }
+  return best ? `${best.tier.name} ${best.attr.name}` : null;
+}
