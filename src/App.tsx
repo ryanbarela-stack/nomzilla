@@ -9,7 +9,7 @@ import { todayISO, fromISODate } from "./lib/date";
 import { computeStreak, computeTotalDaysLogged, getStageForStreak } from "./lib/streak";
 import { getCurrentHealth, applyExerciseBoost, isManaChargeReady } from "./lib/championHealth";
 import { getCurrentLevelIndex } from "./lib/borders";
-import { computeAttributeCount, getAttributeTier } from "./lib/attributes";
+import { computeAttributeCount, getAttributeLevel } from "./lib/attributes";
 import type { AttributeId, HabitEntry, LogsByDate, Settings } from "./lib/types";
 
 function App() {
@@ -127,12 +127,12 @@ function App() {
     setSettings((prev) => ({ ...prev, seenLevelIndex: levelIndex }));
   }
 
-  function acknowledgeAttributeTier(id: AttributeId) {
+  function acknowledgeAttributeLevel(id: AttributeId) {
     const count = computeAttributeCount(logs, id);
-    const tier = getAttributeTier(count);
+    const level = getAttributeLevel(count);
     setSettings((prev) => ({
       ...prev,
-      seenAttributeTiers: { ...prev.seenAttributeTiers, [id]: tier.index },
+      seenAttributeLevels: { ...prev.seenAttributeLevels, [id]: level },
     }));
   }
 
@@ -187,10 +187,10 @@ function App() {
         logs={logs}
         titleAttributeId={settings.titleAttributeId}
         classId={settings.classId}
-        seenAttributeTiers={settings.seenAttributeTiers}
+        seenAttributeLevels={settings.seenAttributeLevels}
         onChangeTitle={changeTitle}
         onChangeClass={changeClass}
-        onAcknowledgeAttributeTier={acknowledgeAttributeTier}
+        onAcknowledgeAttributeLevel={acknowledgeAttributeLevel}
         onActivateMana={activateMana}
       />
 

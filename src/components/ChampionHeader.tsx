@@ -15,10 +15,10 @@ interface Props {
   logs: LogsByDate;
   titleAttributeId: AttributeId | null;
   classId: string | null;
-  seenAttributeTiers: Record<string, number>;
+  seenAttributeLevels: Record<string, number>;
   onChangeTitle: (id: AttributeId | null) => void;
   onChangeClass: (id: string) => void;
-  onAcknowledgeAttributeTier: (id: AttributeId) => void;
+  onAcknowledgeAttributeLevel: (id: AttributeId) => void;
   onActivateMana: (index: number) => void;
 }
 
@@ -29,10 +29,10 @@ export function ChampionHeader({
   logs,
   titleAttributeId,
   classId,
-  seenAttributeTiers,
+  seenAttributeLevels,
   onChangeTitle,
   onChangeClass,
-  onAcknowledgeAttributeTier,
+  onAcknowledgeAttributeLevel,
   onActivateMana,
 }: Props) {
   const [titlePickerOpen, setTitlePickerOpen] = useState(false);
@@ -140,8 +140,8 @@ export function ChampionHeader({
 
         <AttributeStats
           logs={logs}
-          seenAttributeTiers={seenAttributeTiers}
-          onAcknowledgeTier={onAcknowledgeAttributeTier}
+          seenAttributeLevels={seenAttributeLevels}
+          onAcknowledgeLevel={onAcknowledgeAttributeLevel}
         />
       </div>
     </div>

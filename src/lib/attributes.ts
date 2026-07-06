@@ -44,63 +44,56 @@ export const ATTRIBUTES: Attribute[] = [
   },
 ];
 
-export interface AttributeTier {
-  index: number;
-  name: string;
-  /** Total (lifetime) days that habit was logged required to reach this tier. */
-  minCount: number;
-}
-
-export const ATTRIBUTE_TIERS: AttributeTier[] = [
-  { index: 0, name: "Untrained", minCount: 0 },
-  { index: 1, name: "Novice", minCount: 5 },
-  { index: 2, name: "Trained", minCount: 15 },
-  { index: 3, name: "Veteran", minCount: 30 },
-  { index: 4, name: "Master", minCount: 60 },
-];
+/** Lifetime days logged required to advance one level. Uncapped — there is no max level. */
+export const DAYS_PER_LEVEL = 5;
 
 /** Total lifetime days with at least one habit entry logged for this attribute. */
 export function computeAttributeCount(logs: LogsByDate, id: AttributeId): number {
   return Object.values(logs).filter((log) => (log.habitEntries ?? []).some((entry) => entry.attributeId === id)).length;
 }
 
-export function getAttributeTier(count: number): AttributeTier {
-  let current = ATTRIBUTE_TIERS[0];
-  for (const tier of ATTRIBUTE_TIERS) {
-    if (count >= tier.minCount) current = tier;
-  }
-  return current;
+/** Attribute level for a given lifetime day count — one level per DAYS_PER_LEVEL days, uncapped. */
+export function getAttributeLevel(count: number): number {
+  return Math.floor(count / DAYS_PER_LEVEL);
 }
 
-export function getNextAttributeTier(tier: AttributeTier): AttributeTier | null {
-  return ATTRIBUTE_TIERS[tier.index + 1] ?? null;
+/** Days still needed (of this attribute) to reach the next level. */
+export function getDaysToNextLevel(count: number): number {
+  const level = getAttributeLevel(count);
+  return (level + 1) * DAYS_PER_LEVEL - count;
+}
+
+/** Progress (0-100) through the current level. */
+export function getLevelProgressPct(count: number): number {
+  const intoLevel = count - getAttributeLevel(count) * DAYS_PER_LEVEL;
+  return Math.min(100, Math.max(0, (intoLevel / DAYS_PER_LEVEL) * 100));
 }
 
 /**
- * The player's auto-selected title, e.g. "Novice Strength" — drawn from
+ * The player's auto-selected title, e.g. "Level 3 Strength" — drawn from
  * whichever attribute has progressed the furthest. Ties break on raw count,
- * then on ATTRIBUTES order. Returns null until at least one attribute is
- * past Untrained.
+ * then on ATTRIBUTES order. Returns null until at least one attribute has
+ * reached Level 1.
  */
 export function getTopAttributeTitle(logs: LogsByDate): string | null {
-  let best: { attr: Attribute; tier: AttributeTier; count: number } | null = null;
+  let best: { attr: Attribute; level: number; count: number } | null = null;
   for (const attr of ATTRIBUTES) {
     const count = computeAttributeCount(logs, attr.id);
-    const tier = getAttributeTier(count);
-    if (tier.index === 0) continue;
-    if (!best || tier.index > best.tier.index || (tier.index === best.tier.index && count > best.count)) {
-      best = { attr, tier, count };
+    const level = getAttributeLevel(count);
+    if (level === 0) continue;
+    if (!best || level > best.level || (level === best.level && count > best.count)) {
+      best = { attr, level, count };
     }
   }
-  return best ? `${best.tier.name} ${best.attr.name}` : null;
+  return best ? `Level ${best.level} ${best.attr.name}` : null;
 }
 
-/** A given attribute's current title, e.g. "Novice Strength" — null if still Untrained. */
+/** A given attribute's current title, e.g. "Level 3 Strength" — null if still Level 0. */
 export function getAttributeTitle(logs: LogsByDate, id: AttributeId): string | null {
   const attr = ATTRIBUTES.find((a) => a.id === id);
   if (!attr) return null;
-  const tier = getAttributeTier(computeAttributeCount(logs, id));
-  return tier.index === 0 ? null : `${tier.name} ${attr.name}`;
+  const level = getAttributeLevel(computeAttributeCount(logs, id));
+  return level === 0 ? null : `Level ${level} ${attr.name}`;
 }
 
 /**

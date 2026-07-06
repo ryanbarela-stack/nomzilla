@@ -80,17 +80,17 @@ export function AboutModal({ onClose }: Props) {
             <strong className="text-red-400">Strength</strong>, cardio grows{" "}
             <strong className="text-green-400">Stamina</strong>, reading/learning grows{" "}
             <strong className="text-blue-400">Intelligence</strong>, and self-care grows{" "}
-            <strong className="text-yellow-400">Wisdom</strong>. Each attribute levels up through 5 tiers —
-            Untrained, Novice (5 days), Trained (15), Veteran (30), and Master (60) — based on how many
-            lifetime days you've logged that attribute.
+            <strong className="text-yellow-400">Wisdom</strong>. Each attribute has its own level, gaining
+            one level for every 5 lifetime days you've logged that attribute — uncapped, so it keeps
+            climbing the longer you train.
           </p>
         </section>
 
         <section className="flex flex-col gap-1">
           <h3 className="text-sm font-semibold text-emerald-400">Titles</h3>
           <p className="text-sm text-gray-300">
-            Once any attribute passes Untrained, your champion earns a title shown under its name — like
-            "Novice Strength" or "Master Wisdom" — drawn from whichever attribute you've trained the most.
+            Once any attribute reaches Level 1, your champion earns a title shown under its name — like
+            "Level 3 Strength" or "Level 8 Wisdom" — drawn from whichever attribute you've trained the most.
           </p>
         </section>
       </div>

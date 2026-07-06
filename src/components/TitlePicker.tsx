@@ -1,4 +1,4 @@
-import { ATTRIBUTES, computeAttributeCount, getAttributeTier } from "../lib/attributes";
+import { ATTRIBUTES, computeAttributeCount, getAttributeLevel } from "../lib/attributes";
 import type { AttributeId, LogsByDate } from "../lib/types";
 
 interface Props {
@@ -37,8 +37,8 @@ export function TitlePicker({ selectedId, logs, onSelect, onClose }: Props) {
         <div className="grid grid-cols-2 gap-3">
           {ATTRIBUTES.map((attr) => {
             const count = computeAttributeCount(logs, attr.id);
-            const tier = getAttributeTier(count);
-            const unlocked = tier.index > 0;
+            const level = getAttributeLevel(count);
+            const unlocked = level > 0;
             return (
               <button
                 key={attr.id}
@@ -52,9 +52,9 @@ export function TitlePicker({ selectedId, logs, onSelect, onClose }: Props) {
                 } ${unlocked ? "cursor-pointer hover:bg-[#1c2129]" : "opacity-40 cursor-not-allowed"}`}
               >
                 <span className="text-sm font-semibold text-gray-200">
-                  {unlocked ? `${tier.name} ${attr.name}` : attr.name}
+                  {unlocked ? `Level ${level} ${attr.name}` : attr.name}
                 </span>
-                {!unlocked && <span className="text-[10px] text-gray-500">Reach Novice to unlock</span>}
+                {!unlocked && <span className="text-[10px] text-gray-500">Reach Level 1 to unlock</span>}
               </button>
             );
           })}

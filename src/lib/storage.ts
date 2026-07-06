@@ -9,7 +9,7 @@ export const DEFAULT_SETTINGS: Settings = {
   pathId: null,
   borderId: "default",
   seenLevelIndex: 0,
-  seenAttributeTiers: {},
+  seenAttributeLevels: {},
   titleAttributeId: null,
   classId: null,
   championHealth: 100,
