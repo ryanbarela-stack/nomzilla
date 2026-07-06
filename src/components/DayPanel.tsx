@@ -186,65 +186,85 @@ export function DayPanel({
             })}
           </div>
 
-          <div className="flex flex-col gap-2">
-            <div className="flex items-center gap-2">
-              <label className="w-14 shrink-0 text-xs text-gray-500">Sets</label>
-              <input
-                type="number"
-                placeholder="Sets"
-                value={sets}
-                onChange={(e) => setSets(e.target.value)}
-                min={0}
-                className="w-20 bg-[#0d1117] border border-[#30363d] rounded px-2 py-1.5 text-sm text-[#e6edf3] placeholder:text-gray-500 focus:outline-none focus:border-emerald-500"
-              />
+          <div className="bg-[#0d1117] border border-[#21262d] rounded-md p-3 flex flex-col gap-3">
+            <div className="text-xs font-medium text-gray-400">Details (optional)</div>
+
+            <div className="grid grid-cols-2 gap-2">
+              <div className="flex flex-col gap-1">
+                <label htmlFor="habit-sets" className="text-xs text-gray-500">
+                  Sets
+                </label>
+                <input
+                  id="habit-sets"
+                  type="number"
+                  placeholder="0"
+                  value={sets}
+                  onChange={(e) => setSets(e.target.value)}
+                  min={0}
+                  className="w-full bg-[#161b22] border border-[#30363d] rounded px-2 py-1.5 text-sm text-[#e6edf3] placeholder:text-gray-600 focus:outline-none focus:border-emerald-500"
+                />
+              </div>
+              <div className="flex flex-col gap-1">
+                <label htmlFor="habit-reps" className="text-xs text-gray-500">
+                  Reps
+                </label>
+                <input
+                  id="habit-reps"
+                  type="number"
+                  placeholder="0"
+                  value={reps}
+                  onChange={(e) => setReps(e.target.value)}
+                  min={0}
+                  className="w-full bg-[#161b22] border border-[#30363d] rounded px-2 py-1.5 text-sm text-[#e6edf3] placeholder:text-gray-600 focus:outline-none focus:border-emerald-500"
+                />
+              </div>
             </div>
-            <div className="flex items-center gap-2">
-              <label className="w-14 shrink-0 text-xs text-gray-500">Reps</label>
-              <input
-                type="number"
-                placeholder="Reps"
-                value={reps}
-                onChange={(e) => setReps(e.target.value)}
-                min={0}
-                className="w-20 bg-[#0d1117] border border-[#30363d] rounded px-2 py-1.5 text-sm text-[#e6edf3] placeholder:text-gray-500 focus:outline-none focus:border-emerald-500"
-              />
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-14 shrink-0 flex flex-col gap-0.5">
+
+            <div className="flex flex-col gap-1">
+              <div className="flex rounded-md overflow-hidden border border-[#30363d]">
                 <button
                   type="button"
                   onClick={() => setMetricMode("weight")}
-                  className={`px-1.5 py-0.5 text-xs rounded ${metricMode === "weight" ? "bg-[#21262d] text-[#e6edf3]" : "text-gray-500"}`}
+                  className={`flex-1 px-2 py-1.5 text-xs font-medium transition-colors ${
+                    metricMode === "weight" ? "bg-[#21262d] text-[#e6edf3]" : "bg-[#161b22] text-gray-500 hover:text-gray-300"
+                  }`}
                 >
                   Weight
                 </button>
                 <button
                   type="button"
                   onClick={() => setMetricMode("time")}
-                  className={`px-1.5 py-0.5 text-xs rounded ${metricMode === "time" ? "bg-[#21262d] text-[#e6edf3]" : "text-gray-500"}`}
+                  className={`flex-1 px-2 py-1.5 text-xs font-medium transition-colors ${
+                    metricMode === "time" ? "bg-[#21262d] text-[#e6edf3]" : "bg-[#161b22] text-gray-500 hover:text-gray-300"
+                  }`}
                 >
                   Time
                 </button>
               </div>
-              {metricMode === "weight" ? (
-                <input
-                  type="number"
-                  placeholder="lbs"
-                  value={weight}
-                  onChange={(e) => setWeight(e.target.value)}
-                  min={0}
-                  className="w-20 bg-[#0d1117] border border-[#30363d] rounded px-2 py-1.5 text-sm text-[#e6edf3] placeholder:text-gray-500 focus:outline-none focus:border-emerald-500"
-                />
-              ) : (
-                <input
-                  type="number"
-                  placeholder="min"
-                  value={durationMinutes}
-                  onChange={(e) => setDurationMinutes(e.target.value)}
-                  min={0}
-                  className="w-20 bg-[#0d1117] border border-[#30363d] rounded px-2 py-1.5 text-sm text-[#e6edf3] placeholder:text-gray-500 focus:outline-none focus:border-emerald-500"
-                />
-              )}
+              <div className="relative">
+                {metricMode === "weight" ? (
+                  <input
+                    type="number"
+                    placeholder="0"
+                    value={weight}
+                    onChange={(e) => setWeight(e.target.value)}
+                    min={0}
+                    className="w-full bg-[#161b22] border border-[#30363d] rounded px-2 py-1.5 pr-10 text-sm text-[#e6edf3] placeholder:text-gray-600 focus:outline-none focus:border-emerald-500"
+                  />
+                ) : (
+                  <input
+                    type="number"
+                    placeholder="0"
+                    value={durationMinutes}
+                    onChange={(e) => setDurationMinutes(e.target.value)}
+                    min={0}
+                    className="w-full bg-[#161b22] border border-[#30363d] rounded px-2 py-1.5 pr-10 text-sm text-[#e6edf3] placeholder:text-gray-600 focus:outline-none focus:border-emerald-500"
+                  />
+                )}
+                <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs text-gray-500 pointer-events-none">
+                  {metricMode === "weight" ? "lbs" : "min"}
+                </span>
+              </div>
             </div>
           </div>
         </form>
