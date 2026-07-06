@@ -10,6 +10,13 @@ export interface HabitEntry {
   id: string;
   description: string;
   attributeId: AttributeId;
+  /** Optional structured details for exercise activities — all supplement the free-text description. */
+  sets?: number;
+  reps?: number;
+  /** Weight lifted, in lbs. Mutually exclusive with durationMinutes in the UI, but both are just optional data. */
+  weight?: number;
+  /** Duration of a timed activity, in minutes. */
+  durationMinutes?: number;
 }
 
 export interface DayLog {
@@ -30,6 +37,8 @@ export interface Settings {
   seenAttributeTiers: Record<string, number>;
   /** Manually chosen attribute whose title to display, or null to auto-pick the highest-tier one. */
   titleAttributeId: AttributeId | null;
+  /** Highest champion stage index already shown a stage-up banner for. */
+  seenChampionStageIndex: number;
 }
 
 export type LogsByDate = Record<string, DayLog>;

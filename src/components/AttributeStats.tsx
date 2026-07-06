@@ -10,7 +10,7 @@ interface Props {
 export function AttributeStats({ logs, seenAttributeTiers, onAcknowledgeTier }: Props) {
   return (
     <div className="bg-[#161b22] border border-[#30363d] rounded-lg p-4 flex flex-col gap-3">
-      <h2 className="text-sm font-semibold text-[#e6edf3] font-pixel">Attributes</h2>
+      <h2 className="text-sm font-semibold text-[#e6edf3] font-pixel">Champion Attributes</h2>
 
       {ATTRIBUTES.map((attr) => {
         const count = computeAttributeCount(logs, attr.id);

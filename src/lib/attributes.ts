@@ -23,7 +23,7 @@ export const ATTRIBUTES: Attribute[] = [
   },
   {
     id: "endurance",
-    name: "Endurance",
+    name: "Stamina",
     habitLabel: "Cardio",
     barClassName: "bg-green-500",
     activeButtonClassName: "bg-green-950 border-green-600 text-green-200",

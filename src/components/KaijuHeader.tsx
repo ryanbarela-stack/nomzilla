@@ -2,12 +2,9 @@ import { useState } from "react";
 import { KaijuCanvas } from "./KaijuCanvas";
 import { BorderPicker } from "./BorderPicker";
 import { PathPicker } from "./PathPicker";
-import { TitlePicker } from "./TitlePicker";
 import { getNextStage, type GrowthStage } from "../lib/streak";
 import { BORDERS, getBorderById, isBorderUnlocked } from "../lib/borders";
 import { PATHS, getPath, getStageDisplayName, getStagePreviewName } from "../lib/paths";
-import { getDisplayTitle } from "../lib/attributes";
-import type { AttributeId, LogsByDate } from "../lib/types";
 
 interface Props {
   streak: number;
@@ -18,12 +15,9 @@ interface Props {
   totalDaysLogged: number;
   levelIndex: number;
   seenLevelIndex: number;
-  logs: LogsByDate;
-  titleAttributeId: AttributeId | null;
   onChangeTarget: (value: number) => void;
   onChangePath: (id: string) => void;
   onChangeBorder: (id: string) => void;
-  onChangeTitle: (id: AttributeId | null) => void;
   onAcknowledgeLevelUp: () => void;
 }
 
@@ -36,23 +30,17 @@ export function KaijuHeader({
   totalDaysLogged,
   levelIndex,
   seenLevelIndex,
-  logs,
-  titleAttributeId,
   onChangeTarget,
   onChangePath,
   onChangeBorder,
-  onChangeTitle,
   onAcknowledgeLevelUp,
 }: Props) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(String(target));
   const [pathPickerOpen, setPathPickerOpen] = useState(false);
   const [borderPickerOpen, setBorderPickerOpen] = useState(false);
-  const [titlePickerOpen, setTitlePickerOpen] = useState(false);
   const next = getNextStage(stage);
   const daysToNext = next ? Math.max(0, next.minStreak - streak) : null;
-  const displayTitle = getDisplayTitle(logs, titleAttributeId);
-  const hasAnyTitle = getDisplayTitle(logs, null) !== null;
 
   const selectedBorder = getBorderById(borderId);
   const frameBorder = isBorderUnlocked(selectedBorder, totalDaysLogged) ? selectedBorder : BORDERS[0];
@@ -127,17 +115,6 @@ export function KaijuHeader({
             >
               Frame: {selectedBorder.name}
             </button>
-            {hasAnyTitle && (
-              <>
-                <span className="text-gray-600">·</span>
-                <button
-                  onClick={() => setTitlePickerOpen(true)}
-                  className="text-xs text-gray-400 hover:text-yellow-400 underline decoration-dotted"
-                >
-                  Title: {displayTitle ?? "Auto"}
-                </button>
-              </>
-            )}
           </div>
         </div>
 
@@ -154,18 +131,8 @@ export function KaijuHeader({
           />
         )}
 
-        {titlePickerOpen && (
-          <TitlePicker
-            selectedId={titleAttributeId}
-            logs={logs}
-            onSelect={onChangeTitle}
-            onClose={() => setTitlePickerOpen(false)}
-          />
-        )}
-
         <div className="flex-1 w-full flex flex-col gap-2 text-center sm:text-left">
           <h1 className="text-xl font-bold text-[#e6edf3] font-pixel">{getStageDisplayName(stage, pathId)}</h1>
-          {displayTitle && <p className="text-xs text-indigo-300 italic -mt-1">{displayTitle}</p>}
 
           <div className="flex flex-col gap-0.5 w-full max-w-xs mx-auto sm:mx-0">
             <div className="flex items-center justify-between text-xs text-gray-400">

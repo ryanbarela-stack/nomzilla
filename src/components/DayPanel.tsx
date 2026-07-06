@@ -1,14 +1,16 @@
 import { useState } from "react";
 import { ATTRIBUTES } from "../lib/attributes";
-import type { AttributeId, DayLog } from "../lib/types";
+import type { AttributeId, DayLog, HabitEntry } from "../lib/types";
 import { formatFriendly, todayISO } from "../lib/date";
+
+type NewHabitEntry = Omit<HabitEntry, "id">;
 
 interface Props {
   log: DayLog;
   target: number;
   onAddEntry: (name: string, calories: number) => void;
   onRemoveEntry: (id: string) => void;
-  onAddHabitEntry: (description: string, attributeId: AttributeId) => void;
+  onAddHabitEntry: (entry: NewHabitEntry) => void;
   onRemoveHabitEntry: (id: string) => void;
   onJumpToday: () => void;
 }
@@ -26,6 +28,11 @@ export function DayPanel({
   const [calories, setCalories] = useState("");
   const [habitDescription, setHabitDescription] = useState("");
   const [habitAttributeId, setHabitAttributeId] = useState<AttributeId | null>(null);
+  const [sets, setSets] = useState("");
+  const [reps, setReps] = useState("");
+  const [metricMode, setMetricMode] = useState<"weight" | "time">("weight");
+  const [weight, setWeight] = useState("");
+  const [durationMinutes, setDurationMinutes] = useState("");
 
   const total = log.entries.reduce((sum, e) => sum + e.calories, 0);
   const remaining = target - total;
@@ -45,9 +52,20 @@ export function DayPanel({
   function handleHabitSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!habitDescription.trim() || !habitAttributeId) return;
-    onAddHabitEntry(habitDescription.trim(), habitAttributeId);
+    onAddHabitEntry({
+      description: habitDescription.trim(),
+      attributeId: habitAttributeId,
+      sets: sets ? Number(sets) : undefined,
+      reps: reps ? Number(reps) : undefined,
+      weight: metricMode === "weight" && weight ? Number(weight) : undefined,
+      durationMinutes: metricMode === "time" && durationMinutes ? Number(durationMinutes) : undefined,
+    });
     setHabitDescription("");
     setHabitAttributeId(null);
+    setSets("");
+    setReps("");
+    setWeight("");
+    setDurationMinutes("");
   }
 
   return (
@@ -128,13 +146,13 @@ export function DayPanel({
       </ul>
 
       <div className="border-t border-[#30363d] pt-4 flex flex-col gap-3">
-        <h3 className="text-sm font-semibold text-[#e6edf3]">Habits</h3>
+        <h3 className="text-sm font-semibold text-[#e6edf3]">Training log</h3>
 
         <form onSubmit={handleHabitSubmit} className="flex flex-col gap-2">
           <div className="flex gap-2 flex-wrap">
             <input
               type="text"
-              placeholder="What did you do? (e.g. Bench press 3x10)"
+              placeholder="What did you do? (e.g. Bench press)"
               value={habitDescription}
               onChange={(e) => setHabitDescription(e.target.value)}
               className="flex-1 min-w-[160px] bg-[#0d1117] border border-[#30363d] rounded px-3 py-2 text-sm text-[#e6edf3] placeholder:text-gray-500 focus:outline-none focus:border-emerald-500"
@@ -167,20 +185,85 @@ export function DayPanel({
               );
             })}
           </div>
+
+          <div className="flex gap-2 flex-wrap items-center">
+            <input
+              type="number"
+              placeholder="Sets"
+              value={sets}
+              onChange={(e) => setSets(e.target.value)}
+              min={0}
+              className="w-20 bg-[#0d1117] border border-[#30363d] rounded px-2 py-1.5 text-sm text-[#e6edf3] placeholder:text-gray-500 focus:outline-none focus:border-emerald-500"
+            />
+            <input
+              type="number"
+              placeholder="Reps"
+              value={reps}
+              onChange={(e) => setReps(e.target.value)}
+              min={0}
+              className="w-20 bg-[#0d1117] border border-[#30363d] rounded px-2 py-1.5 text-sm text-[#e6edf3] placeholder:text-gray-500 focus:outline-none focus:border-emerald-500"
+            />
+            <div className="flex rounded overflow-hidden border border-[#30363d]">
+              <button
+                type="button"
+                onClick={() => setMetricMode("weight")}
+                className={`px-2 py-1.5 text-xs ${metricMode === "weight" ? "bg-[#21262d] text-[#e6edf3]" : "bg-[#0d1117] text-gray-500"}`}
+              >
+                Weight
+              </button>
+              <button
+                type="button"
+                onClick={() => setMetricMode("time")}
+                className={`px-2 py-1.5 text-xs ${metricMode === "time" ? "bg-[#21262d] text-[#e6edf3]" : "bg-[#0d1117] text-gray-500"}`}
+              >
+                Time
+              </button>
+            </div>
+            {metricMode === "weight" ? (
+              <input
+                type="number"
+                placeholder="lbs"
+                value={weight}
+                onChange={(e) => setWeight(e.target.value)}
+                min={0}
+                className="w-20 bg-[#0d1117] border border-[#30363d] rounded px-2 py-1.5 text-sm text-[#e6edf3] placeholder:text-gray-500 focus:outline-none focus:border-emerald-500"
+              />
+            ) : (
+              <input
+                type="number"
+                placeholder="min"
+                value={durationMinutes}
+                onChange={(e) => setDurationMinutes(e.target.value)}
+                min={0}
+                className="w-20 bg-[#0d1117] border border-[#30363d] rounded px-2 py-1.5 text-sm text-[#e6edf3] placeholder:text-gray-500 focus:outline-none focus:border-emerald-500"
+              />
+            )}
+          </div>
         </form>
 
         <ul className="flex flex-col gap-1 max-h-64 overflow-y-auto">
           {habitEntries.length === 0 && (
-            <li className="text-sm text-gray-500 italic py-2">No habits logged yet.</li>
+            <li className="text-sm text-gray-500 italic py-2">No training logged yet.</li>
           )}
           {habitEntries.map((entry) => {
             const attr = ATTRIBUTES.find((a) => a.id === entry.attributeId);
+            const detailParts: string[] = [];
+            if (entry.sets || entry.reps) {
+              detailParts.push(`${entry.sets ?? "?"}×${entry.reps ?? "?"}`);
+            }
+            if (entry.weight) detailParts.push(`${entry.weight} lb`);
+            if (entry.durationMinutes) detailParts.push(`${entry.durationMinutes} min`);
             return (
               <li
                 key={entry.id}
                 className="flex items-center justify-between bg-[#0d1117] border border-[#21262d] rounded px-3 py-2"
               >
-                <span className="text-sm text-[#e6edf3]">{entry.description}</span>
+                <div className="flex flex-col">
+                  <span className="text-sm text-[#e6edf3]">{entry.description}</span>
+                  {detailParts.length > 0 && (
+                    <span className="text-xs text-gray-500">{detailParts.join(" · ")}</span>
+                  )}
+                </div>
                 <div className="flex items-center gap-3">
                   {attr && (
                     <span className={`text-xs px-2 py-0.5 rounded-full border ${attr.activeButtonClassName}`}>
@@ -190,7 +273,7 @@ export function DayPanel({
                   <button
                     onClick={() => onRemoveHabitEntry(entry.id)}
                     className="text-gray-500 hover:text-red-400 text-sm"
-                    aria-label="Remove habit entry"
+                    aria-label="Remove training entry"
                   >
                     ✕
                   </button>

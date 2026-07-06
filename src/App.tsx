@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { KaijuHeader } from "./components/KaijuHeader";
+import { ChampionHeader } from "./components/ChampionHeader";
 import { DayPanel } from "./components/DayPanel";
 import { AttributeStats } from "./components/AttributeStats";
 import { AboutModal } from "./components/AboutModal";
@@ -7,9 +8,10 @@ import { Calendar } from "./components/Calendar";
 import { loadLogs, saveLogs, loadSettings, saveSettings } from "./lib/storage";
 import { todayISO, fromISODate } from "./lib/date";
 import { computeStreak, computeTotalDaysLogged, getStageForStreak } from "./lib/streak";
+import { computeExerciseStreak, getChampionStageForStreak } from "./lib/championStages";
 import { getCurrentLevelIndex } from "./lib/borders";
 import { computeAttributeCount, getAttributeTier } from "./lib/attributes";
-import type { AttributeId, LogsByDate, Settings } from "./lib/types";
+import type { AttributeId, HabitEntry, LogsByDate, Settings } from "./lib/types";
 
 function App() {
   const [logs, setLogs] = useState<LogsByDate>(() => loadLogs());
@@ -25,6 +27,8 @@ function App() {
   const stage = useMemo(() => getStageForStreak(streak), [streak]);
   const totalDaysLogged = useMemo(() => computeTotalDaysLogged(logs), [logs]);
   const levelIndex = useMemo(() => getCurrentLevelIndex(totalDaysLogged), [totalDaysLogged]);
+  const exerciseStreak = useMemo(() => computeExerciseStreak(logs, todayISO()), [logs]);
+  const championStage = useMemo(() => getChampionStageForStreak(exerciseStreak), [exerciseStreak]);
   const selectedLog = logs[selectedDate] ?? { date: selectedDate, entries: [] };
 
   function addEntry(name: string, calories: number) {
@@ -51,14 +55,14 @@ function App() {
     });
   }
 
-  function addHabitEntry(description: string, attributeId: AttributeId) {
+  function addHabitEntry(entry: Omit<HabitEntry, "id">) {
     setLogs((prev) => {
       const existing = prev[selectedDate] ?? { date: selectedDate, entries: [] };
       return {
         ...prev,
         [selectedDate]: {
           ...existing,
-          habitEntries: [...(existing.habitEntries ?? []), { id: crypto.randomUUID(), description, attributeId }],
+          habitEntries: [...(existing.habitEntries ?? []), { id: crypto.randomUUID(), ...entry }],
         },
       };
     });
@@ -104,6 +108,10 @@ function App() {
     }));
   }
 
+  function acknowledgeChampionStage() {
+    setSettings((prev) => ({ ...prev, seenChampionStageIndex: championStage.index }));
+  }
+
   function changeMonth(delta: number) {
     setViewDate((prev) => new Date(prev.getFullYear(), prev.getMonth() + delta, 1));
   }
@@ -118,7 +126,7 @@ function App() {
     <div className="max-w-3xl mx-auto p-4 flex flex-col gap-4">
       <div className="relative text-center">
         <h1 className="text-2xl font-pixel font-bold tracking-wide text-emerald-400">Nomzilla</h1>
-        <p className="text-sm text-gray-500">Log your calories. Grow your kaiju.</p>
+        <p className="text-sm text-gray-500">Log your calories, grow your kaiju. Log your training, grow your champion.</p>
         <button
           onClick={() => setAboutOpen(true)}
           aria-label="How Nomzilla works"
@@ -142,13 +150,20 @@ function App() {
         totalDaysLogged={totalDaysLogged}
         levelIndex={levelIndex}
         seenLevelIndex={settings.seenLevelIndex}
-        logs={logs}
-        titleAttributeId={settings.titleAttributeId}
         onChangeTarget={changeTarget}
         onChangePath={changePath}
         onChangeBorder={changeBorder}
-        onChangeTitle={changeTitle}
         onAcknowledgeLevelUp={acknowledgeLevelUp}
+      />
+
+      <ChampionHeader
+        streak={exerciseStreak}
+        stage={championStage}
+        logs={logs}
+        titleAttributeId={settings.titleAttributeId}
+        seenStageIndex={settings.seenChampionStageIndex}
+        onChangeTitle={changeTitle}
+        onAcknowledgeStageUp={acknowledgeChampionStage}
       />
 
       <AttributeStats

@@ -51,6 +51,7 @@ export function Calendar({ year, month, logs, target, selectedDate, onSelectDate
           const log = logs[iso];
           const total = log?.entries.reduce((s, e) => s + e.calories, 0) ?? 0;
           const hasLog = !!log && log.entries.length > 0;
+          const hasExerciseLog = !!log && (log.habitEntries ?? []).length > 0;
           const isOver = hasLog && total > target;
           const isToday = iso === today;
           const isSelected = iso === selectedDate;
@@ -72,9 +73,12 @@ export function Calendar({ year, month, logs, target, selectedDate, onSelectDate
                 ${isSelected ? "ring-2 ring-emerald-400" : ""}
                 ${isToday && !isSelected ? "ring-1 ring-gray-400" : ""}
                 hover:brightness-125`}
-              title={hasLog ? `${total} kcal` : "No log"}
+              title={hasLog ? `${total} kcal${hasExerciseLog ? " · training logged" : ""}` : "No log"}
             >
               {day}
+              {hasExerciseLog && (
+                <span className="absolute bottom-0.5 right-0.5 w-1.5 h-1.5 rounded-full bg-indigo-400" />
+              )}
             </button>
           );
         })}
@@ -84,6 +88,7 @@ export function Calendar({ year, month, logs, target, selectedDate, onSelectDate
         <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm bg-emerald-950 border border-emerald-800 inline-block" /> under target</span>
         <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm bg-red-950 border border-red-800 inline-block" /> over target</span>
         <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm bg-[#0d1117] border border-[#21262d] inline-block" /> no log</span>
+        <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-indigo-400 inline-block" /> training logged</span>
       </div>
     </div>
   );
