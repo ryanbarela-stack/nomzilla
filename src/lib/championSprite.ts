@@ -32,7 +32,10 @@ function getSpriteImage(src: string): HTMLImageElement {
 }
 
 function drawSprite(ctx: CanvasRenderingContext2D, src: string, size: SpriteSize) {
-  const targetH = GRID * 0.78;
+  // Champion sprites carry generous transparent padding around the character (for
+  // unused rotation frames), so they need a bigger multiplier than a tightly-cropped
+  // sprite would to read as the same visual size within the canvas.
+  const targetH = GRID * 1.15;
   const scale = targetH / size.height;
   const w = size.width * scale;
   const h = targetH;
