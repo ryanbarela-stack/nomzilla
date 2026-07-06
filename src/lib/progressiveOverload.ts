@@ -1,4 +1,4 @@
-import type { HabitEntry, LogsByDate } from "./types";
+import type { HabitEntry, LogsByDate, SetDetail } from "./types";
 
 export const WEIGHT_INCREMENT = 5;
 export const DURATION_INCREMENT = 5;
@@ -27,18 +27,23 @@ export function findLastExerciseEntry(logs: LogsByDate, description: string): Ex
 }
 
 export interface OverloadSuggestion {
-  sets?: number;
-  reps?: number;
-  weight?: number;
+  setDetails?: SetDetail[];
   durationMinutes?: number;
 }
 
-/** A small nudge up from the last logged entry — same sets/reps, a bit more weight or time. */
+/** A small nudge up from the last logged entry — same reps per set, a bit more weight or time. */
 export function getOverloadSuggestion(last: HabitEntry): OverloadSuggestion {
+  const setDetails = last.setDetails?.length
+    ? last.setDetails.map((set) => ({
+        reps: set.reps,
+        weight: set.weight !== undefined ? set.weight + WEIGHT_INCREMENT : undefined,
+      }))
+    : last.reps !== undefined || last.weight !== undefined
+      ? [{ reps: last.reps, weight: last.weight !== undefined ? last.weight + WEIGHT_INCREMENT : undefined }]
+      : undefined;
+
   return {
-    sets: last.sets,
-    reps: last.reps,
-    weight: last.weight !== undefined ? last.weight + WEIGHT_INCREMENT : undefined,
+    setDetails,
     durationMinutes: last.durationMinutes !== undefined ? last.durationMinutes + DURATION_INCREMENT : undefined,
   };
 }

@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { Fragment, useMemo, useState } from "react";
 import { ATTRIBUTES } from "../lib/attributes";
 import type { AttributeId, DayLog, HabitEntry, LogsByDate } from "../lib/types";
 import { formatFriendly, formatShort, todayISO } from "../lib/date";
@@ -6,6 +6,17 @@ import { formatHabitDetails } from "../lib/habitFormat";
 import { findLastExerciseEntry, getOverloadSuggestion } from "../lib/progressiveOverload";
 
 type NewHabitEntry = Omit<HabitEntry, "id">;
+
+const SET_ROW_COUNT = 3;
+
+interface SetRow {
+  reps: string;
+  weight: string;
+}
+
+function emptySetRows(): SetRow[] {
+  return Array.from({ length: SET_ROW_COUNT }, () => ({ reps: "", weight: "" }));
+}
 
 interface Props {
   log: DayLog;
@@ -32,11 +43,13 @@ export function DayPanel({
   const [calories, setCalories] = useState("");
   const [habitDescription, setHabitDescription] = useState("");
   const [habitAttributeId, setHabitAttributeId] = useState<AttributeId | null>(null);
-  const [sets, setSets] = useState("");
-  const [reps, setReps] = useState("");
-  const [metricMode, setMetricMode] = useState<"weight" | "time">("weight");
-  const [weight, setWeight] = useState("");
+  const [setRows, setSetRows] = useState<SetRow[]>(emptySetRows);
+  const [isTimed, setIsTimed] = useState(false);
   const [durationMinutes, setDurationMinutes] = useState("");
+
+  function updateSetRow(index: number, field: "reps" | "weight", value: string) {
+    setSetRows((prev) => prev.map((row, i) => (i === index ? { ...row, [field]: value } : row)));
+  }
 
   const total = log.entries.reduce((sum, e) => sum + e.calories, 0);
   const remaining = target - total;
@@ -50,16 +63,20 @@ export function DayPanel({
   function applySuggestion() {
     if (!lastEntry || !suggestion) return;
     if (!habitAttributeId) setHabitAttributeId(lastEntry.attributeId);
-    setSets(suggestion.sets !== undefined ? String(suggestion.sets) : "");
-    setReps(suggestion.reps !== undefined ? String(suggestion.reps) : "");
-    if (suggestion.weight !== undefined) {
-      setMetricMode("weight");
-      setWeight(String(suggestion.weight));
-      setDurationMinutes("");
-    } else if (suggestion.durationMinutes !== undefined) {
-      setMetricMode("time");
+
+    const rows = emptySetRows();
+    suggestion.setDetails?.forEach((set, i) => {
+      if (i >= SET_ROW_COUNT) return;
+      rows[i] = {
+        reps: set.reps !== undefined ? String(set.reps) : "",
+        weight: set.weight !== undefined ? String(set.weight) : "",
+      };
+    });
+    setSetRows(rows);
+
+    if (suggestion.durationMinutes !== undefined) {
+      setIsTimed(true);
       setDurationMinutes(String(suggestion.durationMinutes));
-      setWeight("");
     }
   }
 
@@ -75,19 +92,24 @@ export function DayPanel({
   function handleHabitSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!habitDescription.trim() || !habitAttributeId) return;
+
+    const setDetails = setRows
+      .map((row) => ({
+        reps: row.reps ? Number(row.reps) : undefined,
+        weight: row.weight ? Number(row.weight) : undefined,
+      }))
+      .filter((row) => row.reps !== undefined || row.weight !== undefined);
+
     onAddHabitEntry({
       description: habitDescription.trim(),
       attributeId: habitAttributeId,
-      sets: sets ? Number(sets) : undefined,
-      reps: reps ? Number(reps) : undefined,
-      weight: metricMode === "weight" && weight ? Number(weight) : undefined,
-      durationMinutes: metricMode === "time" && durationMinutes ? Number(durationMinutes) : undefined,
+      setDetails: setDetails.length > 0 ? setDetails : undefined,
+      durationMinutes: isTimed && durationMinutes ? Number(durationMinutes) : undefined,
     });
     setHabitDescription("");
     setHabitAttributeId(null);
-    setSets("");
-    setReps("");
-    setWeight("");
+    setSetRows(emptySetRows());
+    setIsTimed(false);
     setDurationMinutes("");
   }
 
@@ -227,85 +249,60 @@ export function DayPanel({
           )}
 
           <div className="bg-[#0d1117] border border-[#21262d] rounded-md p-3 flex flex-col gap-3">
-            <div className="text-xs font-medium text-gray-400">Details (optional)</div>
+            <div className="text-xs font-medium text-gray-400">Sets (optional)</div>
 
-            <div className="grid grid-cols-2 gap-2">
-              <div className="flex flex-col gap-1">
-                <label htmlFor="habit-sets" className="text-xs text-gray-500">
-                  Sets
-                </label>
-                <input
-                  id="habit-sets"
-                  type="number"
-                  placeholder="0"
-                  value={sets}
-                  onChange={(e) => setSets(e.target.value)}
-                  min={0}
-                  className="w-full bg-[#161b22] border border-[#30363d] rounded px-2 py-1.5 text-sm text-[#e6edf3] placeholder:text-gray-600 focus:outline-none focus:border-emerald-500"
-                />
-              </div>
-              <div className="flex flex-col gap-1">
-                <label htmlFor="habit-reps" className="text-xs text-gray-500">
-                  Reps
-                </label>
-                <input
-                  id="habit-reps"
-                  type="number"
-                  placeholder="0"
-                  value={reps}
-                  onChange={(e) => setReps(e.target.value)}
-                  min={0}
-                  className="w-full bg-[#161b22] border border-[#30363d] rounded px-2 py-1.5 text-sm text-[#e6edf3] placeholder:text-gray-600 focus:outline-none focus:border-emerald-500"
-                />
-              </div>
+            <div className="grid grid-cols-3 gap-x-2 gap-y-1.5 items-center">
+              <div className="text-xs text-gray-500 font-medium">Set</div>
+              <div className="text-xs text-gray-500 font-medium">Reps</div>
+              <div className="text-xs text-gray-500 font-medium">Weight (lbs)</div>
+              {setRows.map((row, i) => (
+                <Fragment key={i}>
+                  <div className="text-xs text-gray-400">Set {i + 1}</div>
+                  <input
+                    type="number"
+                    placeholder="0"
+                    value={row.reps}
+                    onChange={(e) => updateSetRow(i, "reps", e.target.value)}
+                    min={0}
+                    className="w-full bg-[#161b22] border border-[#30363d] rounded px-2 py-1.5 text-sm text-[#e6edf3] placeholder:text-gray-600 focus:outline-none focus:border-emerald-500"
+                  />
+                  <input
+                    type="number"
+                    placeholder="0"
+                    value={row.weight}
+                    onChange={(e) => updateSetRow(i, "weight", e.target.value)}
+                    min={0}
+                    className="w-full bg-[#161b22] border border-[#30363d] rounded px-2 py-1.5 text-sm text-[#e6edf3] placeholder:text-gray-600 focus:outline-none focus:border-emerald-500"
+                  />
+                </Fragment>
+              ))}
             </div>
 
-            <div className="flex flex-col gap-1">
-              <div className="flex rounded-md overflow-hidden border border-[#30363d]">
-                <button
-                  type="button"
-                  onClick={() => setMetricMode("weight")}
-                  className={`flex-1 px-2 py-1.5 text-xs font-medium transition-colors ${
-                    metricMode === "weight" ? "bg-[#21262d] text-[#e6edf3]" : "bg-[#161b22] text-gray-500 hover:text-gray-300"
-                  }`}
-                >
-                  Weight
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setMetricMode("time")}
-                  className={`flex-1 px-2 py-1.5 text-xs font-medium transition-colors ${
-                    metricMode === "time" ? "bg-[#21262d] text-[#e6edf3]" : "bg-[#161b22] text-gray-500 hover:text-gray-300"
-                  }`}
-                >
-                  Time
-                </button>
-              </div>
+            <label className="flex items-center gap-2 text-xs text-gray-400 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={isTimed}
+                onChange={(e) => setIsTimed(e.target.checked)}
+                className="accent-emerald-500"
+              />
+              Timed exercise
+            </label>
+
+            {isTimed && (
               <div className="relative">
-                {metricMode === "weight" ? (
-                  <input
-                    type="number"
-                    placeholder="0"
-                    value={weight}
-                    onChange={(e) => setWeight(e.target.value)}
-                    min={0}
-                    className="w-full bg-[#161b22] border border-[#30363d] rounded px-2 py-1.5 pr-10 text-sm text-[#e6edf3] placeholder:text-gray-600 focus:outline-none focus:border-emerald-500"
-                  />
-                ) : (
-                  <input
-                    type="number"
-                    placeholder="0"
-                    value={durationMinutes}
-                    onChange={(e) => setDurationMinutes(e.target.value)}
-                    min={0}
-                    className="w-full bg-[#161b22] border border-[#30363d] rounded px-2 py-1.5 pr-10 text-sm text-[#e6edf3] placeholder:text-gray-600 focus:outline-none focus:border-emerald-500"
-                  />
-                )}
+                <input
+                  type="number"
+                  placeholder="0"
+                  value={durationMinutes}
+                  onChange={(e) => setDurationMinutes(e.target.value)}
+                  min={0}
+                  className="w-full bg-[#161b22] border border-[#30363d] rounded px-2 py-1.5 pr-10 text-sm text-[#e6edf3] placeholder:text-gray-600 focus:outline-none focus:border-emerald-500"
+                />
                 <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs text-gray-500 pointer-events-none">
-                  {metricMode === "weight" ? "lbs" : "min"}
+                  min
                 </span>
               </div>
-            </div>
+            )}
           </div>
         </form>
 

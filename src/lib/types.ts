@@ -6,17 +6,29 @@ export interface FoodEntry {
 
 export type AttributeId = "strength" | "endurance" | "intelligence" | "wisdom";
 
+export interface SetDetail {
+  reps?: number;
+  /** Weight lifted for this set, in lbs. */
+  weight?: number;
+}
+
 export interface HabitEntry {
   id: string;
   description: string;
   attributeId: AttributeId;
-  /** Optional structured details for exercise activities — all supplement the free-text description. */
-  sets?: number;
-  reps?: number;
-  /** Weight lifted, in lbs. Mutually exclusive with durationMinutes in the UI, but both are just optional data. */
-  weight?: number;
+  /** Per-set reps/weight, one entry per set actually logged (reps and/or weight can change set to set). */
+  setDetails?: SetDetail[];
   /** Duration of a timed activity, in minutes. */
   durationMinutes?: number;
+  /**
+   * @deprecated Superseded by setDetails/durationMinutes. Kept so entries logged before that change
+   * still render — new entries never set these.
+   */
+  sets?: number;
+  /** @deprecated See sets. */
+  reps?: number;
+  /** @deprecated See sets. */
+  weight?: number;
 }
 
 export interface DayLog {
