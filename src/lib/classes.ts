@@ -1,6 +1,6 @@
 import type { SpriteSize } from "./paths";
 
-export type ClassId = "warrior" | "cleric" | "monk" | "wizard" | "barbarian";
+export type ClassId = "warrior" | "cleric" | "monk" | "wizard" | "barbarian" | "rogue";
 
 export interface ChampionClass {
   id: ClassId;
@@ -44,6 +44,13 @@ export const CLASSES: ChampionClass[] = [
     name: "Wizard",
     tagline: "Flowing robes, glowing staff",
     sprite: "/sprites/wizard/south.png",
+    spriteSize: { width: 96, height: 96 },
+  },
+  {
+    id: "rogue",
+    name: "Rogue",
+    tagline: "Hooded, twin daggers, quick and quiet",
+    sprite: "/sprites/rogue/south.png",
     spriteSize: { width: 96, height: 96 },
   },
 ];

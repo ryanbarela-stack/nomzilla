@@ -60,7 +60,7 @@ export function AboutModal({ onClose }: Props) {
             trains, and — optionally — sets, reps, and either weight lifted or time spent. Your champion
             advances through stages (Recruit → Trainee → Champion) based on your current training streak,
             the same way your kaiju grows from a food-logging streak. Pick a class — Warrior, Barbarian,
-            Monk, Cleric, or Wizard — anytime to change how your champion looks.
+            Monk, Cleric, Wizard, or Rogue — anytime to change how your champion looks.
           </p>
         </section>
 
