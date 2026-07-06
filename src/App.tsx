@@ -134,6 +134,12 @@ function App() {
         onAcknowledgeLevelUp={acknowledgeLevelUp}
       />
 
+      <AttributeStats
+        logs={logs}
+        seenAttributeTiers={settings.seenAttributeTiers}
+        onAcknowledgeTier={acknowledgeAttributeTier}
+      />
+
       <DayPanel
         log={selectedLog}
         target={settings.targetCalories}
@@ -141,12 +147,6 @@ function App() {
         onRemoveEntry={removeEntry}
         onToggleHabit={toggleHabit}
         onJumpToday={jumpToday}
-      />
-
-      <AttributeStats
-        logs={logs}
-        seenAttributeTiers={settings.seenAttributeTiers}
-        onAcknowledgeTier={acknowledgeAttributeTier}
       />
 
       <Calendar
