@@ -1,6 +1,6 @@
-import type { HabitFlags, LogsByDate } from "./types";
+import type { AttributeId, LogsByDate } from "./types";
 
-export type AttributeId = keyof HabitFlags;
+export type { AttributeId };
 
 export interface Attribute {
   id: AttributeId;
@@ -59,9 +59,9 @@ export const ATTRIBUTE_TIERS: AttributeTier[] = [
   { index: 4, name: "Master", minCount: 60 },
 ];
 
-/** Total lifetime days a given habit was logged. */
+/** Total lifetime days with at least one habit entry logged for this attribute. */
 export function computeAttributeCount(logs: LogsByDate, id: AttributeId): number {
-  return Object.values(logs).filter((log) => log.habits?.[id]).length;
+  return Object.values(logs).filter((log) => (log.habitEntries ?? []).some((entry) => entry.attributeId === id)).length;
 }
 
 export function getAttributeTier(count: number): AttributeTier {

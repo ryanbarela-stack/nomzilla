@@ -8,8 +8,8 @@ import { loadLogs, saveLogs, loadSettings, saveSettings } from "./lib/storage";
 import { todayISO, fromISODate } from "./lib/date";
 import { computeStreak, computeTotalDaysLogged, getStageForStreak } from "./lib/streak";
 import { getCurrentLevelIndex } from "./lib/borders";
-import { computeAttributeCount, getAttributeTier, type AttributeId } from "./lib/attributes";
-import type { LogsByDate, Settings } from "./lib/types";
+import { computeAttributeCount, getAttributeTier } from "./lib/attributes";
+import type { AttributeId, LogsByDate, Settings } from "./lib/types";
 
 function App() {
   const [logs, setLogs] = useState<LogsByDate>(() => loadLogs());
@@ -51,17 +51,27 @@ function App() {
     });
   }
 
-  function toggleHabit(id: AttributeId) {
+  function addHabitEntry(description: string, attributeId: AttributeId) {
     setLogs((prev) => {
       const existing = prev[selectedDate] ?? { date: selectedDate, entries: [] };
-      const habits = {
-        strength: existing.habits?.strength ?? false,
-        endurance: existing.habits?.endurance ?? false,
-        intelligence: existing.habits?.intelligence ?? false,
-        wisdom: existing.habits?.wisdom ?? false,
+      return {
+        ...prev,
+        [selectedDate]: {
+          ...existing,
+          habitEntries: [...(existing.habitEntries ?? []), { id: crypto.randomUUID(), description, attributeId }],
+        },
       };
-      habits[id] = !habits[id];
-      return { ...prev, [selectedDate]: { ...existing, habits } };
+    });
+  }
+
+  function removeHabitEntry(id: string) {
+    setLogs((prev) => {
+      const existing = prev[selectedDate];
+      if (!existing) return prev;
+      return {
+        ...prev,
+        [selectedDate]: { ...existing, habitEntries: (existing.habitEntries ?? []).filter((e) => e.id !== id) },
+      };
     });
   }
 
@@ -145,7 +155,8 @@ function App() {
         target={settings.targetCalories}
         onAddEntry={addEntry}
         onRemoveEntry={removeEntry}
-        onToggleHabit={toggleHabit}
+        onAddHabitEntry={addHabitEntry}
+        onRemoveHabitEntry={removeHabitEntry}
         onJumpToday={jumpToday}
       />
 

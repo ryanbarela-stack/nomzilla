@@ -4,18 +4,19 @@ export interface FoodEntry {
   calories: number;
 }
 
-export interface HabitFlags {
-  strength: boolean;
-  endurance: boolean;
-  intelligence: boolean;
-  wisdom: boolean;
+export type AttributeId = "strength" | "endurance" | "intelligence" | "wisdom";
+
+export interface HabitEntry {
+  id: string;
+  description: string;
+  attributeId: AttributeId;
 }
 
 export interface DayLog {
   date: string; // ISO yyyy-mm-dd
   entries: FoodEntry[];
-  /** Optional — absent on logs saved before habit tracking existed. */
-  habits?: HabitFlags;
+  /** Optional — absent on days with no habits logged yet. */
+  habitEntries?: HabitEntry[];
 }
 
 export interface Settings {
