@@ -28,6 +28,8 @@ export interface Settings {
   seenLevelIndex: number;
   /** Highest attribute tier index already shown a tier-up banner for, per attribute. */
   seenAttributeTiers: Record<string, number>;
+  /** Manually chosen attribute whose title to display, or null to auto-pick the highest-tier one. */
+  titleAttributeId: AttributeId | null;
 }
 
 export type LogsByDate = Record<string, DayLog>;

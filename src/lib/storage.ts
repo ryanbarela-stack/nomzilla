@@ -9,6 +9,7 @@ export const DEFAULT_SETTINGS: Settings = {
   borderId: "default",
   seenLevelIndex: 0,
   seenAttributeTiers: {},
+  titleAttributeId: null,
 };
 
 export function loadLogs(): LogsByDate {

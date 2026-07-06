@@ -77,10 +77,10 @@ export function getNextAttributeTier(tier: AttributeTier): AttributeTier | null 
 }
 
 /**
- * The player's earned title, e.g. "Novice Strength" — drawn from whichever
- * attribute has progressed the furthest. Ties break on raw count, then on
- * ATTRIBUTES order. Returns null until at least one attribute is past
- * Untrained.
+ * The player's auto-selected title, e.g. "Novice Strength" — drawn from
+ * whichever attribute has progressed the furthest. Ties break on raw count,
+ * then on ATTRIBUTES order. Returns null until at least one attribute is
+ * past Untrained.
  */
 export function getTopAttributeTitle(logs: LogsByDate): string | null {
   let best: { attr: Attribute; tier: AttributeTier; count: number } | null = null;
@@ -93,4 +93,25 @@ export function getTopAttributeTitle(logs: LogsByDate): string | null {
     }
   }
   return best ? `${best.tier.name} ${best.attr.name}` : null;
+}
+
+/** A given attribute's current title, e.g. "Novice Strength" — null if still Untrained. */
+export function getAttributeTitle(logs: LogsByDate, id: AttributeId): string | null {
+  const attr = ATTRIBUTES.find((a) => a.id === id);
+  if (!attr) return null;
+  const tier = getAttributeTier(computeAttributeCount(logs, id));
+  return tier.index === 0 ? null : `${tier.name} ${attr.name}`;
+}
+
+/**
+ * The title to actually display: the player's manually-chosen attribute's
+ * title if set and unlocked, otherwise falls back to the auto-selected
+ * top title.
+ */
+export function getDisplayTitle(logs: LogsByDate, titleAttributeId: AttributeId | null): string | null {
+  if (titleAttributeId) {
+    const title = getAttributeTitle(logs, titleAttributeId);
+    if (title) return title;
+  }
+  return getTopAttributeTitle(logs);
 }
