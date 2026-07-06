@@ -67,7 +67,7 @@ export function KaijuHeader({
       {leveledUp && (
         <div className="bg-indigo-950 border border-indigo-700 rounded-md px-3 py-2 text-sm text-indigo-200 flex items-center justify-between gap-2">
           <span>
-            🎉 Level {levelIndex + 1} reached — <strong>{currentLevelBorder.name}</strong> border unlocked!
+            Level {levelIndex + 1} reached — <strong>{currentLevelBorder.name}</strong> border unlocked!
           </span>
           <button onClick={onAcknowledgeLevelUp} className="text-indigo-300 hover:text-white text-xs underline shrink-0">
             Dismiss
@@ -77,7 +77,7 @@ export function KaijuHeader({
 
       {readyToChoosePath && (
         <div className="bg-emerald-950 border border-emerald-700 rounded-md px-3 py-2 text-sm text-emerald-200 flex items-center justify-between gap-2 flex-wrap">
-          <span>🌟 Your kaiju is ready to evolve! Choose a path:</span>
+          <span>Your kaiju is ready to evolve! Choose a path:</span>
           <div className="flex gap-2">
             {PATHS.map((path) => (
               <button
@@ -136,7 +136,7 @@ export function KaijuHeader({
 
           <div className="flex flex-col gap-0.5 w-full max-w-xs mx-auto sm:mx-0">
             <div className="flex items-center justify-between text-xs text-gray-400">
-              <span>🔥 <span className="text-orange-400 font-semibold">{streak}</span>-day streak</span>
+              <span><span className="text-orange-400 font-semibold">{streak}</span>-day streak</span>
               <span>{next ? `${daysToNext}d to ${getStagePreviewName(next, pathId)}` : "Max evolution"}</span>
             </div>
             <div className="h-2 w-full bg-[#0d1117] border border-[#30363d] rounded-full overflow-hidden">

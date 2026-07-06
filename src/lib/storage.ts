@@ -10,8 +10,9 @@ export const DEFAULT_SETTINGS: Settings = {
   seenLevelIndex: 0,
   seenAttributeTiers: {},
   titleAttributeId: null,
-  seenChampionStageIndex: 0,
   classId: null,
+  championHealth: 100,
+  championHealthUpdatedAt: null,
 };
 
 export function loadLogs(): LogsByDate {

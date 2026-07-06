@@ -3,66 +3,43 @@ import { ChampionCanvas } from "./ChampionCanvas";
 import { ClassPicker } from "./ClassPicker";
 import { TitlePicker } from "./TitlePicker";
 import { AttributeStats } from "./AttributeStats";
-import { getNextChampionStage, type ChampionStage } from "../lib/championStages";
 import { getDisplayTitle } from "../lib/attributes";
 import { CLASSES, getClass } from "../lib/classes";
 import type { AttributeId, LogsByDate } from "../lib/types";
 
 interface Props {
-  streak: number;
-  stage: ChampionStage;
+  health: number;
   logs: LogsByDate;
   titleAttributeId: AttributeId | null;
-  seenStageIndex: number;
   classId: string | null;
   seenAttributeTiers: Record<string, number>;
   onChangeTitle: (id: AttributeId | null) => void;
-  onAcknowledgeStageUp: () => void;
   onChangeClass: (id: string) => void;
   onAcknowledgeAttributeTier: (id: AttributeId) => void;
 }
 
 export function ChampionHeader({
-  streak,
-  stage,
+  health,
   logs,
   titleAttributeId,
-  seenStageIndex,
   classId,
   seenAttributeTiers,
   onChangeTitle,
-  onAcknowledgeStageUp,
   onChangeClass,
   onAcknowledgeAttributeTier,
 }: Props) {
   const [titlePickerOpen, setTitlePickerOpen] = useState(false);
   const [classPickerOpen, setClassPickerOpen] = useState(false);
-  const next = getNextChampionStage(stage);
-  const daysToNext = next ? Math.max(0, next.minStreak - streak) : null;
   const displayTitle = getDisplayTitle(logs, titleAttributeId);
   const hasAnyTitle = getDisplayTitle(logs, null) !== null;
-  const stageProgressPct = next
-    ? Math.min(100, Math.max(0, ((streak - stage.minStreak) / (next.minStreak - stage.minStreak)) * 100))
-    : 100;
-  const stagedUp = stage.index > seenStageIndex;
   const currentClass = getClass(classId);
+  const healthPct = Math.round(health);
 
   return (
     <div className="flex flex-col gap-3">
-      {stagedUp && (
-        <div className="bg-indigo-950 border border-indigo-700 rounded-md px-3 py-2 text-sm text-indigo-200 flex items-center justify-between gap-2">
-          <span>
-            🏅 Your champion advanced to <strong>{stage.name}</strong>!
-          </span>
-          <button onClick={onAcknowledgeStageUp} className="text-indigo-300 hover:text-white text-xs underline shrink-0">
-            Dismiss
-          </button>
-        </div>
-      )}
-
       {!currentClass && (
         <div className="bg-emerald-950 border border-emerald-700 rounded-md px-3 py-2 text-sm text-emerald-200 flex items-center justify-between gap-2 flex-wrap">
-          <span>⚔️ Choose your champion's class:</span>
+          <span>Choose your champion's class:</span>
           <div className="flex gap-2 flex-wrap">
             {CLASSES.map((champClass) => (
               <button
@@ -105,7 +82,7 @@ export function ChampionHeader({
           )}
 
           <div className="flex-1 w-full flex flex-col gap-2 text-center sm:text-left">
-            <h1 className="text-xl font-bold text-[#e6edf3] font-pixel">{stage.name}</h1>
+            <h1 className="text-xl font-bold text-[#e6edf3] font-pixel">{currentClass ? currentClass.name : "Champion"}</h1>
             {displayTitle && <p className="text-xs text-indigo-300 italic -mt-1">{displayTitle}</p>}
             {hasAnyTitle && (
               <button
@@ -118,13 +95,13 @@ export function ChampionHeader({
 
             <div className="flex flex-col gap-0.5 w-full max-w-xs mx-auto sm:mx-0">
               <div className="flex items-center justify-between text-xs text-gray-400">
-                <span>💪 <span className="text-orange-400 font-semibold">{streak}</span>-day training streak</span>
-                <span>{next ? `${daysToNext}d to ${next.name}` : "Max stage"}</span>
+                <span>Health</span>
+                <span>{healthPct}%</span>
               </div>
               <div className="h-2 w-full bg-[#0d1117] border border-[#30363d] rounded-full overflow-hidden">
                 <div
-                  className="h-full bg-indigo-500 rounded-full transition-[width]"
-                  style={{ width: `${stageProgressPct}%` }}
+                  className="h-full bg-red-600 rounded-full transition-[width]"
+                  style={{ width: `${healthPct}%` }}
                 />
               </div>
             </div>

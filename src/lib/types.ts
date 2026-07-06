@@ -37,10 +37,12 @@ export interface Settings {
   seenAttributeTiers: Record<string, number>;
   /** Manually chosen attribute whose title to display, or null to auto-pick the highest-tier one. */
   titleAttributeId: AttributeId | null;
-  /** Highest champion stage index already shown a stage-up banner for. */
-  seenChampionStageIndex: number;
-  /** Chosen champion class ("warrior" | "cleric" | "monk" | "wizard" | "barbarian"), or null before one is picked. */
+  /** Chosen champion class ("warrior" | "cleric" | "monk" | "wizard" | "barbarian" | "rogue"), or null before one is picked. */
   classId: string | null;
+  /** Champion health as of championHealthUpdatedAt, 0-100. Decays 1%/hour from that timestamp. */
+  championHealth: number;
+  /** ISO timestamp championHealth was last set (by decay-application or a boost), or null if never set. */
+  championHealthUpdatedAt: string | null;
 }
 
 export type LogsByDate = Record<string, DayLog>;

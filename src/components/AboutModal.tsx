@@ -58,9 +58,9 @@ export function AboutModal({ onClose }: Props) {
           <p className="text-sm text-gray-300">
             Alongside food, log your training in the Training log: what you did, which attribute it
             trains, and — optionally — sets, reps, and either weight lifted or time spent. Your champion
-            advances through stages (Recruit → Trainee → Champion) based on your current training streak,
-            the same way your kaiju grows from a food-logging streak. Pick a class — Warrior, Barbarian,
-            Monk, Cleric, Wizard, or Rogue — anytime to change how your champion looks.
+            has a health bar that starts at 100% and drains 1% every hour. Logging a Strength or Stamina
+            training entry restores 33% of it. Pick a class — Warrior, Barbarian, Monk, Cleric, Wizard, or
+            Rogue — anytime to change how your champion looks.
           </p>
         </section>
 

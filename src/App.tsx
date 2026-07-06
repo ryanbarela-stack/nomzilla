@@ -7,7 +7,7 @@ import { Calendar } from "./components/Calendar";
 import { loadLogs, saveLogs, loadSettings, saveSettings } from "./lib/storage";
 import { todayISO, fromISODate } from "./lib/date";
 import { computeStreak, computeTotalDaysLogged, getStageForStreak } from "./lib/streak";
-import { computeExerciseStreak, getChampionStageForStreak } from "./lib/championStages";
+import { getCurrentHealth, applyExerciseBoost } from "./lib/championHealth";
 import { getCurrentLevelIndex } from "./lib/borders";
 import { computeAttributeCount, getAttributeTier } from "./lib/attributes";
 import type { AttributeId, HabitEntry, LogsByDate, Settings } from "./lib/types";
@@ -18,16 +18,23 @@ function App() {
   const [selectedDate, setSelectedDate] = useState<string>(() => todayISO());
   const [viewDate, setViewDate] = useState<Date>(() => fromISODate(todayISO()));
   const [aboutOpen, setAboutOpen] = useState(false);
+  const [now, setNow] = useState(() => Date.now());
 
   useEffect(() => saveLogs(logs), [logs]);
   useEffect(() => saveSettings(settings), [settings]);
+  useEffect(() => {
+    const id = setInterval(() => setNow(Date.now()), 60_000);
+    return () => clearInterval(id);
+  }, []);
 
   const streak = useMemo(() => computeStreak(logs, todayISO()), [logs]);
   const stage = useMemo(() => getStageForStreak(streak), [streak]);
   const totalDaysLogged = useMemo(() => computeTotalDaysLogged(logs), [logs]);
   const levelIndex = useMemo(() => getCurrentLevelIndex(totalDaysLogged), [totalDaysLogged]);
-  const exerciseStreak = useMemo(() => computeExerciseStreak(logs, todayISO()), [logs]);
-  const championStage = useMemo(() => getChampionStageForStreak(exerciseStreak), [exerciseStreak]);
+  const championHealth = useMemo(
+    () => getCurrentHealth(settings.championHealth, settings.championHealthUpdatedAt, now),
+    [settings.championHealth, settings.championHealthUpdatedAt, now],
+  );
   const selectedLog = logs[selectedDate] ?? { date: selectedDate, entries: [] };
 
   function addEntry(name: string, calories: number) {
@@ -65,6 +72,15 @@ function App() {
         },
       };
     });
+
+    if (entry.attributeId === "strength" || entry.attributeId === "endurance") {
+      const boostedAt = Date.now();
+      setSettings((prev) => ({
+        ...prev,
+        championHealth: applyExerciseBoost(prev.championHealth, prev.championHealthUpdatedAt, boostedAt),
+        championHealthUpdatedAt: new Date(boostedAt).toISOString(),
+      }));
+    }
   }
 
   function removeHabitEntry(id: string) {
@@ -109,10 +125,6 @@ function App() {
       ...prev,
       seenAttributeTiers: { ...prev.seenAttributeTiers, [id]: tier.index },
     }));
-  }
-
-  function acknowledgeChampionStage() {
-    setSettings((prev) => ({ ...prev, seenChampionStageIndex: championStage.index }));
   }
 
   function changeMonth(delta: number) {
@@ -160,15 +172,12 @@ function App() {
       />
 
       <ChampionHeader
-        streak={exerciseStreak}
-        stage={championStage}
+        health={championHealth}
         logs={logs}
         titleAttributeId={settings.titleAttributeId}
-        seenStageIndex={settings.seenChampionStageIndex}
         classId={settings.classId}
         seenAttributeTiers={settings.seenAttributeTiers}
         onChangeTitle={changeTitle}
-        onAcknowledgeStageUp={acknowledgeChampionStage}
         onChangeClass={changeClass}
         onAcknowledgeAttributeTier={acknowledgeAttributeTier}
       />
