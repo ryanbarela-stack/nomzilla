@@ -2,8 +2,8 @@ import { useState } from "react";
 import { KaijuCanvas } from "./KaijuCanvas";
 import { BorderPicker } from "./BorderPicker";
 import { PathPicker } from "./PathPicker";
-import { GROWTH_STAGES, getNextStage, type GrowthStage } from "../lib/streak";
-import { BORDERS, getBorderById, getNextBorder, isBorderUnlocked } from "../lib/borders";
+import { getNextStage, type GrowthStage } from "../lib/streak";
+import { BORDERS, getBorderById, isBorderUnlocked } from "../lib/borders";
 import { PATHS, getPath, getStageDisplayName, getStagePreviewName } from "../lib/paths";
 
 interface Props {
@@ -45,7 +45,6 @@ export function KaijuHeader({
   const selectedBorder = getBorderById(borderId);
   const frameBorder = isBorderUnlocked(selectedBorder, totalDaysLogged) ? selectedBorder : BORDERS[0];
   const currentLevelBorder = BORDERS[levelIndex];
-  const nextBorder = getNextBorder(totalDaysLogged);
   const leveledUp = levelIndex > seenLevelIndex;
 
   const currentPath = getPath(pathId);
@@ -137,8 +136,8 @@ export function KaijuHeader({
 
           <div className="flex flex-col gap-0.5 w-full max-w-xs mx-auto sm:mx-0">
             <div className="flex items-center justify-between text-xs text-gray-400">
-              <span>Stage {stage.index + 1}/{GROWTH_STAGES.length}</span>
-              <span>{next ? `${daysToNext}d to go` : "Max"}</span>
+              <span>🔥 <span className="text-orange-400 font-semibold">{streak}</span>-day streak</span>
+              <span>{next ? `${daysToNext}d to ${getStagePreviewName(next, pathId)}` : "Max evolution"}</span>
             </div>
             <div className="h-2 w-full bg-[#0d1117] border border-[#30363d] rounded-full overflow-hidden">
               <div
@@ -146,22 +145,6 @@ export function KaijuHeader({
                 style={{ width: `${stageProgressPct}%` }}
               />
             </div>
-          </div>
-
-          <div className="text-sm text-gray-400">
-            🔥 <span className="text-orange-400 font-semibold">{streak}</span> day logging streak
-            {next && (
-              <span> — log {daysToNext} more day{daysToNext === 1 ? "" : "s"} to reach <span className="text-gray-300">{getStagePreviewName(next, pathId)}</span></span>
-            )}
-            {!next && <span className="text-emerald-400"> — max evolution reached!</span>}
-          </div>
-
-          <div className="text-xs text-gray-500">
-            {totalDaysLogged} day{totalDaysLogged === 1 ? "" : "s"} logged in total
-            {nextBorder && (
-              <span> — {nextBorder.minDays - totalDaysLogged} more to unlock the <span className="text-gray-400">{nextBorder.name}</span> border</span>
-            )}
-            {!nextBorder && <span className="text-indigo-400"> — every border unlocked!</span>}
           </div>
 
           <div className="flex items-center justify-center sm:justify-start gap-2 text-sm">
