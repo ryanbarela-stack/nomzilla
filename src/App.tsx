@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from "react";
 import { KaijuHeader } from "./components/KaijuHeader";
 import { ChampionHeader } from "./components/ChampionHeader";
 import { DayPanel } from "./components/DayPanel";
-import { AttributeStats } from "./components/AttributeStats";
 import { AboutModal } from "./components/AboutModal";
 import { Calendar } from "./components/Calendar";
 import { loadLogs, saveLogs, loadSettings, saveSettings } from "./lib/storage";
@@ -167,15 +166,11 @@ function App() {
         titleAttributeId={settings.titleAttributeId}
         seenStageIndex={settings.seenChampionStageIndex}
         classId={settings.classId}
+        seenAttributeTiers={settings.seenAttributeTiers}
         onChangeTitle={changeTitle}
         onAcknowledgeStageUp={acknowledgeChampionStage}
         onChangeClass={changeClass}
-      />
-
-      <AttributeStats
-        logs={logs}
-        seenAttributeTiers={settings.seenAttributeTiers}
-        onAcknowledgeTier={acknowledgeAttributeTier}
+        onAcknowledgeAttributeTier={acknowledgeAttributeTier}
       />
 
       <DayPanel
