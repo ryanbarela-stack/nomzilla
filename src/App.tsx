@@ -7,7 +7,7 @@ import { Calendar } from "./components/Calendar";
 import { loadLogs, saveLogs, loadSettings, saveSettings } from "./lib/storage";
 import { todayISO, fromISODate } from "./lib/date";
 import { computeStreak, computeTotalDaysLogged, getStageForStreak } from "./lib/streak";
-import { getCurrentHealth, applyExerciseBoost } from "./lib/championHealth";
+import { getCurrentHealth, applyExerciseBoost, isManaChargeReady } from "./lib/championHealth";
 import { getCurrentLevelIndex } from "./lib/borders";
 import { computeAttributeCount, getAttributeTier } from "./lib/attributes";
 import type { AttributeId, HabitEntry, LogsByDate, Settings } from "./lib/types";
@@ -32,8 +32,8 @@ function App() {
   const totalDaysLogged = useMemo(() => computeTotalDaysLogged(logs), [logs]);
   const levelIndex = useMemo(() => getCurrentLevelIndex(totalDaysLogged), [totalDaysLogged]);
   const championHealth = useMemo(
-    () => getCurrentHealth(settings.championHealth, settings.championHealthUpdatedAt, now),
-    [settings.championHealth, settings.championHealthUpdatedAt, now],
+    () => getCurrentHealth(settings.championHealth, settings.championHealthUpdatedAt, settings.manaCharges, now),
+    [settings.championHealth, settings.championHealthUpdatedAt, settings.manaCharges, now],
   );
   const selectedLog = logs[selectedDate] ?? { date: selectedDate, entries: [] };
 
@@ -77,7 +77,7 @@ function App() {
       const boostedAt = Date.now();
       setSettings((prev) => ({
         ...prev,
-        championHealth: applyExerciseBoost(prev.championHealth, prev.championHealthUpdatedAt, boostedAt),
+        championHealth: applyExerciseBoost(prev.championHealth, prev.championHealthUpdatedAt, prev.manaCharges, boostedAt),
         championHealthUpdatedAt: new Date(boostedAt).toISOString(),
       }));
     }
@@ -112,6 +112,15 @@ function App() {
 
   function changeTitle(id: AttributeId | null) {
     setSettings((prev) => ({ ...prev, titleAttributeId: id }));
+  }
+
+  function activateMana(index: number) {
+    setSettings((prev) => {
+      if (!isManaChargeReady(prev.manaCharges[index], Date.now())) return prev;
+      const manaCharges = [...prev.manaCharges];
+      manaCharges[index] = new Date().toISOString();
+      return { ...prev, manaCharges };
+    });
   }
 
   function acknowledgeLevelUp() {
@@ -173,6 +182,8 @@ function App() {
 
       <ChampionHeader
         health={championHealth}
+        manaCharges={settings.manaCharges}
+        now={now}
         logs={logs}
         titleAttributeId={settings.titleAttributeId}
         classId={settings.classId}
@@ -180,6 +191,7 @@ function App() {
         onChangeTitle={changeTitle}
         onChangeClass={changeClass}
         onAcknowledgeAttributeTier={acknowledgeAttributeTier}
+        onActivateMana={activateMana}
       />
 
       <DayPanel

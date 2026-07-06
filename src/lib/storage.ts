@@ -1,3 +1,4 @@
+import { MANA_CHARGE_COUNT } from "./championHealth";
 import type { LogsByDate, Settings } from "./types";
 
 const LOGS_KEY = "nomzilla:logs";
@@ -13,6 +14,7 @@ export const DEFAULT_SETTINGS: Settings = {
   classId: null,
   championHealth: 100,
   championHealthUpdatedAt: null,
+  manaCharges: Array<string | null>(MANA_CHARGE_COUNT).fill(null),
 };
 
 export function loadLogs(): LogsByDate {

@@ -43,6 +43,8 @@ export interface Settings {
   championHealth: number;
   /** ISO timestamp championHealth was last set (by decay-application or a boost), or null if never set. */
   championHealthUpdatedAt: string | null;
+  /** ISO timestamp each mana charge was last activated (pausing health decay for 24h from then), or null if unused. */
+  manaCharges: (string | null)[];
 }
 
 export type LogsByDate = Record<string, DayLog>;

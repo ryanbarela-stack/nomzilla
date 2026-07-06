@@ -65,6 +65,15 @@ export function AboutModal({ onClose }: Props) {
         </section>
 
         <section className="flex flex-col gap-1">
+          <h3 className="text-sm font-semibold text-emerald-400">Mana</h3>
+          <p className="text-sm text-gray-300">
+            Below the health bar are 3 mana charges. Using one pauses health decay for 24 hours — it
+            doesn't get used up permanently, it just recharges and becomes usable again 24 hours after
+            you activate it.
+          </p>
+        </section>
+
+        <section className="flex flex-col gap-1">
           <h3 className="text-sm font-semibold text-emerald-400">Attributes</h3>
           <p className="text-sm text-gray-300">
             Each training entry is tagged to one attribute: weight training grows{" "}
