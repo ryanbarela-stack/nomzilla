@@ -1,12 +1,15 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { ATTRIBUTES } from "../lib/attributes";
-import type { AttributeId, DayLog, HabitEntry } from "../lib/types";
-import { formatFriendly, todayISO } from "../lib/date";
+import type { AttributeId, DayLog, HabitEntry, LogsByDate } from "../lib/types";
+import { formatFriendly, formatShort, todayISO } from "../lib/date";
+import { formatHabitDetails } from "../lib/habitFormat";
+import { findLastExerciseEntry, getOverloadSuggestion } from "../lib/progressiveOverload";
 
 type NewHabitEntry = Omit<HabitEntry, "id">;
 
 interface Props {
   log: DayLog;
+  logs: LogsByDate;
   target: number;
   onAddEntry: (name: string, calories: number) => void;
   onRemoveEntry: (id: string) => void;
@@ -17,6 +20,7 @@ interface Props {
 
 export function DayPanel({
   log,
+  logs,
   target,
   onAddEntry,
   onRemoveEntry,
@@ -39,6 +43,25 @@ export function DayPanel({
   const isToday = log.date === todayISO();
   const pct = Math.min(100, Math.round((total / Math.max(1, target)) * 100));
   const habitEntries = log.habitEntries ?? [];
+
+  const lastEntry = useMemo(() => findLastExerciseEntry(logs, habitDescription), [logs, habitDescription]);
+  const suggestion = useMemo(() => (lastEntry ? getOverloadSuggestion(lastEntry) : null), [lastEntry]);
+
+  function applySuggestion() {
+    if (!lastEntry || !suggestion) return;
+    if (!habitAttributeId) setHabitAttributeId(lastEntry.attributeId);
+    setSets(suggestion.sets !== undefined ? String(suggestion.sets) : "");
+    setReps(suggestion.reps !== undefined ? String(suggestion.reps) : "");
+    if (suggestion.weight !== undefined) {
+      setMetricMode("weight");
+      setWeight(String(suggestion.weight));
+      setDurationMinutes("");
+    } else if (suggestion.durationMinutes !== undefined) {
+      setMetricMode("time");
+      setDurationMinutes(String(suggestion.durationMinutes));
+      setWeight("");
+    }
+  }
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -186,6 +209,23 @@ export function DayPanel({
             })}
           </div>
 
+          {lastEntry && suggestion && (
+            <div className="bg-indigo-950 border border-indigo-800 rounded-md px-3 py-2 text-xs text-indigo-200 flex items-center justify-between gap-2 flex-wrap">
+              <span>
+                Last time ({formatShort(lastEntry.date)}): {formatHabitDetails(lastEntry) || "logged, no details"}
+              </span>
+              {formatHabitDetails(suggestion) && (
+                <button
+                  type="button"
+                  onClick={applySuggestion}
+                  className="text-indigo-300 hover:text-white underline shrink-0"
+                >
+                  Try {formatHabitDetails(suggestion)}
+                </button>
+              )}
+            </div>
+          )}
+
           <div className="bg-[#0d1117] border border-[#21262d] rounded-md p-3 flex flex-col gap-3">
             <div className="text-xs font-medium text-gray-400">Details (optional)</div>
 
@@ -275,12 +315,7 @@ export function DayPanel({
           )}
           {habitEntries.map((entry) => {
             const attr = ATTRIBUTES.find((a) => a.id === entry.attributeId);
-            const detailParts: string[] = [];
-            if (entry.sets || entry.reps) {
-              detailParts.push(`${entry.sets ?? "?"}×${entry.reps ?? "?"}`);
-            }
-            if (entry.weight) detailParts.push(`${entry.weight} lb`);
-            if (entry.durationMinutes) detailParts.push(`${entry.durationMinutes} min`);
+            const details = formatHabitDetails(entry);
             return (
               <li
                 key={entry.id}
@@ -288,9 +323,7 @@ export function DayPanel({
               >
                 <div className="flex flex-col">
                   <span className="text-sm text-[#e6edf3]">{entry.description}</span>
-                  {detailParts.length > 0 && (
-                    <span className="text-xs text-gray-500">{detailParts.join(" · ")}</span>
-                  )}
+                  {details && <span className="text-xs text-gray-500">{details}</span>}
                 </div>
                 <div className="flex items-center gap-3">
                   {attr && (

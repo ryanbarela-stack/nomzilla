@@ -196,6 +196,7 @@ function App() {
 
       <DayPanel
         log={selectedLog}
+        logs={logs}
         target={settings.targetCalories}
         onAddEntry={addEntry}
         onRemoveEntry={removeEntry}

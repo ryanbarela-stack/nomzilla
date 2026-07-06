@@ -30,6 +30,11 @@ export function formatFriendly(iso: string): string {
   });
 }
 
+export function formatShort(iso: string): string {
+  const d = fromISODate(iso);
+  return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+}
+
 export const MONTH_NAMES = [
   "January", "February", "March", "April", "May", "June",
   "July", "August", "September", "October", "November", "December",
