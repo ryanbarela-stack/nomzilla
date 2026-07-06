@@ -186,58 +186,66 @@ export function DayPanel({
             })}
           </div>
 
-          <div className="flex gap-2 flex-wrap items-center">
-            <input
-              type="number"
-              placeholder="Sets"
-              value={sets}
-              onChange={(e) => setSets(e.target.value)}
-              min={0}
-              className="w-20 bg-[#0d1117] border border-[#30363d] rounded px-2 py-1.5 text-sm text-[#e6edf3] placeholder:text-gray-500 focus:outline-none focus:border-emerald-500"
-            />
-            <input
-              type="number"
-              placeholder="Reps"
-              value={reps}
-              onChange={(e) => setReps(e.target.value)}
-              min={0}
-              className="w-20 bg-[#0d1117] border border-[#30363d] rounded px-2 py-1.5 text-sm text-[#e6edf3] placeholder:text-gray-500 focus:outline-none focus:border-emerald-500"
-            />
-            <div className="flex rounded overflow-hidden border border-[#30363d]">
-              <button
-                type="button"
-                onClick={() => setMetricMode("weight")}
-                className={`px-2 py-1.5 text-xs ${metricMode === "weight" ? "bg-[#21262d] text-[#e6edf3]" : "bg-[#0d1117] text-gray-500"}`}
-              >
-                Weight
-              </button>
-              <button
-                type="button"
-                onClick={() => setMetricMode("time")}
-                className={`px-2 py-1.5 text-xs ${metricMode === "time" ? "bg-[#21262d] text-[#e6edf3]" : "bg-[#0d1117] text-gray-500"}`}
-              >
-                Time
-              </button>
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center gap-2">
+              <label className="w-14 shrink-0 text-xs text-gray-500">Sets</label>
+              <input
+                type="number"
+                placeholder="Sets"
+                value={sets}
+                onChange={(e) => setSets(e.target.value)}
+                min={0}
+                className="w-20 bg-[#0d1117] border border-[#30363d] rounded px-2 py-1.5 text-sm text-[#e6edf3] placeholder:text-gray-500 focus:outline-none focus:border-emerald-500"
+              />
             </div>
-            {metricMode === "weight" ? (
+            <div className="flex items-center gap-2">
+              <label className="w-14 shrink-0 text-xs text-gray-500">Reps</label>
               <input
                 type="number"
-                placeholder="lbs"
-                value={weight}
-                onChange={(e) => setWeight(e.target.value)}
+                placeholder="Reps"
+                value={reps}
+                onChange={(e) => setReps(e.target.value)}
                 min={0}
                 className="w-20 bg-[#0d1117] border border-[#30363d] rounded px-2 py-1.5 text-sm text-[#e6edf3] placeholder:text-gray-500 focus:outline-none focus:border-emerald-500"
               />
-            ) : (
-              <input
-                type="number"
-                placeholder="min"
-                value={durationMinutes}
-                onChange={(e) => setDurationMinutes(e.target.value)}
-                min={0}
-                className="w-20 bg-[#0d1117] border border-[#30363d] rounded px-2 py-1.5 text-sm text-[#e6edf3] placeholder:text-gray-500 focus:outline-none focus:border-emerald-500"
-              />
-            )}
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-14 shrink-0 flex flex-col gap-0.5">
+                <button
+                  type="button"
+                  onClick={() => setMetricMode("weight")}
+                  className={`px-1.5 py-0.5 text-xs rounded ${metricMode === "weight" ? "bg-[#21262d] text-[#e6edf3]" : "text-gray-500"}`}
+                >
+                  Weight
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setMetricMode("time")}
+                  className={`px-1.5 py-0.5 text-xs rounded ${metricMode === "time" ? "bg-[#21262d] text-[#e6edf3]" : "text-gray-500"}`}
+                >
+                  Time
+                </button>
+              </div>
+              {metricMode === "weight" ? (
+                <input
+                  type="number"
+                  placeholder="lbs"
+                  value={weight}
+                  onChange={(e) => setWeight(e.target.value)}
+                  min={0}
+                  className="w-20 bg-[#0d1117] border border-[#30363d] rounded px-2 py-1.5 text-sm text-[#e6edf3] placeholder:text-gray-500 focus:outline-none focus:border-emerald-500"
+                />
+              ) : (
+                <input
+                  type="number"
+                  placeholder="min"
+                  value={durationMinutes}
+                  onChange={(e) => setDurationMinutes(e.target.value)}
+                  min={0}
+                  className="w-20 bg-[#0d1117] border border-[#30363d] rounded px-2 py-1.5 text-sm text-[#e6edf3] placeholder:text-gray-500 focus:outline-none focus:border-emerald-500"
+                />
+              )}
+            </div>
           </div>
         </form>
 
