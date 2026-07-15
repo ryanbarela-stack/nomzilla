@@ -232,7 +232,7 @@ export function DayPanel({
         <h3 className="text-sm font-semibold text-[#e6edf3]">Training log</h3>
 
         <form onSubmit={handleHabitSubmit} className="flex flex-col gap-2">
-          <div className="flex gap-2 flex-wrap">
+          <div className="flex gap-2 flex-wrap items-center">
             <input
               type="text"
               placeholder="What did you do? (e.g. Bench press)"
@@ -240,6 +240,15 @@ export function DayPanel({
               onChange={(e) => setHabitDescription(e.target.value)}
               className="flex-1 min-w-[160px] bg-[#0d1117] border border-[#30363d] rounded px-3 py-2 text-sm text-[#e6edf3] placeholder:text-gray-500 focus:outline-none focus:border-emerald-500"
             />
+            <label className="flex items-center gap-1.5 text-xs text-gray-400 cursor-pointer whitespace-nowrap shrink-0">
+              <input
+                type="checkbox"
+                checked={isTimed}
+                onChange={(e) => setIsTimed(e.target.checked)}
+                className="accent-emerald-500"
+              />
+              Timed exercise
+            </label>
             <button
               type="submit"
               disabled={!habitDescription.trim() || !habitAttributeId}
@@ -286,47 +295,9 @@ export function DayPanel({
             </div>
           )}
 
-          <div className="bg-[#0d1117] border border-[#21262d] rounded-md p-3 flex flex-col gap-3">
-            <div className="text-xs font-medium text-gray-400">Sets (optional)</div>
-
-            <div className="grid grid-cols-3 gap-x-2 gap-y-1.5 items-center">
-              <div className="text-xs text-gray-500 font-medium">Set</div>
-              <div className="text-xs text-gray-500 font-medium">Reps</div>
-              <div className="text-xs text-gray-500 font-medium">Weight (lbs)</div>
-              {setRows.map((row, i) => (
-                <Fragment key={i}>
-                  <div className="text-xs text-gray-400">Set {i + 1}</div>
-                  <input
-                    type="number"
-                    placeholder="0"
-                    value={row.reps}
-                    onChange={(e) => updateSetRow(i, "reps", e.target.value)}
-                    min={0}
-                    className="w-full bg-[#161b22] border border-[#30363d] rounded px-2 py-1.5 text-sm text-[#e6edf3] placeholder:text-gray-600 focus:outline-none focus:border-emerald-500"
-                  />
-                  <input
-                    type="number"
-                    placeholder="0"
-                    value={row.weight}
-                    onChange={(e) => updateSetRow(i, "weight", e.target.value)}
-                    min={0}
-                    className="w-full bg-[#161b22] border border-[#30363d] rounded px-2 py-1.5 text-sm text-[#e6edf3] placeholder:text-gray-600 focus:outline-none focus:border-emerald-500"
-                  />
-                </Fragment>
-              ))}
-            </div>
-
-            <label className="flex items-center gap-2 text-xs text-gray-400 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={isTimed}
-                onChange={(e) => setIsTimed(e.target.checked)}
-                className="accent-emerald-500"
-              />
-              Timed exercise
-            </label>
-
-            {isTimed && (
+          {isTimed ? (
+            <div className="bg-[#0d1117] border border-[#21262d] rounded-md p-3 flex flex-col gap-2">
+              <div className="text-xs font-medium text-gray-400">Duration</div>
               <div className="relative">
                 <input
                   type="number"
@@ -340,8 +311,39 @@ export function DayPanel({
                   min
                 </span>
               </div>
-            )}
-          </div>
+            </div>
+          ) : (
+            <div className="bg-[#0d1117] border border-[#21262d] rounded-md p-3 flex flex-col gap-3">
+              <div className="text-xs font-medium text-gray-400">Sets (optional)</div>
+
+              <div className="grid grid-cols-3 gap-x-2 gap-y-1.5 items-center">
+                <div className="text-xs text-gray-500 font-medium">Set</div>
+                <div className="text-xs text-gray-500 font-medium">Reps</div>
+                <div className="text-xs text-gray-500 font-medium">Weight (lbs)</div>
+                {setRows.map((row, i) => (
+                  <Fragment key={i}>
+                    <div className="text-xs text-gray-400">Set {i + 1}</div>
+                    <input
+                      type="number"
+                      placeholder="0"
+                      value={row.reps}
+                      onChange={(e) => updateSetRow(i, "reps", e.target.value)}
+                      min={0}
+                      className="w-full bg-[#161b22] border border-[#30363d] rounded px-2 py-1.5 text-sm text-[#e6edf3] placeholder:text-gray-600 focus:outline-none focus:border-emerald-500"
+                    />
+                    <input
+                      type="number"
+                      placeholder="0"
+                      value={row.weight}
+                      onChange={(e) => updateSetRow(i, "weight", e.target.value)}
+                      min={0}
+                      className="w-full bg-[#161b22] border border-[#30363d] rounded px-2 py-1.5 text-sm text-[#e6edf3] placeholder:text-gray-600 focus:outline-none focus:border-emerald-500"
+                    />
+                  </Fragment>
+                ))}
+              </div>
+            </div>
+          )}
         </form>
 
         <ul className="flex flex-col gap-1 max-h-64 overflow-y-auto">
