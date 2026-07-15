@@ -27,6 +27,7 @@ interface Props {
   onAddHabitEntry: (entry: NewHabitEntry) => void;
   onRemoveHabitEntry: (id: string) => void;
   onJumpToday: () => void;
+  onChangeTarget: (value: number) => void;
 }
 
 export function DayPanel({
@@ -38,9 +39,12 @@ export function DayPanel({
   onAddHabitEntry,
   onRemoveHabitEntry,
   onJumpToday,
+  onChangeTarget,
 }: Props) {
   const [name, setName] = useState("");
   const [calories, setCalories] = useState("");
+  const [editingTarget, setEditingTarget] = useState(false);
+  const [targetDraft, setTargetDraft] = useState(String(target));
   const [habitDescription, setHabitDescription] = useState("");
   const [habitAttributeId, setHabitAttributeId] = useState<AttributeId | null>(null);
   const [setRows, setSetRows] = useState<SetRow[]>(emptySetRows);
@@ -78,6 +82,13 @@ export function DayPanel({
       setIsTimed(true);
       setDurationMinutes(String(suggestion.durationMinutes));
     }
+  }
+
+  function commitTarget() {
+    const val = Number(targetDraft);
+    if (val > 0) onChangeTarget(Math.round(val));
+    else setTargetDraft(String(target));
+    setEditingTarget(false);
   }
 
   function handleSubmit(e: React.FormEvent) {
@@ -128,7 +139,34 @@ export function DayPanel({
           )}
         </div>
         <div className="text-right">
-          <div className="text-2xl font-bold text-[#e6edf3]">{total} <span className="text-sm font-normal text-gray-400">/ {target} kcal</span></div>
+          <div className="text-2xl font-bold text-[#e6edf3]">
+            {total}{" "}
+            <span className="text-sm font-normal text-gray-400">
+              /{" "}
+              {editingTarget ? (
+                <input
+                  autoFocus
+                  type="number"
+                  value={targetDraft}
+                  onChange={(e) => setTargetDraft(e.target.value)}
+                  onBlur={commitTarget}
+                  onKeyDown={(e) => e.key === "Enter" && commitTarget()}
+                  className="w-20 bg-[#0d1117] border border-emerald-600 rounded px-1 py-0.5 text-[#e6edf3] text-sm focus:outline-none"
+                />
+              ) : (
+                <button
+                  onClick={() => {
+                    setTargetDraft(String(target));
+                    setEditingTarget(true);
+                  }}
+                  className="underline decoration-dotted hover:text-emerald-400"
+                >
+                  {target}
+                </button>
+              )}{" "}
+              kcal
+            </span>
+          </div>
           <div className={`text-sm ${remaining >= 0 ? "text-emerald-400" : "text-red-400"}`}>
             {remaining >= 0 ? `${remaining} remaining` : `${Math.abs(remaining)} over`}
           </div>

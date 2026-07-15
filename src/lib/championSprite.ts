@@ -1,5 +1,4 @@
-import { getClass, type ClassId } from "./classes";
-import type { SpriteSize } from "./paths";
+import { getClass, type ClassId, type SpriteSize } from "./classes";
 
 export const GRID = 96;
 const S = GRID / 32;

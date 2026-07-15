@@ -1,6 +1,9 @@
-import type { SpriteSize } from "./paths";
-
 export type ClassId = "warrior" | "cleric" | "monk" | "wizard" | "barbarian" | "rogue";
+
+export interface SpriteSize {
+  width: number;
+  height: number;
+}
 
 export interface ChampionClass {
   id: ClassId;

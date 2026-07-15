@@ -1,14 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
-import { KaijuHeader } from "./components/KaijuHeader";
 import { ChampionHeader } from "./components/ChampionHeader";
 import { DayPanel } from "./components/DayPanel";
 import { AboutModal } from "./components/AboutModal";
 import { Calendar } from "./components/Calendar";
 import { loadLogs, saveLogs, loadSettings, saveSettings } from "./lib/storage";
 import { todayISO, fromISODate } from "./lib/date";
-import { computeStreak, computeTotalDaysLogged, getStageForStreak } from "./lib/streak";
 import { getCurrentHealth, applyExerciseBoost, isManaChargeReady } from "./lib/championHealth";
-import { getCurrentLevelIndex } from "./lib/borders";
 import { computeAttributeCount, getAttributeLevel } from "./lib/attributes";
 import type { AttributeId, HabitEntry, LogsByDate, Settings } from "./lib/types";
 
@@ -27,10 +24,6 @@ function App() {
     return () => clearInterval(id);
   }, []);
 
-  const streak = useMemo(() => computeStreak(logs, todayISO()), [logs]);
-  const stage = useMemo(() => getStageForStreak(streak), [streak]);
-  const totalDaysLogged = useMemo(() => computeTotalDaysLogged(logs), [logs]);
-  const levelIndex = useMemo(() => getCurrentLevelIndex(totalDaysLogged), [totalDaysLogged]);
   const championHealth = useMemo(
     () => getCurrentHealth(settings.championHealth, settings.championHealthUpdatedAt, settings.manaCharges, now),
     [settings.championHealth, settings.championHealthUpdatedAt, settings.manaCharges, now],
@@ -98,14 +91,6 @@ function App() {
     setSettings((prev) => ({ ...prev, targetCalories: value }));
   }
 
-  function changePath(id: string) {
-    setSettings((prev) => ({ ...prev, pathId: id }));
-  }
-
-  function changeBorder(id: string) {
-    setSettings((prev) => ({ ...prev, borderId: id }));
-  }
-
   function changeClass(id: string) {
     setSettings((prev) => ({ ...prev, classId: id }));
   }
@@ -121,10 +106,6 @@ function App() {
       manaCharges[index] = new Date().toISOString();
       return { ...prev, manaCharges };
     });
-  }
-
-  function acknowledgeLevelUp() {
-    setSettings((prev) => ({ ...prev, seenLevelIndex: levelIndex }));
   }
 
   function acknowledgeAttributeLevel(id: AttributeId) {
@@ -150,7 +131,7 @@ function App() {
     <div className="max-w-3xl mx-auto p-4 flex flex-col gap-4">
       <div className="relative text-center">
         <h1 className="text-2xl font-pixel font-bold tracking-wide text-emerald-400">Nomzilla</h1>
-        <p className="text-sm text-gray-500">Teach your Champion. Grow your Kaiju.</p>
+        <p className="text-sm text-gray-500">Teach your Champion.</p>
         <button
           onClick={() => setAboutOpen(true)}
           aria-label="How Nomzilla works"
@@ -179,21 +160,6 @@ function App() {
         onActivateMana={activateMana}
       />
 
-      <KaijuHeader
-        streak={streak}
-        stage={stage}
-        target={settings.targetCalories}
-        pathId={settings.pathId}
-        borderId={settings.borderId}
-        totalDaysLogged={totalDaysLogged}
-        levelIndex={levelIndex}
-        seenLevelIndex={settings.seenLevelIndex}
-        onChangeTarget={changeTarget}
-        onChangePath={changePath}
-        onChangeBorder={changeBorder}
-        onAcknowledgeLevelUp={acknowledgeLevelUp}
-      />
-
       <DayPanel
         log={selectedLog}
         logs={logs}
@@ -203,6 +169,7 @@ function App() {
         onAddHabitEntry={addHabitEntry}
         onRemoveHabitEntry={removeHabitEntry}
         onJumpToday={jumpToday}
+        onChangeTarget={changeTarget}
       />
 
       <Calendar
