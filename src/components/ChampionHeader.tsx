@@ -137,9 +137,9 @@ export function ChampionHeader({
               </div>
             </div>
           </div>
-        </div>
 
-        <AttributeRadar logs={logs} />
+          <AttributeRadar logs={logs} size={128} />
+        </div>
 
         <AttributeStats
           logs={logs}
