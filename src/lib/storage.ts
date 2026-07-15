@@ -6,9 +6,6 @@ const SETTINGS_KEY = "nomzilla:settings";
 
 export const DEFAULT_SETTINGS: Settings = {
   targetCalories: 2000,
-  pathId: null,
-  borderId: "default",
-  seenLevelIndex: 0,
   seenAttributeLevels: {},
   titleAttributeId: null,
   classId: null,
