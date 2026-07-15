@@ -1,8 +1,9 @@
 import { Fragment, useMemo, useState } from "react";
 import { ATTRIBUTES } from "../lib/attributes";
-import type { AttributeId, DayLog, HabitEntry, LogsByDate } from "../lib/types";
+import type { AttributeId, DayLog, FoodEntry, FoodMacros, HabitEntry, LogsByDate } from "../lib/types";
 import { formatFriendly, formatShort, todayISO } from "../lib/date";
 import { formatHabitDetails } from "../lib/habitFormat";
+import { formatMacros } from "../lib/foodFormat";
 import { findLastExerciseEntry, getOverloadSuggestion } from "../lib/progressiveOverload";
 
 type NewHabitEntry = Omit<HabitEntry, "id">;
@@ -22,7 +23,7 @@ interface Props {
   log: DayLog;
   logs: LogsByDate;
   target: number;
-  onAddEntry: (name: string, calories: number) => void;
+  onAddEntry: (name: string, calories: number, macros?: FoodMacros) => void;
   onRemoveEntry: (id: string) => void;
   onAddHabitEntry: (entry: NewHabitEntry) => void;
   onRemoveHabitEntry: (id: string) => void;
@@ -43,6 +44,10 @@ export function DayPanel({
 }: Props) {
   const [name, setName] = useState("");
   const [calories, setCalories] = useState("");
+  const [macrosOpen, setMacrosOpen] = useState(false);
+  const [protein, setProtein] = useState("");
+  const [carbs, setCarbs] = useState("");
+  const [fat, setFat] = useState("");
   const [editingTarget, setEditingTarget] = useState(false);
   const [targetDraft, setTargetDraft] = useState(String(target));
   const [habitDescription, setHabitDescription] = useState("");
@@ -60,6 +65,34 @@ export function DayPanel({
   const isToday = log.date === todayISO();
   const pct = Math.min(100, Math.round((total / Math.max(1, target)) * 100));
   const habitEntries = log.habitEntries ?? [];
+
+  const macroTotals: FoodMacros = {
+    protein: log.entries.some((e) => e.protein !== undefined)
+      ? log.entries.reduce((sum, e) => sum + (e.protein ?? 0), 0)
+      : undefined,
+    carbs: log.entries.some((e) => e.carbs !== undefined)
+      ? log.entries.reduce((sum, e) => sum + (e.carbs ?? 0), 0)
+      : undefined,
+    fat: log.entries.some((e) => e.fat !== undefined)
+      ? log.entries.reduce((sum, e) => sum + (e.fat ?? 0), 0)
+      : undefined,
+  };
+  const hasMacros = macroTotals.protein !== undefined || macroTotals.carbs !== undefined || macroTotals.fat !== undefined;
+
+  const recentFoods = useMemo(() => {
+    const byName = new Map<string, { entry: FoodEntry; date: string }>();
+    Object.entries(logs).forEach(([date, dayLog]) => {
+      dayLog.entries.forEach((entry) => {
+        const key = entry.name.trim().toLowerCase();
+        const existing = byName.get(key);
+        if (!existing || date > existing.date) byName.set(key, { entry, date });
+      });
+    });
+    return Array.from(byName.values())
+      .sort((a, b) => (a.date === b.date ? 0 : a.date < b.date ? 1 : -1))
+      .slice(0, 8)
+      .map((v) => v.entry);
+  }, [logs]);
 
   const lastEntry = useMemo(() => findLastExerciseEntry(logs, habitDescription), [logs, habitDescription]);
   const suggestion = useMemo(() => (lastEntry ? getOverloadSuggestion(lastEntry) : null), [lastEntry]);
@@ -95,9 +128,29 @@ export function DayPanel({
     e.preventDefault();
     const cal = Number(calories);
     if (!name.trim() || !cal || cal <= 0) return;
-    onAddEntry(name.trim(), Math.round(cal));
+
+    const macros: FoodMacros = {
+      protein: protein ? Number(protein) : undefined,
+      carbs: carbs ? Number(carbs) : undefined,
+      fat: fat ? Number(fat) : undefined,
+    };
+    const hasAnyMacro = macros.protein !== undefined || macros.carbs !== undefined || macros.fat !== undefined;
+
+    onAddEntry(name.trim(), Math.round(cal), hasAnyMacro ? macros : undefined);
     setName("");
     setCalories("");
+    setProtein("");
+    setCarbs("");
+    setFat("");
+  }
+
+  function applyRecentFood(entry: FoodEntry) {
+    setName(entry.name);
+    setCalories(String(entry.calories));
+    setProtein(entry.protein !== undefined ? String(entry.protein) : "");
+    setCarbs(entry.carbs !== undefined ? String(entry.carbs) : "");
+    setFat(entry.fat !== undefined ? String(entry.fat) : "");
+    if (entry.protein !== undefined || entry.carbs !== undefined || entry.fat !== undefined) setMacrosOpen(true);
   }
 
   function handleHabitSubmit(e: React.FormEvent) {
@@ -170,6 +223,7 @@ export function DayPanel({
           <div className={`text-sm ${remaining >= 0 ? "text-emerald-400" : "text-red-400"}`}>
             {remaining >= 0 ? `${remaining} remaining` : `${Math.abs(remaining)} over`}
           </div>
+          {hasMacros && <div className="text-xs text-gray-500">{formatMacros(macroTotals)}</div>}
         </div>
       </div>
 
@@ -180,52 +234,112 @@ export function DayPanel({
         />
       </div>
 
-      <form onSubmit={handleSubmit} className="flex gap-2 flex-wrap">
-        <input
-          type="text"
-          placeholder="Food name"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          className="flex-1 min-w-[120px] bg-[#0d1117] border border-[#30363d] rounded px-3 py-2 text-sm text-[#e6edf3] placeholder:text-gray-500 focus:outline-none focus:border-emerald-500"
-        />
-        <input
-          type="number"
-          placeholder="kcal"
-          value={calories}
-          onChange={(e) => setCalories(e.target.value)}
-          className="w-24 bg-[#0d1117] border border-[#30363d] rounded px-3 py-2 text-sm text-[#e6edf3] placeholder:text-gray-500 focus:outline-none focus:border-emerald-500"
-          min={1}
-        />
-        <button
-          type="submit"
-          className="bg-emerald-600 hover:bg-emerald-500 text-white rounded px-4 py-2 text-sm font-medium"
-        >
-          Add
-        </button>
+      <form onSubmit={handleSubmit} className="flex flex-col gap-2">
+        <div className="flex gap-2 flex-wrap">
+          <input
+            type="text"
+            placeholder="Food name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            className="flex-1 min-w-[120px] bg-[#0d1117] border border-[#30363d] rounded px-3 py-2 text-sm text-[#e6edf3] placeholder:text-gray-500 focus:outline-none focus:border-emerald-500"
+          />
+          <input
+            type="number"
+            placeholder="kcal"
+            value={calories}
+            onChange={(e) => setCalories(e.target.value)}
+            className="w-24 bg-[#0d1117] border border-[#30363d] rounded px-3 py-2 text-sm text-[#e6edf3] placeholder:text-gray-500 focus:outline-none focus:border-emerald-500"
+            min={1}
+          />
+          <button
+            type="button"
+            onClick={() => setMacrosOpen((prev) => !prev)}
+            className="text-xs text-gray-400 hover:text-emerald-400 underline decoration-dotted whitespace-nowrap"
+          >
+            {macrosOpen ? "Hide macros" : "+ Macros"}
+          </button>
+          <button
+            type="submit"
+            className="bg-emerald-600 hover:bg-emerald-500 text-white rounded px-4 py-2 text-sm font-medium"
+          >
+            Add
+          </button>
+        </div>
+
+        {macrosOpen && (
+          <div className="flex gap-2 flex-wrap">
+            <input
+              type="number"
+              placeholder="Protein (g)"
+              value={protein}
+              onChange={(e) => setProtein(e.target.value)}
+              min={0}
+              className="w-28 bg-[#0d1117] border border-[#30363d] rounded px-3 py-2 text-sm text-[#e6edf3] placeholder:text-gray-500 focus:outline-none focus:border-emerald-500"
+            />
+            <input
+              type="number"
+              placeholder="Carbs (g)"
+              value={carbs}
+              onChange={(e) => setCarbs(e.target.value)}
+              min={0}
+              className="w-28 bg-[#0d1117] border border-[#30363d] rounded px-3 py-2 text-sm text-[#e6edf3] placeholder:text-gray-500 focus:outline-none focus:border-emerald-500"
+            />
+            <input
+              type="number"
+              placeholder="Fat (g)"
+              value={fat}
+              onChange={(e) => setFat(e.target.value)}
+              min={0}
+              className="w-28 bg-[#0d1117] border border-[#30363d] rounded px-3 py-2 text-sm text-[#e6edf3] placeholder:text-gray-500 focus:outline-none focus:border-emerald-500"
+            />
+          </div>
+        )}
       </form>
+
+      {recentFoods.length > 0 && (
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="text-xs text-gray-500">Recent:</span>
+          {recentFoods.map((entry) => (
+            <button
+              key={entry.id}
+              type="button"
+              onClick={() => applyRecentFood(entry)}
+              className="text-xs px-2 py-1 rounded-full bg-[#0d1117] border border-[#30363d] text-gray-300 hover:border-emerald-500 hover:text-emerald-400"
+            >
+              {entry.name} · {entry.calories} kcal
+            </button>
+          ))}
+        </div>
+      )}
 
       <ul className="flex flex-col gap-1 max-h-64 overflow-y-auto">
         {log.entries.length === 0 && (
           <li className="text-sm text-gray-500 italic py-2">No food logged yet.</li>
         )}
-        {log.entries.map((entry) => (
-          <li
-            key={entry.id}
-            className="flex items-center justify-between bg-[#0d1117] border border-[#21262d] rounded px-3 py-2"
-          >
-            <span className="text-sm text-[#e6edf3]">{entry.name}</span>
-            <div className="flex items-center gap-3">
-              <span className="text-sm text-gray-400">{entry.calories} kcal</span>
-              <button
-                onClick={() => onRemoveEntry(entry.id)}
-                className="text-gray-500 hover:text-red-400 text-sm"
-                aria-label="Remove entry"
-              >
-                ✕
-              </button>
-            </div>
-          </li>
-        ))}
+        {log.entries.map((entry) => {
+          const macros = formatMacros(entry);
+          return (
+            <li
+              key={entry.id}
+              className="flex items-center justify-between bg-[#0d1117] border border-[#21262d] rounded px-3 py-2"
+            >
+              <div className="flex flex-col">
+                <span className="text-sm text-[#e6edf3]">{entry.name}</span>
+                {macros && <span className="text-xs text-gray-500">{macros}</span>}
+              </div>
+              <div className="flex items-center gap-3">
+                <span className="text-sm text-gray-400">{entry.calories} kcal</span>
+                <button
+                  onClick={() => onRemoveEntry(entry.id)}
+                  className="text-gray-500 hover:text-red-400 text-sm"
+                  aria-label="Remove entry"
+                >
+                  ✕
+                </button>
+              </div>
+            </li>
+          );
+        })}
       </ul>
 
       <div className="border-t border-[#30363d] pt-4 flex flex-col gap-3">

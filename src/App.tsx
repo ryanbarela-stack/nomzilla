@@ -7,7 +7,7 @@ import { loadLogs, saveLogs, loadSettings, saveSettings } from "./lib/storage";
 import { todayISO, fromISODate } from "./lib/date";
 import { getCurrentHealth, applyExerciseBoost, isManaChargeReady } from "./lib/championHealth";
 import { computeAttributeCount, getAttributeLevel } from "./lib/attributes";
-import type { AttributeId, HabitEntry, LogsByDate, Settings } from "./lib/types";
+import type { AttributeId, FoodMacros, HabitEntry, LogsByDate, Settings } from "./lib/types";
 
 function App() {
   const [logs, setLogs] = useState<LogsByDate>(() => loadLogs());
@@ -30,14 +30,14 @@ function App() {
   );
   const selectedLog = logs[selectedDate] ?? { date: selectedDate, entries: [] };
 
-  function addEntry(name: string, calories: number) {
+  function addEntry(name: string, calories: number, macros?: FoodMacros) {
     setLogs((prev) => {
       const existing = prev[selectedDate] ?? { date: selectedDate, entries: [] };
       return {
         ...prev,
         [selectedDate]: {
           ...existing,
-          entries: [...existing.entries, { id: crypto.randomUUID(), name, calories }],
+          entries: [...existing.entries, { id: crypto.randomUUID(), name, calories, ...macros }],
         },
       };
     });

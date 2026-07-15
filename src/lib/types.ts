@@ -2,7 +2,15 @@ export interface FoodEntry {
   id: string;
   name: string;
   calories: number;
+  /** Grams of protein, if logged. */
+  protein?: number;
+  /** Grams of carbohydrates, if logged. */
+  carbs?: number;
+  /** Grams of fat, if logged. */
+  fat?: number;
 }
+
+export type FoodMacros = Pick<FoodEntry, "protein" | "carbs" | "fat">;
 
 export type AttributeId = "strength" | "endurance" | "intelligence" | "wisdom";
 
