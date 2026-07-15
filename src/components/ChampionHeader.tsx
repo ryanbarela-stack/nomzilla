@@ -90,19 +90,19 @@ export function ChampionHeader({
             />
           )}
 
-          <div className="flex-1 w-full flex flex-col gap-2 text-center sm:text-left">
+          <div className="flex-1 w-full flex flex-col items-center gap-2 text-center">
             <h1 className="text-xl font-bold text-[#e6edf3] font-pixel">{currentClass ? currentClass.name : "Champion"}</h1>
             {displayTitle && <p className="text-xs text-indigo-300 italic -mt-1">{displayTitle}</p>}
             {hasAnyTitle && (
               <button
                 onClick={() => setTitlePickerOpen(true)}
-                className="text-xs text-gray-400 hover:text-yellow-400 underline decoration-dotted self-center sm:self-start -mt-1"
+                className="text-xs text-gray-400 hover:text-yellow-400 underline decoration-dotted -mt-1"
               >
                 Title: {displayTitle ?? "Auto"}
               </button>
             )}
 
-            <div className="flex flex-col gap-0.5 w-full max-w-xs mx-auto sm:mx-0">
+            <div className="flex flex-col gap-0.5 w-full max-w-xs">
               <div className="flex items-center justify-between text-xs text-gray-400">
                 <span>Health{paused && <span className="text-blue-400"> (paused)</span>}</span>
                 <span>{healthPct}%</span>
@@ -115,7 +115,7 @@ export function ChampionHeader({
               </div>
             </div>
 
-            <div className="flex flex-col gap-0.5 w-full max-w-xs mx-auto sm:mx-0">
+            <div className="flex flex-col gap-0.5 w-full max-w-xs">
               <div className="text-xs text-gray-400">Mana</div>
               <div className="flex gap-1">
                 {manaCharges.map((activatedAt, i) => {
