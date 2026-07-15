@@ -11,6 +11,8 @@ export interface Attribute {
   barClassName: string;
   /** Classes for the habit-toggle button when active. */
   activeButtonClassName: string;
+  /** Same color as barClassName, as a hex value for use in SVG (e.g. the radar chart). */
+  hex: string;
 }
 
 export const ATTRIBUTES: Attribute[] = [
@@ -20,6 +22,7 @@ export const ATTRIBUTES: Attribute[] = [
     habitLabel: "Weight training",
     barClassName: "bg-red-500",
     activeButtonClassName: "bg-red-950 border-red-600 text-red-200",
+    hex: "#ef4444",
   },
   {
     id: "endurance",
@@ -27,6 +30,7 @@ export const ATTRIBUTES: Attribute[] = [
     habitLabel: "Cardio",
     barClassName: "bg-green-500",
     activeButtonClassName: "bg-green-950 border-green-600 text-green-200",
+    hex: "#22c55e",
   },
   {
     id: "intelligence",
@@ -34,6 +38,7 @@ export const ATTRIBUTES: Attribute[] = [
     habitLabel: "Reading / learning",
     barClassName: "bg-blue-500",
     activeButtonClassName: "bg-blue-950 border-blue-600 text-blue-200",
+    hex: "#3b82f6",
   },
   {
     id: "wisdom",
@@ -41,6 +46,7 @@ export const ATTRIBUTES: Attribute[] = [
     habitLabel: "Self-care",
     barClassName: "bg-yellow-500",
     activeButtonClassName: "bg-yellow-950 border-yellow-600 text-yellow-200",
+    hex: "#eab308",
   },
 ];
 

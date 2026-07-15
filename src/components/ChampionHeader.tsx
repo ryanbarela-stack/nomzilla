@@ -3,6 +3,7 @@ import { ChampionCanvas } from "./ChampionCanvas";
 import { ClassPicker } from "./ClassPicker";
 import { TitlePicker } from "./TitlePicker";
 import { AttributeStats } from "./AttributeStats";
+import { AttributeRadar } from "./AttributeRadar";
 import { getDisplayTitle } from "../lib/attributes";
 import { CLASSES, getClass } from "../lib/classes";
 import { isHealthPaused, isManaChargeReady, type ManaCharges } from "../lib/championHealth";
@@ -137,6 +138,8 @@ export function ChampionHeader({
             </div>
           </div>
         </div>
+
+        <AttributeRadar logs={logs} />
 
         <AttributeStats
           logs={logs}
