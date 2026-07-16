@@ -4,13 +4,7 @@ export interface FoodEntry {
   calories: number;
   /** Grams of protein, if logged. */
   protein?: number;
-  /** Grams of carbohydrates, if logged. */
-  carbs?: number;
-  /** Grams of fat, if logged. */
-  fat?: number;
 }
-
-export type FoodMacros = Pick<FoodEntry, "protein" | "carbs" | "fat">;
 
 export type AttributeId = "strength" | "endurance" | "intelligence" | "wisdom";
 
@@ -48,6 +42,7 @@ export interface DayLog {
 
 export interface Settings {
   targetCalories: number;
+  targetProtein: number;
   /** Highest attribute level already shown a level-up banner for, per attribute. */
   seenAttributeLevels: Record<string, number>;
   /** Manually chosen attribute whose title to display, or null to auto-pick the highest-tier one. */

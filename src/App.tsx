@@ -7,7 +7,7 @@ import { loadLogs, saveLogs, loadSettings, saveSettings } from "./lib/storage";
 import { todayISO, fromISODate } from "./lib/date";
 import { getCurrentHealth, applyExerciseBoost, isManaChargeReady } from "./lib/championHealth";
 import { computeAttributeCount, getAttributeLevel } from "./lib/attributes";
-import type { AttributeId, FoodMacros, HabitEntry, LogsByDate, Settings } from "./lib/types";
+import type { AttributeId, HabitEntry, LogsByDate, Settings } from "./lib/types";
 
 function App() {
   const [logs, setLogs] = useState<LogsByDate>(() => loadLogs());
@@ -30,14 +30,14 @@ function App() {
   );
   const selectedLog = logs[selectedDate] ?? { date: selectedDate, entries: [] };
 
-  function addEntry(name: string, calories: number, macros?: FoodMacros) {
+  function addEntry(name: string, calories: number, protein?: number) {
     setLogs((prev) => {
       const existing = prev[selectedDate] ?? { date: selectedDate, entries: [] };
       return {
         ...prev,
         [selectedDate]: {
           ...existing,
-          entries: [...existing.entries, { id: crypto.randomUUID(), name, calories, ...macros }],
+          entries: [...existing.entries, { id: crypto.randomUUID(), name, calories, protein }],
         },
       };
     });
@@ -89,6 +89,10 @@ function App() {
 
   function changeTarget(value: number) {
     setSettings((prev) => ({ ...prev, targetCalories: value }));
+  }
+
+  function changeProteinTarget(value: number) {
+    setSettings((prev) => ({ ...prev, targetProtein: value }));
   }
 
   function changeClass(id: string) {
@@ -164,12 +168,14 @@ function App() {
         log={selectedLog}
         logs={logs}
         target={settings.targetCalories}
+        proteinTarget={settings.targetProtein}
         onAddEntry={addEntry}
         onRemoveEntry={removeEntry}
         onAddHabitEntry={addHabitEntry}
         onRemoveHabitEntry={removeHabitEntry}
         onJumpToday={jumpToday}
         onChangeTarget={changeTarget}
+        onChangeProteinTarget={changeProteinTarget}
       />
 
       <Calendar
