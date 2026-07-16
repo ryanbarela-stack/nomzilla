@@ -1,11 +1,4 @@
-import {
-  ATTRIBUTES,
-  computeAttributeCount,
-  getAttributeLevel,
-  getDaysToNextLevel,
-  getLevelProgressPct,
-  type AttributeId,
-} from "../lib/attributes";
+import { ATTRIBUTES, getAttributeProgress, type AttributeId } from "../lib/attributes";
 import type { LogsByDate } from "../lib/types";
 
 interface Props {
@@ -20,10 +13,7 @@ export function AttributeStats({ logs, seenAttributeLevels, onAcknowledgeLevel }
       <h2 className="text-sm font-semibold text-[#e6edf3] font-pixel">Champion Attributes</h2>
 
       {ATTRIBUTES.map((attr) => {
-        const count = computeAttributeCount(logs, attr.id);
-        const level = getAttributeLevel(count);
-        const daysToNext = getDaysToNextLevel(count);
-        const pct = getLevelProgressPct(count);
+        const { level, pointsToNextLevel, pct } = getAttributeProgress(logs, attr.id);
         const leveledUp = level > (seenAttributeLevels[attr.id] ?? 0);
 
         return (
@@ -45,7 +35,7 @@ export function AttributeStats({ logs, seenAttributeLevels, onAcknowledgeLevel }
               <span>
                 {attr.name} — <span className="text-gray-300">Level {level}</span>
               </span>
-              <span>{daysToNext} more</span>
+              <span>{pointsToNextLevel.toLocaleString()} {attr.unitLabel} more</span>
             </div>
             <div className="h-2 w-full bg-[#0d1117] border border-[#30363d] rounded-full overflow-hidden">
               <div className={`h-full ${attr.barClassName} rounded-full transition-[width]`} style={{ width: `${pct}%` }} />

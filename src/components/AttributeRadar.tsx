@@ -1,4 +1,4 @@
-import { ATTRIBUTES, computeAttributeCount, getAttributeLevel } from "../lib/attributes";
+import { ATTRIBUTES, getAttributeProgress } from "../lib/attributes";
 import type { LogsByDate } from "../lib/types";
 
 interface Props {
@@ -56,7 +56,7 @@ export function AttributeRadar({ logs, size = BASE_SIZE }: Props) {
     }
   }
 
-  const levels = ATTRIBUTES.map((attr) => getAttributeLevel(computeAttributeCount(logs, attr.id)));
+  const levels = ATTRIBUTES.map((attr) => getAttributeProgress(logs, attr.id).level);
   const axisMax = Math.max(4, Math.max(...levels) + 2);
 
   const dataPoints = levels.map((level, i) => axisPoint(i, level / axisMax));

@@ -6,7 +6,7 @@ import { Calendar } from "./components/Calendar";
 import { loadLogs, saveLogs, loadSettings, saveSettings } from "./lib/storage";
 import { todayISO, fromISODate } from "./lib/date";
 import { getCurrentHealth, applyExerciseBoost, isManaChargeReady } from "./lib/championHealth";
-import { computeAttributeCount, getAttributeLevel } from "./lib/attributes";
+import { getAttributeProgress } from "./lib/attributes";
 import type { AttributeId, HabitEntry, LogsByDate, Settings } from "./lib/types";
 
 function App() {
@@ -113,8 +113,7 @@ function App() {
   }
 
   function acknowledgeAttributeLevel(id: AttributeId) {
-    const count = computeAttributeCount(logs, id);
-    const level = getAttributeLevel(count);
+    const { level } = getAttributeProgress(logs, id);
     setSettings((prev) => ({
       ...prev,
       seenAttributeLevels: { ...prev.seenAttributeLevels, [id]: level },
