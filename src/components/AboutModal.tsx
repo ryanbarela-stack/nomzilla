@@ -17,10 +17,12 @@ export function AboutModal({ onClose }: Props) {
         </div>
 
         <section className="flex flex-col gap-1">
-          <h3 className="text-sm font-semibold text-emerald-400">Logging & streaks</h3>
+          <h3 className="text-sm font-semibold text-emerald-400">Logging food & protein</h3>
           <p className="text-sm text-gray-300">
-            Log your food each day to build a streak. A streak stays alive as long as you don't skip a day —
-            today doesn't need to be logged yet to keep it going, but missing any other day breaks it back to 0.
+            Log each food's name and calories against your daily calorie target — click the target number
+            to change it. Protein has its own target and progress bar nested right under calories, so you
+            can track it separately from your calorie budget. "Recent" shows foods you've logged before for
+            one-tap re-adding.
           </p>
         </section>
 
@@ -51,9 +53,29 @@ export function AboutModal({ onClose }: Props) {
             <strong className="text-red-400">Strength</strong>, cardio grows{" "}
             <strong className="text-green-400">Stamina</strong>, reading/learning grows{" "}
             <strong className="text-blue-400">Intelligence</strong>, and self-care grows{" "}
-            <strong className="text-yellow-400">Wisdom</strong>. Each attribute has its own level, gaining
-            one level for every 5 lifetime days you've logged that attribute — uncapped, so it keeps
-            climbing the longer you train.
+            <strong className="text-yellow-400">Wisdom</strong>. Every attribute levels up uncapped, but
+            they earn progress differently:
+          </p>
+          <ul className="text-sm text-gray-300 list-disc list-inside">
+            <li>
+              <strong className="text-red-400">Strength</strong> and{" "}
+              <strong className="text-green-400">Stamina</strong> earn XP from what you actually log — more
+              reps, heavier weight, or longer time all earn more XP — 5,000 XP per level.
+            </li>
+            <li>
+              <strong className="text-blue-400">Intelligence</strong> and{" "}
+              <strong className="text-yellow-400">Wisdom</strong> level up from consistency — one point per
+              lifetime day logged, 5 days per level.
+            </li>
+          </ul>
+        </section>
+
+        <section className="flex flex-col gap-1">
+          <h3 className="text-sm font-semibold text-emerald-400">Progressive overload</h3>
+          <p className="text-sm text-gray-300">
+            When you log an exercise you've logged before (same description), the Training log shows your
+            last result and a suggested nudge up — a bit more weight or time, same reps — so it's easy to
+            keep progressing instead of repeating the same numbers.
           </p>
         </section>
 
@@ -62,6 +84,16 @@ export function AboutModal({ onClose }: Props) {
           <p className="text-sm text-gray-300">
             Once any attribute reaches Level 1, your champion earns a title shown under its name — like
             "Level 3 Strength" or "Level 8 Wisdom" — drawn from whichever attribute you've trained the most.
+            Click the title to pin it to a specific attribute instead of always showing the highest one.
+          </p>
+        </section>
+
+        <section className="flex flex-col gap-1">
+          <h3 className="text-sm font-semibold text-emerald-400">Calendar</h3>
+          <p className="text-sm text-gray-300">
+            Each day is colored green if you logged food and stayed under your calorie target, red if you
+            went over, and dark if nothing was logged. A small dot marks days you also logged training.
+            Click any day to view or edit that day's log.
           </p>
         </section>
       </div>
