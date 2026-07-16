@@ -1,4 +1,4 @@
-import { ATTRIBUTES, computeAttributeCount, getAttributeLevel } from "../lib/attributes";
+import { ATTRIBUTES, getAttributeProgress } from "../lib/attributes";
 import type { AttributeId, LogsByDate } from "../lib/types";
 
 interface Props {
@@ -36,8 +36,7 @@ export function TitlePicker({ selectedId, logs, onSelect, onClose }: Props) {
 
         <div className="grid grid-cols-2 gap-3">
           {ATTRIBUTES.map((attr) => {
-            const count = computeAttributeCount(logs, attr.id);
-            const level = getAttributeLevel(count);
+            const { level } = getAttributeProgress(logs, attr.id);
             const unlocked = level > 0;
             return (
               <button

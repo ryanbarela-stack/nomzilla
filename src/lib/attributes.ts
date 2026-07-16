@@ -1,6 +1,8 @@
-import type { AttributeId, LogsByDate } from "./types";
+import type { AttributeId, HabitEntry, LogsByDate } from "./types";
 
 export type { AttributeId };
+
+export type AttributeProgressMode = "volume" | "days";
 
 export interface Attribute {
   id: AttributeId;
@@ -13,6 +15,16 @@ export interface Attribute {
   activeButtonClassName: string;
   /** Same color as barClassName, as a hex value for use in SVG (e.g. the radar chart). */
   hex: string;
+  /**
+   * How this attribute earns points: "volume" credits the actual reps/weight/duration logged
+   * per entry (so a heavier or longer session is worth more); "days" credits one point per
+   * lifetime day the attribute was logged at all, regardless of how much.
+   */
+  progressMode: AttributeProgressMode;
+  /** Points needed to gain one level. */
+  pointsPerLevel: number;
+  /** Unit shown next to remaining-points-to-level-up, e.g. "XP" or "days". */
+  unitLabel: string;
 }
 
 export const ATTRIBUTES: Attribute[] = [
@@ -23,6 +35,9 @@ export const ATTRIBUTES: Attribute[] = [
     barClassName: "bg-red-500",
     activeButtonClassName: "bg-red-950 border-red-600 text-red-200",
     hex: "#ef4444",
+    progressMode: "volume",
+    pointsPerLevel: 5000,
+    unitLabel: "XP",
   },
   {
     id: "endurance",
@@ -31,6 +46,9 @@ export const ATTRIBUTES: Attribute[] = [
     barClassName: "bg-green-500",
     activeButtonClassName: "bg-green-950 border-green-600 text-green-200",
     hex: "#22c55e",
+    progressMode: "volume",
+    pointsPerLevel: 5000,
+    unitLabel: "XP",
   },
   {
     id: "intelligence",
@@ -39,6 +57,9 @@ export const ATTRIBUTES: Attribute[] = [
     barClassName: "bg-blue-500",
     activeButtonClassName: "bg-blue-950 border-blue-600 text-blue-200",
     hex: "#3b82f6",
+    progressMode: "days",
+    pointsPerLevel: 5,
+    unitLabel: "days",
   },
   {
     id: "wisdom",
@@ -47,48 +68,91 @@ export const ATTRIBUTES: Attribute[] = [
     barClassName: "bg-yellow-500",
     activeButtonClassName: "bg-yellow-950 border-yellow-600 text-yellow-200",
     hex: "#eab308",
+    progressMode: "days",
+    pointsPerLevel: 5,
+    unitLabel: "days",
   },
 ];
 
-/** Lifetime days logged required to advance one level. Uncapped — there is no max level. */
-export const DAYS_PER_LEVEL = 5;
+/** Assumed load (lb) for a rep logged with no weight, e.g. a bodyweight set. */
+const BODYWEIGHT_LOAD_LB = 50;
+/** Points credited per minute of a timed entry. */
+const POINTS_PER_MINUTE = 60;
+/** Points credited for an entry with no logged sets, reps, weight, or duration. */
+const MIN_ENTRY_POINTS = 50;
 
-/** Total lifetime days with at least one habit entry logged for this attribute. */
-export function computeAttributeCount(logs: LogsByDate, id: AttributeId): number {
-  return Object.values(logs).filter((log) => (log.habitEntries ?? []).some((entry) => entry.attributeId === id)).length;
+/** Points earned from a single habit entry's logged detail — more/heavier/longer is worth more. */
+function computeEntryPoints(entry: HabitEntry): number {
+  if (entry.setDetails && entry.setDetails.length > 0) {
+    const points = entry.setDetails.reduce((sum, set) => {
+      if (set.reps !== undefined) return sum + set.reps * (set.weight ?? BODYWEIGHT_LOAD_LB);
+      if (set.weight !== undefined) return sum + set.weight;
+      return sum;
+    }, 0);
+    if (points > 0) return points;
+  } else if (entry.sets !== undefined || entry.reps !== undefined || entry.weight !== undefined) {
+    const sets = entry.sets ?? 1;
+    const reps = entry.reps ?? 1;
+    return sets * reps * (entry.weight ?? BODYWEIGHT_LOAD_LB);
+  }
+  if (entry.durationMinutes !== undefined) return entry.durationMinutes * POINTS_PER_MINUTE;
+  return MIN_ENTRY_POINTS;
 }
 
-/** Attribute level for a given lifetime day count — one level per DAYS_PER_LEVEL days, uncapped. */
-export function getAttributeLevel(count: number): number {
-  return Math.floor(count / DAYS_PER_LEVEL);
+/** Lifetime points earned toward this attribute, per its progressMode. */
+export function computeAttributePoints(logs: LogsByDate, id: AttributeId): number {
+  const attr = ATTRIBUTES.find((a) => a.id === id);
+  if (!attr) return 0;
+
+  if (attr.progressMode === "days") {
+    return Object.values(logs).filter((log) => (log.habitEntries ?? []).some((entry) => entry.attributeId === id))
+      .length;
+  }
+
+  return Object.values(logs).reduce((sum, log) => {
+    const entries = (log.habitEntries ?? []).filter((entry) => entry.attributeId === id);
+    return sum + entries.reduce((s, entry) => s + computeEntryPoints(entry), 0);
+  }, 0);
 }
 
-/** Days still needed (of this attribute) to reach the next level. */
-export function getDaysToNextLevel(count: number): number {
-  const level = getAttributeLevel(count);
-  return (level + 1) * DAYS_PER_LEVEL - count;
+export interface AttributeProgress {
+  points: number;
+  level: number;
+  pointsIntoLevel: number;
+  pointsToNextLevel: number;
+  /** Progress (0-100) through the current level. */
+  pct: number;
 }
 
-/** Progress (0-100) through the current level. */
-export function getLevelProgressPct(count: number): number {
-  const intoLevel = count - getAttributeLevel(count) * DAYS_PER_LEVEL;
-  return Math.min(100, Math.max(0, (intoLevel / DAYS_PER_LEVEL) * 100));
+/** Current level and progress-to-next-level for an attribute, uncapped. */
+export function getAttributeProgress(logs: LogsByDate, id: AttributeId): AttributeProgress {
+  const attr = ATTRIBUTES.find((a) => a.id === id);
+  const pointsPerLevel = attr?.pointsPerLevel ?? 1;
+  const points = computeAttributePoints(logs, id);
+  const level = Math.floor(points / pointsPerLevel);
+  const pointsIntoLevel = points - level * pointsPerLevel;
+  return {
+    points,
+    level,
+    pointsIntoLevel,
+    pointsToNextLevel: pointsPerLevel - pointsIntoLevel,
+    pct: Math.min(100, Math.max(0, (pointsIntoLevel / pointsPerLevel) * 100)),
+  };
 }
 
 /**
  * The player's auto-selected title, e.g. "Level 3 Strength" — drawn from
- * whichever attribute has progressed the furthest. Ties break on raw count,
+ * whichever attribute has progressed the furthest. Ties break on raw points,
  * then on ATTRIBUTES order. Returns null until at least one attribute has
  * reached Level 1.
  */
 export function getTopAttributeTitle(logs: LogsByDate): string | null {
-  let best: { attr: Attribute; level: number; count: number } | null = null;
+  let best: { attr: Attribute; level: number; points: number } | null = null;
   for (const attr of ATTRIBUTES) {
-    const count = computeAttributeCount(logs, attr.id);
-    const level = getAttributeLevel(count);
+    const { level, points } = getAttributeProgress(logs, attr.id);
     if (level === 0) continue;
-    if (!best || level > best.level || (level === best.level && count > best.count)) {
-      best = { attr, level, count };
+    if (!best || level > best.level || (level === best.level && points > best.points)) {
+      best = { attr, level, points };
     }
   }
   return best ? `Level ${best.level} ${best.attr.name}` : null;
@@ -98,7 +162,7 @@ export function getTopAttributeTitle(logs: LogsByDate): string | null {
 export function getAttributeTitle(logs: LogsByDate, id: AttributeId): string | null {
   const attr = ATTRIBUTES.find((a) => a.id === id);
   if (!attr) return null;
-  const level = getAttributeLevel(computeAttributeCount(logs, id));
+  const { level } = getAttributeProgress(logs, id);
   return level === 0 ? null : `Level ${level} ${attr.name}`;
 }
 
