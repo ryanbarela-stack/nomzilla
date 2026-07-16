@@ -1,9 +1,9 @@
 import { Fragment, useMemo, useState } from "react";
 import { ATTRIBUTES } from "../lib/attributes";
-import type { AttributeId, DayLog, FoodEntry, FoodMacros, HabitEntry, LogsByDate } from "../lib/types";
+import type { AttributeId, DayLog, FoodEntry, HabitEntry, LogsByDate } from "../lib/types";
 import { formatFriendly, formatShort, todayISO } from "../lib/date";
 import { formatHabitDetails } from "../lib/habitFormat";
-import { formatMacros } from "../lib/foodFormat";
+import { formatProtein } from "../lib/foodFormat";
 import { findLastExerciseEntry, getOverloadSuggestion } from "../lib/progressiveOverload";
 
 type NewHabitEntry = Omit<HabitEntry, "id">;
@@ -23,33 +23,36 @@ interface Props {
   log: DayLog;
   logs: LogsByDate;
   target: number;
-  onAddEntry: (name: string, calories: number, macros?: FoodMacros) => void;
+  proteinTarget: number;
+  onAddEntry: (name: string, calories: number, protein?: number) => void;
   onRemoveEntry: (id: string) => void;
   onAddHabitEntry: (entry: NewHabitEntry) => void;
   onRemoveHabitEntry: (id: string) => void;
   onJumpToday: () => void;
   onChangeTarget: (value: number) => void;
+  onChangeProteinTarget: (value: number) => void;
 }
 
 export function DayPanel({
   log,
   logs,
   target,
+  proteinTarget,
   onAddEntry,
   onRemoveEntry,
   onAddHabitEntry,
   onRemoveHabitEntry,
   onJumpToday,
   onChangeTarget,
+  onChangeProteinTarget,
 }: Props) {
   const [name, setName] = useState("");
   const [calories, setCalories] = useState("");
-  const [macrosOpen, setMacrosOpen] = useState(false);
   const [protein, setProtein] = useState("");
-  const [carbs, setCarbs] = useState("");
-  const [fat, setFat] = useState("");
   const [editingTarget, setEditingTarget] = useState(false);
   const [targetDraft, setTargetDraft] = useState(String(target));
+  const [editingProteinTarget, setEditingProteinTarget] = useState(false);
+  const [proteinTargetDraft, setProteinTargetDraft] = useState(String(proteinTarget));
   const [habitDescription, setHabitDescription] = useState("");
   const [habitAttributeId, setHabitAttributeId] = useState<AttributeId | null>(null);
   const [setRows, setSetRows] = useState<SetRow[]>(emptySetRows);
@@ -66,18 +69,9 @@ export function DayPanel({
   const pct = Math.min(100, Math.round((total / Math.max(1, target)) * 100));
   const habitEntries = log.habitEntries ?? [];
 
-  const macroTotals: FoodMacros = {
-    protein: log.entries.some((e) => e.protein !== undefined)
-      ? log.entries.reduce((sum, e) => sum + (e.protein ?? 0), 0)
-      : undefined,
-    carbs: log.entries.some((e) => e.carbs !== undefined)
-      ? log.entries.reduce((sum, e) => sum + (e.carbs ?? 0), 0)
-      : undefined,
-    fat: log.entries.some((e) => e.fat !== undefined)
-      ? log.entries.reduce((sum, e) => sum + (e.fat ?? 0), 0)
-      : undefined,
-  };
-  const hasMacros = macroTotals.protein !== undefined || macroTotals.carbs !== undefined || macroTotals.fat !== undefined;
+  const proteinTotal = log.entries.reduce((sum, e) => sum + (e.protein ?? 0), 0);
+  const proteinRemaining = proteinTarget - proteinTotal;
+  const proteinPct = Math.min(100, Math.round((proteinTotal / Math.max(1, proteinTarget)) * 100));
 
   const recentFoods = useMemo(() => {
     const byName = new Map<string, { entry: FoodEntry; date: string }>();
@@ -124,33 +118,28 @@ export function DayPanel({
     setEditingTarget(false);
   }
 
+  function commitProteinTarget() {
+    const val = Number(proteinTargetDraft);
+    if (val > 0) onChangeProteinTarget(Math.round(val));
+    else setProteinTargetDraft(String(proteinTarget));
+    setEditingProteinTarget(false);
+  }
+
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     const cal = Number(calories);
     if (!name.trim() || !cal || cal <= 0) return;
 
-    const macros: FoodMacros = {
-      protein: protein ? Number(protein) : undefined,
-      carbs: carbs ? Number(carbs) : undefined,
-      fat: fat ? Number(fat) : undefined,
-    };
-    const hasAnyMacro = macros.protein !== undefined || macros.carbs !== undefined || macros.fat !== undefined;
-
-    onAddEntry(name.trim(), Math.round(cal), hasAnyMacro ? macros : undefined);
+    onAddEntry(name.trim(), Math.round(cal), protein ? Number(protein) : undefined);
     setName("");
     setCalories("");
     setProtein("");
-    setCarbs("");
-    setFat("");
   }
 
   function applyRecentFood(entry: FoodEntry) {
     setName(entry.name);
     setCalories(String(entry.calories));
     setProtein(entry.protein !== undefined ? String(entry.protein) : "");
-    setCarbs(entry.carbs !== undefined ? String(entry.carbs) : "");
-    setFat(entry.fat !== undefined ? String(entry.fat) : "");
-    if (entry.protein !== undefined || entry.carbs !== undefined || entry.fat !== undefined) setMacrosOpen(true);
   }
 
   function handleHabitSubmit(e: React.FormEvent) {
@@ -223,7 +212,6 @@ export function DayPanel({
           <div className={`text-sm ${remaining >= 0 ? "text-emerald-400" : "text-red-400"}`}>
             {remaining >= 0 ? `${remaining} remaining` : `${Math.abs(remaining)} over`}
           </div>
-          {hasMacros && <div className="text-xs text-gray-500">{formatMacros(macroTotals)}</div>}
         </div>
       </div>
 
@@ -232,6 +220,45 @@ export function DayPanel({
           className={`h-full ${total > target ? "bg-red-500" : "bg-emerald-500"}`}
           style={{ width: `${pct}%` }}
         />
+      </div>
+
+      <div className="pl-3 border-l-2 border-[#30363d] flex flex-col gap-1.5">
+        <div className="flex items-center justify-between gap-2">
+          <span className="text-xs font-medium text-gray-400">Protein</span>
+          <span className="text-xs text-gray-400">
+            {proteinTotal}g /{" "}
+            {editingProteinTarget ? (
+              <input
+                autoFocus
+                type="number"
+                value={proteinTargetDraft}
+                onChange={(e) => setProteinTargetDraft(e.target.value)}
+                onBlur={commitProteinTarget}
+                onKeyDown={(e) => e.key === "Enter" && commitProteinTarget()}
+                className="w-14 bg-[#0d1117] border border-sky-600 rounded px-1 py-0.5 text-[#e6edf3] text-xs focus:outline-none"
+              />
+            ) : (
+              <button
+                onClick={() => {
+                  setProteinTargetDraft(String(proteinTarget));
+                  setEditingProteinTarget(true);
+                }}
+                className="underline decoration-dotted hover:text-sky-400"
+              >
+                {proteinTarget}
+              </button>
+            )}
+            g
+          </span>
+        </div>
+        <div className="w-full h-1.5 bg-[#0d1117] rounded overflow-hidden border border-[#30363d]">
+          <div className="h-full bg-sky-500" style={{ width: `${proteinPct}%` }} />
+        </div>
+        {proteinRemaining >= 0 ? (
+          <span className="text-xs text-gray-500">{proteinRemaining}g remaining</span>
+        ) : (
+          <span className="text-xs text-sky-400">{Math.abs(proteinRemaining)}g over target</span>
+        )}
       </div>
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-2">
@@ -251,13 +278,14 @@ export function DayPanel({
             className="w-24 bg-[#0d1117] border border-[#30363d] rounded px-3 py-2 text-sm text-[#e6edf3] placeholder:text-gray-500 focus:outline-none focus:border-emerald-500"
             min={1}
           />
-          <button
-            type="button"
-            onClick={() => setMacrosOpen((prev) => !prev)}
-            className="text-xs text-gray-400 hover:text-emerald-400 underline decoration-dotted whitespace-nowrap"
-          >
-            {macrosOpen ? "Hide macros" : "+ Macros"}
-          </button>
+          <input
+            type="number"
+            placeholder="Protein (g)"
+            value={protein}
+            onChange={(e) => setProtein(e.target.value)}
+            min={0}
+            className="w-28 bg-[#0d1117] border border-[#30363d] rounded px-3 py-2 text-sm text-[#e6edf3] placeholder:text-gray-500 focus:outline-none focus:border-sky-500"
+          />
           <button
             type="submit"
             className="bg-emerald-600 hover:bg-emerald-500 text-white rounded px-4 py-2 text-sm font-medium"
@@ -265,35 +293,6 @@ export function DayPanel({
             Add
           </button>
         </div>
-
-        {macrosOpen && (
-          <div className="flex gap-2 flex-wrap">
-            <input
-              type="number"
-              placeholder="Protein (g)"
-              value={protein}
-              onChange={(e) => setProtein(e.target.value)}
-              min={0}
-              className="w-28 bg-[#0d1117] border border-[#30363d] rounded px-3 py-2 text-sm text-[#e6edf3] placeholder:text-gray-500 focus:outline-none focus:border-emerald-500"
-            />
-            <input
-              type="number"
-              placeholder="Carbs (g)"
-              value={carbs}
-              onChange={(e) => setCarbs(e.target.value)}
-              min={0}
-              className="w-28 bg-[#0d1117] border border-[#30363d] rounded px-3 py-2 text-sm text-[#e6edf3] placeholder:text-gray-500 focus:outline-none focus:border-emerald-500"
-            />
-            <input
-              type="number"
-              placeholder="Fat (g)"
-              value={fat}
-              onChange={(e) => setFat(e.target.value)}
-              min={0}
-              className="w-28 bg-[#0d1117] border border-[#30363d] rounded px-3 py-2 text-sm text-[#e6edf3] placeholder:text-gray-500 focus:outline-none focus:border-emerald-500"
-            />
-          </div>
-        )}
       </form>
 
       {recentFoods.length > 0 && (
@@ -317,7 +316,7 @@ export function DayPanel({
           <li className="text-sm text-gray-500 italic py-2">No food logged yet.</li>
         )}
         {log.entries.map((entry) => {
-          const macros = formatMacros(entry);
+          const protein = formatProtein(entry);
           return (
             <li
               key={entry.id}
@@ -325,7 +324,7 @@ export function DayPanel({
             >
               <div className="flex flex-col">
                 <span className="text-sm text-[#e6edf3]">{entry.name}</span>
-                {macros && <span className="text-xs text-gray-500">{macros}</span>}
+                {protein && <span className="text-xs text-gray-500">{protein}</span>}
               </div>
               <div className="flex items-center gap-3">
                 <span className="text-sm text-gray-400">{entry.calories} kcal</span>
