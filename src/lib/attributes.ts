@@ -25,6 +25,11 @@ export interface Attribute {
   pointsPerLevel: number;
   /** Unit shown next to remaining-points-to-level-up, e.g. "XP" or "days". */
   unitLabel: string;
+  /**
+   * Fantasy title tiers for this attribute, ascending by minLevel — the title shown is whichever
+   * tier's minLevel is the highest one not exceeding the current level.
+   */
+  titleTiers: { minLevel: number; name: string }[];
 }
 
 export const ATTRIBUTES: Attribute[] = [
@@ -38,6 +43,14 @@ export const ATTRIBUTES: Attribute[] = [
     progressMode: "volume",
     pointsPerLevel: 5000,
     unitLabel: "XP",
+    titleTiers: [
+      { minLevel: 1, name: "Brawler" },
+      { minLevel: 3, name: "Bruiser" },
+      { minLevel: 6, name: "Warbringer" },
+      { minLevel: 10, name: "Berserker" },
+      { minLevel: 15, name: "Juggernaut" },
+      { minLevel: 21, name: "Titan of Strength" },
+    ],
   },
   {
     id: "endurance",
@@ -49,6 +62,14 @@ export const ATTRIBUTES: Attribute[] = [
     progressMode: "volume",
     pointsPerLevel: 5000,
     unitLabel: "XP",
+    titleTiers: [
+      { minLevel: 1, name: "Sprinter" },
+      { minLevel: 3, name: "Pathfinder" },
+      { minLevel: 6, name: "Windrunner" },
+      { minLevel: 10, name: "Stormrunner" },
+      { minLevel: 15, name: "Tireless Wanderer" },
+      { minLevel: 21, name: "Endless Marathoner" },
+    ],
   },
   {
     id: "intelligence",
@@ -60,6 +81,14 @@ export const ATTRIBUTES: Attribute[] = [
     progressMode: "days",
     pointsPerLevel: 5,
     unitLabel: "days",
+    titleTiers: [
+      { minLevel: 1, name: "Apprentice" },
+      { minLevel: 3, name: "Scholar" },
+      { minLevel: 6, name: "Adept" },
+      { minLevel: 10, name: "Magus" },
+      { minLevel: 15, name: "Archmage" },
+      { minLevel: 21, name: "Loremaster" },
+    ],
   },
   {
     id: "wisdom",
@@ -71,8 +100,28 @@ export const ATTRIBUTES: Attribute[] = [
     progressMode: "days",
     pointsPerLevel: 5,
     unitLabel: "days",
+    titleTiers: [
+      { minLevel: 1, name: "Acolyte" },
+      { minLevel: 3, name: "Mystic" },
+      { minLevel: 6, name: "Serene Adept" },
+      { minLevel: 10, name: "Enlightened One" },
+      { minLevel: 15, name: "Ascendant" },
+      { minLevel: 21, name: "Transcendent Sage" },
+    ],
   },
 ];
+
+/** The fantasy title name for an attribute at a given level — the highest tier reached, uncapped. */
+export function getFantasyTitleName(id: AttributeId, level: number): string | null {
+  const attr = ATTRIBUTES.find((a) => a.id === id);
+  if (!attr || level < 1) return null;
+  let name: string | null = null;
+  for (const tier of attr.titleTiers) {
+    if (tier.minLevel > level) break;
+    name = tier.name;
+  }
+  return name;
+}
 
 /** Assumed load (lb) for a rep logged with no weight, e.g. a bodyweight set. */
 const BODYWEIGHT_LOAD_LB = 50;
@@ -150,7 +199,7 @@ export function getAttributeProgress(logs: LogsByDate, id: AttributeId): Attribu
 }
 
 /**
- * The player's auto-selected title, e.g. "Level 3 Strength" — drawn from
+ * The player's auto-selected title, e.g. "Level 3 Warbringer" — drawn from
  * whichever attribute has progressed the furthest. Ties break on raw points,
  * then on ATTRIBUTES order. Returns null until at least one attribute has
  * reached Level 1.
@@ -164,15 +213,14 @@ export function getTopAttributeTitle(logs: LogsByDate): string | null {
       best = { attr, level, points };
     }
   }
-  return best ? `Level ${best.level} ${best.attr.name}` : null;
+  return best ? `Level ${best.level} ${getFantasyTitleName(best.attr.id, best.level)}` : null;
 }
 
-/** A given attribute's current title, e.g. "Level 3 Strength" — null if still Level 0. */
+/** A given attribute's current title, e.g. "Level 3 Warbringer" — null if still Level 0. */
 export function getAttributeTitle(logs: LogsByDate, id: AttributeId): string | null {
-  const attr = ATTRIBUTES.find((a) => a.id === id);
-  if (!attr) return null;
   const { level } = getAttributeProgress(logs, id);
-  return level === 0 ? null : `Level ${level} ${attr.name}`;
+  if (level === 0) return null;
+  return `Level ${level} ${getFantasyTitleName(id, level)}`;
 }
 
 /**

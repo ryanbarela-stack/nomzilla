@@ -92,13 +92,12 @@ export function ChampionHeader({
 
           <div className="flex-1 w-full flex flex-col items-center gap-2 text-center">
             <h1 className="text-xl font-bold text-[#e6edf3] font-pixel">{currentClass ? currentClass.name : "Champion"}</h1>
-            {displayTitle && <p className="text-xs text-indigo-300 italic -mt-1">{displayTitle}</p>}
             {hasAnyTitle && (
               <button
                 onClick={() => setTitlePickerOpen(true)}
-                className="text-xs text-gray-400 hover:text-yellow-400 underline decoration-dotted -mt-1"
+                className="text-xs text-indigo-300 italic hover:text-yellow-400 underline decoration-dotted -mt-1"
               >
-                Title: {displayTitle ?? "Auto"}
+                {displayTitle ?? "Auto"}
               </button>
             )}
 
