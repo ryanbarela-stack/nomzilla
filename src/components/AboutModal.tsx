@@ -17,6 +17,16 @@ export function AboutModal({ onClose }: Props) {
         </div>
 
         <section className="flex flex-col gap-1">
+          <h3 className="text-sm font-semibold text-emerald-400">Streaks</h3>
+          <p className="text-sm text-gray-300">
+            Log food each day to build a streak, shown as the 🔥 bar under your champion. A streak stays
+            alive as long as you don't skip a day — today doesn't need to be logged yet to keep it going,
+            but missing any other day breaks it back to 0. Every 7 days is a milestone, and streak days
+            are marked with 🔥 on the calendar.
+          </p>
+        </section>
+
+        <section className="flex flex-col gap-1">
           <h3 className="text-sm font-semibold text-emerald-400">Logging food & protein</h3>
           <p className="text-sm text-gray-300">
             Log each food's name and calories against your daily calorie target — click the target number
