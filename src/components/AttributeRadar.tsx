@@ -1,4 +1,4 @@
-import { ATTRIBUTES, getAttributeProgress } from "../lib/attributes";
+import { ATTRIBUTES, getAttributeProgress, visualProgressPct } from "../lib/attributes";
 import type { LogsByDate } from "../lib/types";
 
 interface Props {
@@ -56,10 +56,12 @@ export function AttributeRadar({ logs, size = BASE_SIZE }: Props) {
     }
   }
 
-  const levels = ATTRIBUTES.map((attr) => getAttributeProgress(logs, attr.id).level);
-  const axisMax = Math.max(4, Math.max(...levels) + 2);
+  const progress = ATTRIBUTES.map((attr) => getAttributeProgress(logs, attr.id));
+  /** Level plus curved fractional progress toward the next one, so any logged effort nudges the shape outward immediately. */
+  const progressValues = progress.map((p) => p.level + visualProgressPct(p.pct) / 100);
+  const axisMax = Math.max(4, Math.max(...progressValues) + 2);
 
-  const dataPoints = levels.map((level, i) => axisPoint(i, level / axisMax));
+  const dataPoints = progressValues.map((value, i) => axisPoint(i, value / axisMax));
   const dataPolygon = dataPoints.map((p) => p.join(",")).join(" ");
 
   return (
@@ -94,7 +96,7 @@ export function AttributeRadar({ logs, size = BASE_SIZE }: Props) {
               stroke="#0d1117"
               strokeWidth={Math.max(1.5, 2 * scale)}
             >
-              <title>{`${ATTRIBUTES[i].name} — Level ${levels[i]}`}</title>
+              <title>{`${ATTRIBUTES[i].name} — Level ${progress[i].level} (${Math.round(progress[i].pct)}% to next)`}</title>
             </circle>
           ))}
 

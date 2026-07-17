@@ -1,4 +1,4 @@
-import { ATTRIBUTES, getAttributeProgress, type AttributeId } from "../lib/attributes";
+import { ATTRIBUTES, getAttributeProgress, visualProgressPct, type AttributeId } from "../lib/attributes";
 import type { LogsByDate } from "../lib/types";
 
 interface Props {
@@ -15,6 +15,7 @@ export function AttributeStats({ logs, seenAttributeLevels, onAcknowledgeLevel }
       {ATTRIBUTES.map((attr) => {
         const { level, pointsToNextLevel, pct } = getAttributeProgress(logs, attr.id);
         const leveledUp = level > (seenAttributeLevels[attr.id] ?? 0);
+        const pctLabel = pct > 0 && Math.round(pct) === 0 ? "<1" : String(Math.round(pct));
 
         return (
           <div key={attr.id} className="flex flex-col gap-1">
@@ -33,12 +34,16 @@ export function AttributeStats({ logs, seenAttributeLevels, onAcknowledgeLevel }
             )}
             <div className="flex items-center justify-between text-xs text-gray-400">
               <span>
-                {attr.name} — <span className="text-gray-300">Level {level}</span>
+                {attr.name} — <span className="text-gray-300">Level {level}</span>{" "}
+                <span className="text-gray-500">({pctLabel}%)</span>
               </span>
               <span>{pointsToNextLevel.toLocaleString()} {attr.unitLabel} more</span>
             </div>
             <div className="h-2 w-full bg-[#0d1117] border border-[#30363d] rounded-full overflow-hidden">
-              <div className={`h-full ${attr.barClassName} rounded-full transition-[width]`} style={{ width: `${pct}%` }} />
+              <div
+                className={`h-full ${attr.barClassName} rounded-full transition-[width]`}
+                style={{ width: `${visualProgressPct(pct)}%` }}
+              />
             </div>
           </div>
         );

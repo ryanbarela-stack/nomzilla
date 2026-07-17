@@ -115,6 +115,15 @@ export function computeAttributePoints(logs: LogsByDate, id: AttributeId): numbe
   }, 0);
 }
 
+/**
+ * Concave curve applied to in-level progress for rendering only (bar widths, radar shape) — a small
+ * amount of real progress still reads as a visible nudge instead of a near-invisible sliver. Numeric
+ * displays (percent text, points remaining) stay linear/accurate; only this visual mapping is curved.
+ */
+export function visualProgressPct(pct: number): number {
+  return Math.sqrt(Math.max(0, Math.min(100, pct)) / 100) * 100;
+}
+
 export interface AttributeProgress {
   points: number;
   level: number;
