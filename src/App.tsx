@@ -3,6 +3,7 @@ import { ChampionHeader } from "./components/ChampionHeader";
 import { DayPanel } from "./components/DayPanel";
 import { AboutModal } from "./components/AboutModal";
 import { Calendar } from "./components/Calendar";
+import { WeightPage } from "./components/WeightPage";
 import { loadLogs, saveLogs, loadSettings, saveSettings } from "./lib/storage";
 import { todayISO, fromISODate } from "./lib/date";
 import { getCurrentHealth, applyExerciseBoost, isManaChargeReady } from "./lib/championHealth";
@@ -16,6 +17,7 @@ function App() {
   const [viewDate, setViewDate] = useState<Date>(() => fromISODate(todayISO()));
   const [aboutOpen, setAboutOpen] = useState(false);
   const [now, setNow] = useState(() => Date.now());
+  const [activeTab, setActiveTab] = useState<"today" | "weight">("today");
 
   useEffect(() => saveLogs(logs), [logs]);
   useEffect(() => saveSettings(settings), [settings]);
@@ -84,6 +86,22 @@ function App() {
         ...prev,
         [selectedDate]: { ...existing, habitEntries: (existing.habitEntries ?? []).filter((e) => e.id !== id) },
       };
+    });
+  }
+
+  function setWeight(date: string, weightLbs: number) {
+    setLogs((prev) => {
+      const existing = prev[date] ?? { date, entries: [] };
+      return { ...prev, [date]: { ...existing, weightLbs } };
+    });
+  }
+
+  function removeWeight(date: string) {
+    setLogs((prev) => {
+      const existing = prev[date];
+      if (!existing) return prev;
+      const { weightLbs: _weightLbs, ...rest } = existing;
+      return { ...prev, [date]: rest };
     });
   }
 
@@ -163,29 +181,51 @@ function App() {
         onActivateMana={activateMana}
       />
 
-      <DayPanel
-        log={selectedLog}
-        logs={logs}
-        target={settings.targetCalories}
-        proteinTarget={settings.targetProtein}
-        onAddEntry={addEntry}
-        onRemoveEntry={removeEntry}
-        onAddHabitEntry={addHabitEntry}
-        onRemoveHabitEntry={removeHabitEntry}
-        onJumpToday={jumpToday}
-        onChangeTarget={changeTarget}
-        onChangeProteinTarget={changeProteinTarget}
-      />
+      <div className="flex gap-2">
+        {(["today", "weight"] as const).map((tab) => (
+          <button
+            key={tab}
+            onClick={() => setActiveTab(tab)}
+            className={`flex-1 rounded-md border px-3 py-2 text-sm font-medium capitalize transition-colors ${
+              activeTab === tab
+                ? "bg-emerald-950 border-emerald-600 text-emerald-200"
+                : "bg-[#161b22] border-[#30363d] text-gray-400 hover:border-gray-500"
+            }`}
+          >
+            {tab}
+          </button>
+        ))}
+      </div>
 
-      <Calendar
-        year={viewDate.getFullYear()}
-        month={viewDate.getMonth()}
-        logs={logs}
-        target={settings.targetCalories}
-        selectedDate={selectedDate}
-        onSelectDate={setSelectedDate}
-        onChangeMonth={changeMonth}
-      />
+      {activeTab === "today" ? (
+        <>
+          <DayPanel
+            log={selectedLog}
+            logs={logs}
+            target={settings.targetCalories}
+            proteinTarget={settings.targetProtein}
+            onAddEntry={addEntry}
+            onRemoveEntry={removeEntry}
+            onAddHabitEntry={addHabitEntry}
+            onRemoveHabitEntry={removeHabitEntry}
+            onJumpToday={jumpToday}
+            onChangeTarget={changeTarget}
+            onChangeProteinTarget={changeProteinTarget}
+          />
+
+          <Calendar
+            year={viewDate.getFullYear()}
+            month={viewDate.getMonth()}
+            logs={logs}
+            target={settings.targetCalories}
+            selectedDate={selectedDate}
+            onSelectDate={setSelectedDate}
+            onChangeMonth={changeMonth}
+          />
+        </>
+      ) : (
+        <WeightPage logs={logs} onSetWeight={setWeight} onRemoveWeight={removeWeight} />
+      )}
     </div>
   );
 }
