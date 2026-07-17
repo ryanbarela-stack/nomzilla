@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { ChampionHeader } from "./components/ChampionHeader";
-import { DayPanel } from "./components/DayPanel";
+import { CaloriePanel } from "./components/CaloriePanel";
+import { TrainingPanel } from "./components/TrainingPanel";
 import { AboutModal } from "./components/AboutModal";
 import { Calendar } from "./components/Calendar";
 import { WeightPage } from "./components/WeightPage";
@@ -17,7 +18,7 @@ function App() {
   const [viewDate, setViewDate] = useState<Date>(() => fromISODate(todayISO()));
   const [aboutOpen, setAboutOpen] = useState(false);
   const [now, setNow] = useState(() => Date.now());
-  const [activeTab, setActiveTab] = useState<"today" | "weight">("today");
+  const [activeTab, setActiveTab] = useState<"calories" | "training" | "weight">("calories");
 
   useEffect(() => saveLogs(logs), [logs]);
   useEffect(() => saveSettings(settings), [settings]);
@@ -181,8 +182,18 @@ function App() {
         onActivateMana={activateMana}
       />
 
+      <Calendar
+        year={viewDate.getFullYear()}
+        month={viewDate.getMonth()}
+        logs={logs}
+        target={settings.targetCalories}
+        selectedDate={selectedDate}
+        onSelectDate={setSelectedDate}
+        onChangeMonth={changeMonth}
+      />
+
       <div className="flex gap-2">
-        {(["today", "weight"] as const).map((tab) => (
+        {(["calories", "training", "weight"] as const).map((tab) => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
@@ -197,33 +208,31 @@ function App() {
         ))}
       </div>
 
-      {activeTab === "today" ? (
-        <>
-          <DayPanel
-            log={selectedLog}
-            logs={logs}
-            target={settings.targetCalories}
-            proteinTarget={settings.targetProtein}
-            onAddEntry={addEntry}
-            onRemoveEntry={removeEntry}
-            onAddHabitEntry={addHabitEntry}
-            onRemoveHabitEntry={removeHabitEntry}
-            onJumpToday={jumpToday}
-            onChangeTarget={changeTarget}
-            onChangeProteinTarget={changeProteinTarget}
-          />
+      {activeTab === "calories" && (
+        <CaloriePanel
+          log={selectedLog}
+          logs={logs}
+          target={settings.targetCalories}
+          proteinTarget={settings.targetProtein}
+          onAddEntry={addEntry}
+          onRemoveEntry={removeEntry}
+          onJumpToday={jumpToday}
+          onChangeTarget={changeTarget}
+          onChangeProteinTarget={changeProteinTarget}
+        />
+      )}
 
-          <Calendar
-            year={viewDate.getFullYear()}
-            month={viewDate.getMonth()}
-            logs={logs}
-            target={settings.targetCalories}
-            selectedDate={selectedDate}
-            onSelectDate={setSelectedDate}
-            onChangeMonth={changeMonth}
-          />
-        </>
-      ) : (
+      {activeTab === "training" && (
+        <TrainingPanel
+          log={selectedLog}
+          logs={logs}
+          onAddHabitEntry={addHabitEntry}
+          onRemoveHabitEntry={removeHabitEntry}
+          onJumpToday={jumpToday}
+        />
+      )}
+
+      {activeTab === "weight" && (
         <WeightPage logs={logs} onSetWeight={setWeight} onRemoveWeight={removeWeight} />
       )}
     </div>
