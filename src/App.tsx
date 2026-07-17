@@ -153,7 +153,7 @@ function App() {
     <div className="max-w-3xl mx-auto p-4 flex flex-col gap-4">
       <div className="relative text-center">
         <h1 className="text-2xl font-pixel font-bold tracking-wide text-emerald-400">Nomzilla</h1>
-        <p className="text-sm text-gray-500">Teach your Champion.</p>
+        <p className="text-sm text-gray-500">Every meal, every set, every level.</p>
         <button
           onClick={() => setAboutOpen(true)}
           aria-label="How Nomzilla works"
