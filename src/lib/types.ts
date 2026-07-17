@@ -38,6 +38,8 @@ export interface DayLog {
   entries: FoodEntry[];
   /** Optional — absent on days with no habits logged yet. */
   habitEntries?: HabitEntry[];
+  /** Body weight logged for this day, in lbs. */
+  weightLbs?: number;
 }
 
 export interface Settings {
