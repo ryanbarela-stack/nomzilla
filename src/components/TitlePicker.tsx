@@ -1,4 +1,4 @@
-import { ATTRIBUTES, getAttributeProgress } from "../lib/attributes";
+import { ATTRIBUTES, getAttributeProgress, getAttributeTitle } from "../lib/attributes";
 import type { AttributeId, LogsByDate } from "../lib/types";
 
 interface Props {
@@ -51,7 +51,7 @@ export function TitlePicker({ selectedId, logs, onSelect, onClose }: Props) {
                 } ${unlocked ? "cursor-pointer hover:bg-[#1c2129]" : "opacity-40 cursor-not-allowed"}`}
               >
                 <span className="text-sm font-semibold text-gray-200">
-                  {unlocked ? `Level ${level} ${attr.name}` : attr.name}
+                  {unlocked ? getAttributeTitle(logs, attr.id) : attr.name}
                 </span>
                 {!unlocked && <span className="text-[10px] text-gray-500">Reach Level 1 to unlock</span>}
               </button>

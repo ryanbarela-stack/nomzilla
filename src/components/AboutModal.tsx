@@ -92,9 +92,11 @@ export function AboutModal({ onClose }: Props) {
         <section className="flex flex-col gap-1">
           <h3 className="text-sm font-semibold text-emerald-400">Titles</h3>
           <p className="text-sm text-gray-300">
-            Once any attribute reaches Level 1, your champion earns a title shown under its name — like
-            "Level 3 Strength" or "Level 8 Wisdom" — drawn from whichever attribute you've trained the most.
-            Click the title to pin it to a specific attribute instead of always showing the highest one.
+            Once any attribute reaches Level 1, your champion earns a fantasy title shown under its
+            name — like "Level 3 Bruiser" (Strength) or "Level 8 Archmage" (Intelligence) — drawn from
+            whichever attribute you've trained the most. Each attribute has its own run of titles that
+            gets grander as you level up. Click the title to pin it to a specific attribute instead of
+            always showing the highest one.
           </p>
         </section>
 
