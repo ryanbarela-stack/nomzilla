@@ -4,6 +4,7 @@ import { CaloriePanel } from "./components/CaloriePanel";
 import { TrainingPanel } from "./components/TrainingPanel";
 import { AboutModal } from "./components/AboutModal";
 import { Calendar } from "./components/Calendar";
+import { StreakBar } from "./components/StreakBar";
 import { WeightPage } from "./components/WeightPage";
 import { loadLogs, saveLogs, loadSettings, saveSettings } from "./lib/storage";
 import { todayISO, fromISODate } from "./lib/date";
@@ -181,6 +182,8 @@ function App() {
         onAcknowledgeAttributeLevel={acknowledgeAttributeLevel}
         onActivateMana={activateMana}
       />
+
+      <StreakBar logs={logs} />
 
       <Calendar
         year={viewDate.getFullYear()}

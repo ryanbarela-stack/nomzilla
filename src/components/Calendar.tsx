@@ -1,4 +1,5 @@
 import { getMonthGrid, MONTH_NAMES, WEEKDAY_LABELS, todayISO } from "../lib/date";
+import { getStreakDates } from "../lib/streak";
 import type { LogsByDate } from "../lib/types";
 
 interface Props {
@@ -14,6 +15,7 @@ interface Props {
 export function Calendar({ year, month, logs, target, selectedDate, onSelectDate, onChangeMonth }: Props) {
   const grid = getMonthGrid(year, month);
   const today = todayISO();
+  const streakDates = new Set(getStreakDates(logs, today));
 
   return (
     <div className="bg-[#161b22] border border-[#30363d] rounded-lg p-4">
@@ -55,6 +57,7 @@ export function Calendar({ year, month, logs, target, selectedDate, onSelectDate
           const isOver = hasLog && total > target;
           const isToday = iso === today;
           const isSelected = iso === selectedDate;
+          const isStreakDay = streakDates.has(iso);
           const day = Number(iso.slice(-2));
 
           let colorClasses = "bg-[#0d1117] text-gray-500 border-[#21262d]";
@@ -73,9 +76,12 @@ export function Calendar({ year, month, logs, target, selectedDate, onSelectDate
                 ${isSelected ? "ring-2 ring-emerald-400" : ""}
                 ${isToday && !isSelected ? "ring-1 ring-gray-400" : ""}
                 hover:brightness-125`}
-              title={hasLog ? `${total} kcal${hasExerciseLog ? " · training logged" : ""}` : "No log"}
+              title={hasLog ? `${total} kcal${hasExerciseLog ? " · training logged" : ""}${isStreakDay ? " · streak" : ""}` : "No log"}
             >
               {day}
+              {isStreakDay && (
+                <span className="absolute top-0.5 left-0.5 text-[8px] leading-none">🔥</span>
+              )}
               {hasExerciseLog && (
                 <span className="absolute bottom-0.5 right-0.5 w-1.5 h-1.5 rounded-full bg-indigo-400" />
               )}
@@ -89,6 +95,7 @@ export function Calendar({ year, month, logs, target, selectedDate, onSelectDate
         <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm bg-red-950 border border-red-800 inline-block" /> over target</span>
         <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm bg-[#0d1117] border border-[#21262d] inline-block" /> no log</span>
         <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-indigo-400 inline-block" /> training logged</span>
+        <span className="flex items-center gap-1">🔥 streak</span>
       </div>
     </div>
   );
