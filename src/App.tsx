@@ -129,6 +129,10 @@ function App() {
     setSettings((prev) => ({ ...prev, targetProtein: value }));
   }
 
+  function changeUsdaApiKey(value: string) {
+    setSettings((prev) => ({ ...prev, usdaApiKey: value }));
+  }
+
   function changeClass(id: string) {
     setSettings((prev) => ({ ...prev, classId: id }));
   }
@@ -230,12 +234,14 @@ function App() {
           log={selectedLog}
           target={settings.targetCalories}
           proteinTarget={settings.targetProtein}
+          usdaApiKey={settings.usdaApiKey}
           onAddEntry={addEntry}
           onUpdateEntry={updateEntry}
           onRemoveEntry={removeEntry}
           onJumpToday={jumpToday}
           onChangeTarget={changeTarget}
           onChangeProteinTarget={changeProteinTarget}
+          onChangeUsdaApiKey={changeUsdaApiKey}
         />
       )}
 

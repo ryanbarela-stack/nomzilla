@@ -83,7 +83,15 @@ const NUMBER_WORDS: Record<string, number> = {
   ten: 10,
 };
 
-function parseLeadingMultiplier(segment: string): number {
+export function splitFoodSegments(description: string): string[] {
+  return description
+    .toLowerCase()
+    .split(/,|&|\+|\b(?:and|with|plus)\b/)
+    .map((s) => s.trim())
+    .filter(Boolean);
+}
+
+export function parseLeadingMultiplier(segment: string): number {
   const match = segment.match(/^(\d+(?:\.\d+)?|\d+\/\d+|[a-z]+)\b/);
   if (!match) return 1;
   const token = match[1];
@@ -95,7 +103,7 @@ function parseLeadingMultiplier(segment: string): number {
   return NUMBER_WORDS[token] ?? 1;
 }
 
-function parseExplicitGrams(segment: string): number | null {
+export function parseExplicitGrams(segment: string): number | null {
   const match = segment.match(/(\d+(?:\.\d+)?)\s*(g|gram|grams|oz|ounce|ounces)\b/);
   if (!match) return null;
   const amount = Number(match[1]);
@@ -108,12 +116,7 @@ function parseExplicitGrams(segment: string): number | null {
  * against a small built-in food table. Returns null if no segment matched a known food.
  */
 export function estimateFood(description: string): FoodEstimate | null {
-  const segments = description
-    .toLowerCase()
-    .split(/,|&|\+|\b(?:and|with|plus)\b/)
-    .map((s) => s.trim())
-    .filter(Boolean);
-
+  const segments = splitFoodSegments(description);
   if (segments.length === 0) return null;
 
   let calories = 0;

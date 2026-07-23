@@ -13,6 +13,7 @@ export const DEFAULT_SETTINGS: Settings = {
   championHealth: 100,
   championHealthUpdatedAt: null,
   manaCharges: Array<string | null>(MANA_CHARGE_COUNT).fill(null),
+  usdaApiKey: "",
 };
 
 export function loadLogs(): LogsByDate {

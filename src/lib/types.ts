@@ -57,6 +57,8 @@ export interface Settings {
   championHealthUpdatedAt: string | null;
   /** ISO timestamp each mana charge was last activated (pausing health decay for 24h from then), or null if unused. */
   manaCharges: (string | null)[];
+  /** Free USDA FoodData Central API key, used to look up foods the local table doesn't know. Empty if unset. */
+  usdaApiKey: string;
 }
 
 export type LogsByDate = Record<string, DayLog>;

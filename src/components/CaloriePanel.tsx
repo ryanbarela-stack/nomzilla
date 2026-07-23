@@ -2,35 +2,41 @@ import { useState } from "react";
 import type { DayLog, FoodEntry } from "../lib/types";
 import { formatFriendly, todayISO } from "../lib/date";
 import { formatProtein } from "../lib/foodFormat";
-import { estimateFood } from "../lib/foodEstimate";
+import { estimateFood, splitFoodSegments } from "../lib/foodEstimate";
+import { lookupSegmentsViaUsda } from "../lib/usdaEstimate";
 
 interface Props {
   log: DayLog;
   target: number;
   proteinTarget: number;
+  usdaApiKey: string;
   onAddEntry: (name: string, calories: number, protein?: number) => void;
   onUpdateEntry: (id: string, name: string, calories: number, protein?: number) => void;
   onRemoveEntry: (id: string) => void;
   onJumpToday: () => void;
   onChangeTarget: (value: number) => void;
   onChangeProteinTarget: (value: number) => void;
+  onChangeUsdaApiKey: (value: string) => void;
 }
 
 export function CaloriePanel({
   log,
   target,
   proteinTarget,
+  usdaApiKey,
   onAddEntry,
   onUpdateEntry,
   onRemoveEntry,
   onJumpToday,
   onChangeTarget,
   onChangeProteinTarget,
+  onChangeUsdaApiKey,
 }: Props) {
   const [name, setName] = useState("");
   const [calories, setCalories] = useState("");
   const [protein, setProtein] = useState("");
   const [estimateNote, setEstimateNote] = useState<string | null>(null);
+  const [estimating, setEstimating] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingTarget, setEditingTarget] = useState(false);
   const [targetDraft, setTargetDraft] = useState(String(target));
@@ -93,20 +99,51 @@ export function CaloriePanel({
     setEstimateNote(null);
   }
 
-  function handleEstimate() {
-    const result = estimateFood(name);
-    if (!result) {
+  function finishEstimate(calories: number, protein: number, unmatched: string[], source: string) {
+    if (calories <= 0 && protein <= 0) {
       setEstimateNote("Couldn't estimate that — try common food names, or enter kcal/protein manually.");
       return;
     }
-
-    setCalories(String(result.calories));
-    setProtein(String(result.protein));
+    setCalories(String(Math.round(calories)));
+    setProtein(String(Math.round(protein)));
     setEstimateNote(
-      result.unmatched.length > 0
-        ? `Estimated — couldn't match: ${result.unmatched.join(", ")}. Adjust before adding.`
-        : "Estimated — adjust before adding if it looks off.",
+      unmatched.length > 0
+        ? `Estimated (${source}) — couldn't match: ${unmatched.join(", ")}. Adjust before adding.`
+        : `Estimated (${source}) — adjust before adding if it looks off.`,
     );
+  }
+
+  async function handleEstimate() {
+    const local = estimateFood(name);
+    const key = usdaApiKey.trim();
+    const segmentsToLookup = local ? local.unmatched : splitFoodSegments(name);
+
+    if (!key || segmentsToLookup.length === 0) {
+      finishEstimate(local?.calories ?? 0, local?.protein ?? 0, local?.unmatched ?? [], "local table");
+      return;
+    }
+
+    setEstimating(true);
+    try {
+      const usda = await lookupSegmentsViaUsda(segmentsToLookup, key);
+      const calories = (local?.calories ?? 0) + usda.calories;
+      const protein = (local?.protein ?? 0) + usda.protein;
+      finishEstimate(calories, protein, usda.stillUnmatched, "local + USDA");
+    } catch {
+      const localCalories = local?.calories ?? 0;
+      const localProtein = local?.protein ?? 0;
+      if (localCalories > 0 || localProtein > 0) {
+        setCalories(String(localCalories));
+        setProtein(String(localProtein));
+      }
+      setEstimateNote(
+        local
+          ? "USDA lookup failed (check your API key or connection) — showing local-table estimate only."
+          : "USDA lookup failed (check your API key or connection), and no local match either.",
+      );
+    } finally {
+      setEstimating(false);
+    }
   }
 
   return (
@@ -219,10 +256,10 @@ export function CaloriePanel({
           <button
             type="button"
             onClick={handleEstimate}
-            disabled={!name.trim()}
+            disabled={!name.trim() || estimating}
             className="bg-[#0d1117] border border-emerald-600 text-emerald-400 hover:bg-emerald-950 disabled:opacity-40 disabled:cursor-not-allowed rounded px-3 py-2 text-sm font-medium"
           >
-            Estimate
+            {estimating ? "Estimating…" : "Estimate"}
           </button>
           <input
             type="number"
@@ -258,6 +295,32 @@ export function CaloriePanel({
         </div>
         {editingId && <p className="text-xs text-sky-400">Editing entry — Save to update, or Cancel.</p>}
         {estimateNote && <p className="text-xs text-gray-500">{estimateNote}</p>}
+
+        <details className="text-xs text-gray-500">
+          <summary className="cursor-pointer hover:text-emerald-400 select-none">
+            Improve estimates with a free USDA API key
+          </summary>
+          <div className="mt-2 flex items-center gap-2 flex-wrap">
+            <input
+              type="text"
+              placeholder="USDA API key (optional)"
+              value={usdaApiKey}
+              onChange={(e) => onChangeUsdaApiKey(e.target.value)}
+              className="flex-1 min-w-[160px] bg-[#0d1117] border border-[#30363d] rounded px-3 py-1.5 text-xs text-[#e6edf3] placeholder:text-gray-500 focus:outline-none focus:border-emerald-500"
+            />
+            <a
+              href="https://fdc.nal.usda.gov/api-key-signup"
+              target="_blank"
+              rel="noreferrer"
+              className="text-emerald-400 hover:text-emerald-300 underline"
+            >
+              Get a free key
+            </a>
+          </div>
+          <p className="mt-1 text-gray-600">
+            Used to look up foods the built-in table doesn't know. Stored only on this device.
+          </p>
+        </details>
       </form>
 
       <ul className="flex flex-col gap-1 max-h-64 overflow-y-auto">
