@@ -1,12 +1,11 @@
-import { useMemo, useState } from "react";
-import type { DayLog, FoodEntry, LogsByDate } from "../lib/types";
+import { useState } from "react";
+import type { DayLog, FoodEntry } from "../lib/types";
 import { formatFriendly, todayISO } from "../lib/date";
 import { formatProtein } from "../lib/foodFormat";
 import { estimateFood } from "../lib/foodEstimate";
 
 interface Props {
   log: DayLog;
-  logs: LogsByDate;
   target: number;
   proteinTarget: number;
   onAddEntry: (name: string, calories: number, protein?: number) => void;
@@ -19,7 +18,6 @@ interface Props {
 
 export function CaloriePanel({
   log,
-  logs,
   target,
   proteinTarget,
   onAddEntry,
@@ -47,21 +45,6 @@ export function CaloriePanel({
   const proteinTotal = log.entries.reduce((sum, e) => sum + (e.protein ?? 0), 0);
   const proteinRemaining = proteinTarget - proteinTotal;
   const proteinPct = Math.min(100, Math.round((proteinTotal / Math.max(1, proteinTarget)) * 100));
-
-  const recentFoods = useMemo(() => {
-    const byName = new Map<string, { entry: FoodEntry; date: string }>();
-    Object.entries(logs).forEach(([date, dayLog]) => {
-      dayLog.entries.forEach((entry) => {
-        const key = entry.name.trim().toLowerCase();
-        const existing = byName.get(key);
-        if (!existing || date > existing.date) byName.set(key, { entry, date });
-      });
-    });
-    return Array.from(byName.values())
-      .sort((a, b) => (a.date === b.date ? 0 : a.date < b.date ? 1 : -1))
-      .slice(0, 8)
-      .map((v) => v.entry);
-  }, [logs]);
 
   function commitTarget() {
     const val = Number(targetDraft);
@@ -124,12 +107,6 @@ export function CaloriePanel({
         ? `Estimated — couldn't match: ${result.unmatched.join(", ")}. Adjust before adding.`
         : "Estimated — adjust before adding if it looks off.",
     );
-  }
-
-  function applyRecentFood(entry: FoodEntry) {
-    setName(entry.name);
-    setCalories(String(entry.calories));
-    setProtein(entry.protein !== undefined ? String(entry.protein) : "");
   }
 
   return (
@@ -282,22 +259,6 @@ export function CaloriePanel({
         {editingId && <p className="text-xs text-sky-400">Editing entry — Save to update, or Cancel.</p>}
         {estimateNote && <p className="text-xs text-gray-500">{estimateNote}</p>}
       </form>
-
-      {recentFoods.length > 0 && (
-        <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-xs text-gray-500">Recent:</span>
-          {recentFoods.map((entry) => (
-            <button
-              key={entry.id}
-              type="button"
-              onClick={() => applyRecentFood(entry)}
-              className="text-xs px-2 py-1 rounded-full bg-[#0d1117] border border-[#30363d] text-gray-300 hover:border-emerald-500 hover:text-emerald-400"
-            >
-              {entry.name} · {entry.calories} kcal
-            </button>
-          ))}
-        </div>
-      )}
 
       <ul className="flex flex-col gap-1 max-h-64 overflow-y-auto">
         {log.entries.length === 0 && (

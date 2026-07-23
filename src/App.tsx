@@ -228,7 +228,6 @@ function App() {
       {activeTab === "calories" && (
         <CaloriePanel
           log={selectedLog}
-          logs={logs}
           target={settings.targetCalories}
           proteinTarget={settings.targetProtein}
           onAddEntry={addEntry}

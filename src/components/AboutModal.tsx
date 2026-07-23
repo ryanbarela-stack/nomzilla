@@ -31,8 +31,8 @@ export function AboutModal({ onClose }: Props) {
           <p className="text-sm text-gray-300">
             Log each food's name and calories against your daily calorie target — click the target number
             to change it. Protein has its own target and progress bar nested right under calories, so you
-            can track it separately from your calorie budget. "Recent" shows foods you've logged before for
-            one-tap re-adding. Type a description like "2 eggs and a banana" and hit{" "}
+            can track it separately from your calorie budget. Type a description like "2 eggs and a banana"
+            and hit{" "}
             <strong className="text-emerald-400">Estimate</strong> to auto-fill calories and protein from a
             small built-in food table — always double-check the numbers before adding, since it's a rough
             estimate, not an exact lookup.
