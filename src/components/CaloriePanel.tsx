@@ -2,7 +2,7 @@ import { useState } from "react";
 import type { DayLog, FoodEntry } from "../lib/types";
 import { formatFriendly, todayISO } from "../lib/date";
 import { formatProtein } from "../lib/foodFormat";
-import { estimateFood, splitFoodSegments } from "../lib/foodEstimate";
+import { estimateFood, matchFoodSegment, splitFoodSegments } from "../lib/foodEstimate";
 import { lookupSegmentsViaUsda } from "../lib/usdaEstimate";
 
 interface Props {
@@ -114,27 +114,39 @@ export function CaloriePanel({
   }
 
   async function handleEstimate() {
-    const local = estimateFood(name);
     const key = usdaApiKey.trim();
-    const segmentsToLookup = local ? local.unmatched : splitFoodSegments(name);
+    const segments = splitFoodSegments(name);
 
-    if (!key || segmentsToLookup.length === 0) {
+    if (!key || segments.length === 0) {
+      const local = estimateFood(name);
       finishEstimate(local?.calories ?? 0, local?.protein ?? 0, local?.unmatched ?? [], "local table");
       return;
     }
 
     setEstimating(true);
     try {
-      const usda = await lookupSegmentsViaUsda(segmentsToLookup, key);
-      const calories = (local?.calories ?? 0) + usda.calories;
-      const protein = (local?.protein ?? 0) + usda.protein;
-      finishEstimate(calories, protein, usda.stillUnmatched, "local + USDA");
+      const usda = await lookupSegmentsViaUsda(segments, key);
+      let calories = usda.calories;
+      let protein = usda.protein;
+      const unmatched: string[] = [];
+
+      for (const segment of usda.stillUnmatched) {
+        const local = matchFoodSegment(segment);
+        if (local) {
+          calories += local.calories;
+          protein += local.protein;
+        } else {
+          unmatched.push(segment);
+        }
+      }
+
+      const usedLocalFallback = unmatched.length < usda.stillUnmatched.length;
+      finishEstimate(calories, protein, unmatched, usedLocalFallback ? "USDA + local table" : "USDA");
     } catch {
-      const localCalories = local?.calories ?? 0;
-      const localProtein = local?.protein ?? 0;
-      if (localCalories > 0 || localProtein > 0) {
-        setCalories(String(localCalories));
-        setProtein(String(localProtein));
+      const local = estimateFood(name);
+      if (local && (local.calories > 0 || local.protein > 0)) {
+        setCalories(String(local.calories));
+        setProtein(String(local.protein));
       }
       setEstimateNote(
         local
@@ -318,7 +330,8 @@ export function CaloriePanel({
             </a>
           </div>
           <p className="mt-1 text-gray-600">
-            Used to look up foods the built-in table doesn't know. Stored only on this device.
+            When set, USDA is checked first for real nutrition data; the built-in table only fills in
+            anything USDA can't find. Stored only on this device.
           </p>
         </details>
       </form>

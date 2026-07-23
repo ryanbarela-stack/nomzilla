@@ -36,8 +36,8 @@ export function AboutModal({ onClose }: Props) {
             <strong className="text-emerald-400">Estimate</strong> to auto-fill calories and protein from a
             small built-in food table — always double-check the numbers before adding, since it's a rough
             estimate, not an exact lookup. Add a free USDA FoodData Central API key (under the "Improve
-            estimates" link on the form) to also look up foods the built-in table doesn't recognize — the
-            key is stored only on this device.
+            estimates" link on the form) to check real USDA nutrition data first, with the built-in table
+            only filling in whatever USDA can't find — the key is stored only on this device.
           </p>
         </section>
 

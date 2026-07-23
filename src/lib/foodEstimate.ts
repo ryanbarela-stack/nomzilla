@@ -103,12 +103,43 @@ export function parseLeadingMultiplier(segment: string): number {
   return NUMBER_WORDS[token] ?? 1;
 }
 
+/** Strips a leading quantity word/number (e.g. "2 " or "a "), leaving the food name untouched otherwise. */
+export function stripLeadingQuantity(segment: string): string {
+  const match = segment.match(/^(\d+(?:\.\d+)?|\d+\/\d+|[a-z]+)\s+/);
+  if (!match) return segment;
+
+  const token = match[1];
+  const isQuantityWord = /^\d+(\.\d+)?$/.test(token) || /^\d+\/\d+$/.test(token) || token in NUMBER_WORDS;
+  return isQuantityWord ? segment.slice(match[0].length).trim() : segment;
+}
+
 export function parseExplicitGrams(segment: string): number | null {
   const match = segment.match(/(\d+(?:\.\d+)?)\s*(g|gram|grams|oz|ounce|ounces)\b/);
   if (!match) return null;
   const amount = Number(match[1]);
   const unit = match[2];
   return unit.startsWith("oz") || unit.startsWith("ounce") ? amount * 28.35 : amount;
+}
+
+/** Matches a single description segment (e.g. "2 eggs") against the built-in food table. */
+export function matchFoodSegment(segment: string): { calories: number; protein: number } | null {
+  const hit = KEYWORD_INDEX.find(({ keyword }) => segment.includes(keyword));
+  if (!hit) return null;
+
+  const { entry } = hit;
+  const multiplier = parseLeadingMultiplier(segment);
+  const explicitGrams = entry.per === "100g" ? parseExplicitGrams(segment) : null;
+
+  let factor: number;
+  if (explicitGrams !== null) {
+    factor = explicitGrams / 100;
+  } else if (entry.per === "100g") {
+    factor = ((entry.defaultGrams ?? 100) * multiplier) / 100;
+  } else {
+    factor = multiplier;
+  }
+
+  return { calories: entry.calories * factor, protein: entry.protein * factor };
 }
 
 /**
@@ -125,27 +156,13 @@ export function estimateFood(description: string): FoodEstimate | null {
   const unmatched: string[] = [];
 
   for (const segment of segments) {
-    const hit = KEYWORD_INDEX.find(({ keyword }) => segment.includes(keyword));
+    const hit = matchFoodSegment(segment);
     if (!hit) {
       unmatched.push(segment);
       continue;
     }
-
-    const { entry } = hit;
-    const multiplier = parseLeadingMultiplier(segment);
-    const explicitGrams = entry.per === "100g" ? parseExplicitGrams(segment) : null;
-
-    let factor: number;
-    if (explicitGrams !== null) {
-      factor = explicitGrams / 100;
-    } else if (entry.per === "100g") {
-      factor = ((entry.defaultGrams ?? 100) * multiplier) / 100;
-    } else {
-      factor = multiplier;
-    }
-
-    calories += entry.calories * factor;
-    protein += entry.protein * factor;
+    calories += hit.calories;
+    protein += hit.protein;
     matchedAny = true;
   }
 

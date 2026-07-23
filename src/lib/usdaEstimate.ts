@@ -1,4 +1,4 @@
-import { parseExplicitGrams, parseLeadingMultiplier } from "./foodEstimate";
+import { parseExplicitGrams, parseLeadingMultiplier, stripLeadingQuantity } from "./foodEstimate";
 
 interface UsdaNutrient {
   nutrientName: string;
@@ -42,7 +42,7 @@ async function lookupPer100g(query: string, apiKey: string): Promise<{ calories:
 async function lookupSegment(segment: string, apiKey: string): Promise<{ calories: number; protein: number } | null> {
   const grams = parseExplicitGrams(segment);
   const multiplier = parseLeadingMultiplier(segment);
-  const query = segment.replace(/^(\d+(?:\.\d+)?|\d+\/\d+|[a-z]+)\s+/, "").trim();
+  const query = stripLeadingQuantity(segment);
   if (!query) return null;
 
   const per100g = await lookupPer100g(query, apiKey);
