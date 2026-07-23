@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import type { DayLog, FoodEntry, LogsByDate } from "../lib/types";
 import { formatFriendly, todayISO } from "../lib/date";
 import { formatProtein } from "../lib/foodFormat";
+import { estimateFood } from "../lib/foodEstimate";
 
 interface Props {
   log: DayLog;
@@ -29,6 +30,7 @@ export function CaloriePanel({
   const [name, setName] = useState("");
   const [calories, setCalories] = useState("");
   const [protein, setProtein] = useState("");
+  const [estimateNote, setEstimateNote] = useState<string | null>(null);
   const [editingTarget, setEditingTarget] = useState(false);
   const [targetDraft, setTargetDraft] = useState(String(target));
   const [editingProteinTarget, setEditingProteinTarget] = useState(false);
@@ -81,6 +83,23 @@ export function CaloriePanel({
     setName("");
     setCalories("");
     setProtein("");
+    setEstimateNote(null);
+  }
+
+  function handleEstimate() {
+    const result = estimateFood(name);
+    if (!result) {
+      setEstimateNote("Couldn't estimate that — try common food names, or enter kcal/protein manually.");
+      return;
+    }
+
+    setCalories(String(result.calories));
+    setProtein(String(result.protein));
+    setEstimateNote(
+      result.unmatched.length > 0
+        ? `Estimated — couldn't match: ${result.unmatched.join(", ")}. Adjust before adding.`
+        : "Estimated — adjust before adding if it looks off.",
+    );
   }
 
   function applyRecentFood(entry: FoodEntry) {
@@ -188,11 +207,22 @@ export function CaloriePanel({
         <div className="flex gap-2 flex-wrap">
           <input
             type="text"
-            placeholder="Food name"
+            placeholder="Food name or description, e.g. 2 eggs and toast"
             value={name}
-            onChange={(e) => setName(e.target.value)}
+            onChange={(e) => {
+              setName(e.target.value);
+              setEstimateNote(null);
+            }}
             className="flex-1 min-w-[120px] bg-[#0d1117] border border-[#30363d] rounded px-3 py-2 text-sm text-[#e6edf3] placeholder:text-gray-500 focus:outline-none focus:border-emerald-500"
           />
+          <button
+            type="button"
+            onClick={handleEstimate}
+            disabled={!name.trim()}
+            className="bg-[#0d1117] border border-emerald-600 text-emerald-400 hover:bg-emerald-950 disabled:opacity-40 disabled:cursor-not-allowed rounded px-3 py-2 text-sm font-medium"
+          >
+            Estimate
+          </button>
           <input
             type="number"
             placeholder="kcal"
@@ -216,6 +246,7 @@ export function CaloriePanel({
             Add
           </button>
         </div>
+        {estimateNote && <p className="text-xs text-gray-500">{estimateNote}</p>}
       </form>
 
       {recentFoods.length > 0 && (
