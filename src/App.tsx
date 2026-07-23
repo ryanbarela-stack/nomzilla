@@ -47,6 +47,20 @@ function App() {
     });
   }
 
+  function updateEntry(id: string, name: string, calories: number, protein?: number) {
+    setLogs((prev) => {
+      const existing = prev[selectedDate];
+      if (!existing) return prev;
+      return {
+        ...prev,
+        [selectedDate]: {
+          ...existing,
+          entries: existing.entries.map((e) => (e.id === id ? { ...e, name, calories, protein } : e)),
+        },
+      };
+    });
+  }
+
   function removeEntry(id: string) {
     setLogs((prev) => {
       const existing = prev[selectedDate];
@@ -218,6 +232,7 @@ function App() {
           target={settings.targetCalories}
           proteinTarget={settings.targetProtein}
           onAddEntry={addEntry}
+          onUpdateEntry={updateEntry}
           onRemoveEntry={removeEntry}
           onJumpToday={jumpToday}
           onChangeTarget={changeTarget}

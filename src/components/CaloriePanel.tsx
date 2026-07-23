@@ -10,6 +10,7 @@ interface Props {
   target: number;
   proteinTarget: number;
   onAddEntry: (name: string, calories: number, protein?: number) => void;
+  onUpdateEntry: (id: string, name: string, calories: number, protein?: number) => void;
   onRemoveEntry: (id: string) => void;
   onJumpToday: () => void;
   onChangeTarget: (value: number) => void;
@@ -22,6 +23,7 @@ export function CaloriePanel({
   target,
   proteinTarget,
   onAddEntry,
+  onUpdateEntry,
   onRemoveEntry,
   onJumpToday,
   onChangeTarget,
@@ -31,6 +33,7 @@ export function CaloriePanel({
   const [calories, setCalories] = useState("");
   const [protein, setProtein] = useState("");
   const [estimateNote, setEstimateNote] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [editingTarget, setEditingTarget] = useState(false);
   const [targetDraft, setTargetDraft] = useState(String(target));
   const [editingProteinTarget, setEditingProteinTarget] = useState(false);
@@ -79,7 +82,28 @@ export function CaloriePanel({
     const cal = Number(calories);
     if (!name.trim() || !cal || cal <= 0) return;
 
-    onAddEntry(name.trim(), Math.round(cal), protein ? Number(protein) : undefined);
+    if (editingId) {
+      onUpdateEntry(editingId, name.trim(), Math.round(cal), protein ? Number(protein) : undefined);
+    } else {
+      onAddEntry(name.trim(), Math.round(cal), protein ? Number(protein) : undefined);
+    }
+    setName("");
+    setCalories("");
+    setProtein("");
+    setEstimateNote(null);
+    setEditingId(null);
+  }
+
+  function startEdit(entry: FoodEntry) {
+    setEditingId(entry.id);
+    setName(entry.name);
+    setCalories(String(entry.calories));
+    setProtein(entry.protein !== undefined ? String(entry.protein) : "");
+    setEstimateNote(null);
+  }
+
+  function cancelEdit() {
+    setEditingId(null);
     setName("");
     setCalories("");
     setProtein("");
@@ -243,9 +267,19 @@ export function CaloriePanel({
             type="submit"
             className="bg-emerald-600 hover:bg-emerald-500 text-white rounded px-4 py-2 text-sm font-medium"
           >
-            Add
+            {editingId ? "Save" : "Add"}
           </button>
+          {editingId && (
+            <button
+              type="button"
+              onClick={cancelEdit}
+              className="bg-[#0d1117] border border-[#30363d] text-gray-400 hover:text-gray-200 rounded px-4 py-2 text-sm font-medium"
+            >
+              Cancel
+            </button>
+          )}
         </div>
+        {editingId && <p className="text-xs text-sky-400">Editing entry — Save to update, or Cancel.</p>}
         {estimateNote && <p className="text-xs text-gray-500">{estimateNote}</p>}
       </form>
 
@@ -274,7 +308,9 @@ export function CaloriePanel({
           return (
             <li
               key={entry.id}
-              className="flex items-center justify-between bg-[#0d1117] border border-[#21262d] rounded px-3 py-2"
+              className={`flex items-center justify-between bg-[#0d1117] border rounded px-3 py-2 ${
+                editingId === entry.id ? "border-sky-600" : "border-[#21262d]"
+              }`}
             >
               <div className="flex flex-col">
                 <span className="text-sm text-[#e6edf3]">{entry.name}</span>
@@ -283,7 +319,17 @@ export function CaloriePanel({
               <div className="flex items-center gap-3">
                 <span className="text-sm text-gray-400">{entry.calories} kcal</span>
                 <button
-                  onClick={() => onRemoveEntry(entry.id)}
+                  onClick={() => startEdit(entry)}
+                  className="text-gray-500 hover:text-emerald-400 text-sm"
+                  aria-label="Edit entry"
+                >
+                  ✎
+                </button>
+                <button
+                  onClick={() => {
+                    onRemoveEntry(entry.id);
+                    if (editingId === entry.id) cancelEdit();
+                  }}
                   className="text-gray-500 hover:text-red-400 text-sm"
                   aria-label="Remove entry"
                 >
