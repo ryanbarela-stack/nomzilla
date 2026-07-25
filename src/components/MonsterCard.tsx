@@ -1,16 +1,23 @@
 import { ATTRIBUTES } from "../lib/attributes";
 import { MAX_ACTION_POINTS } from "../lib/monsterEncounter";
+import type { Ability } from "../lib/abilities";
+import type { AttributeId } from "../lib/types";
 import type { Monster } from "../lib/monsters";
+
+export interface AttackOption {
+  ability: Ability;
+  level: number;
+}
 
 interface Props {
   monster: Monster | null;
   currentHealth: number;
   actionPoints: number;
-  abilityName: string | null;
-  onAttack: () => void;
+  attacks: AttackOption[];
+  onAttack: (attributeId: AttributeId) => void;
 }
 
-export function MonsterCard({ monster, currentHealth, actionPoints, abilityName, onAttack }: Props) {
+export function MonsterCard({ monster, currentHealth, actionPoints, attacks, onAttack }: Props) {
   const actionPointsLabel = `⚡ ${actionPoints}/${MAX_ACTION_POINTS}`;
 
   if (!monster) {
@@ -25,7 +32,6 @@ export function MonsterCard({ monster, currentHealth, actionPoints, abilityName,
   }
 
   const pct = Math.max(0, Math.min(100, Math.round((currentHealth / monster.maxHealth) * 100)));
-  const canAttack = actionPoints > 0 && !!abilityName;
   const weakness = ATTRIBUTES.find((attr) => attr.id === monster.weakness);
 
   return (
@@ -53,15 +59,41 @@ export function MonsterCard({ monster, currentHealth, actionPoints, abilityName,
         </div>
       </div>
 
-      <div className="flex items-center justify-between gap-2">
-        <span className="text-xs text-gray-400">{actionPointsLabel}</span>
-        <button
-          onClick={onAttack}
-          disabled={!canAttack}
-          className="bg-red-700 hover:bg-red-600 disabled:opacity-40 disabled:cursor-not-allowed text-white rounded px-4 py-2 text-sm font-medium"
-        >
-          {abilityName ? `Attack (${abilityName})` : "Choose a class to attack"}
-        </button>
+      <div className="flex flex-col gap-2">
+        <div className="flex items-center justify-between">
+          <span className="text-xs text-gray-400">Attacks</span>
+          <span className="text-xs text-gray-400">{actionPointsLabel}</span>
+        </div>
+
+        {attacks.length === 0 ? (
+          <span className="text-xs text-gray-500 italic">Choose a class to attack.</span>
+        ) : (
+          <div className="grid grid-cols-2 gap-2">
+            {attacks.map(({ ability, level }) => {
+              const attr = ATTRIBUTES.find((a) => a.id === ability.scalesWith);
+              const isWeakness = ability.scalesWith === monster.weakness;
+              return (
+                <button
+                  key={ability.scalesWith}
+                  onClick={() => onAttack(ability.scalesWith)}
+                  disabled={actionPoints <= 0}
+                  title={`Scales with ${attr?.name ?? ability.scalesWith} (Level ${level})`}
+                  className={`flex flex-col items-start gap-0.5 rounded px-3 py-2 text-left text-white disabled:opacity-40 disabled:cursor-not-allowed ${
+                    isWeakness
+                      ? "bg-red-700 hover:bg-red-600 ring-1 ring-red-400"
+                      : "bg-[#0d1117] border border-[#30363d] hover:border-red-600"
+                  }`}
+                >
+                  <span className="text-sm font-medium">{ability.name}</span>
+                  <span className="text-[10px]" style={{ color: attr?.hex }}>
+                    {attr?.name} Lv {level}
+                    {isWeakness && " · bonus"}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        )}
       </div>
     </div>
   );

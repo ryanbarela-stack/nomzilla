@@ -50,9 +50,10 @@ export function AboutModal({ onClose }: Props) {
           <h3 className="text-sm font-semibold text-emerald-400">Monsters</h3>
           <p className="text-sm text-gray-300">
             Once a week, a monster spawns at a random time — logging any training entry earns 1 action
-            point (⚡, capped at 5), which you spend to attack it with your class's ability. Damage scales
-            with the level of that ability's attribute, so leveling up through training hits harder. Each
-            monster also has a weakness attribute that deals bonus damage regardless of class —{" "}
+            point (⚡, capped at 5), which you spend to attack it. Every class has 4 attacks, one per
+            attribute, each dealing damage that scales with that attribute's level — pick whichever
+            matches your strongest stat, or the monster's weakness for a bonus. Each monster has a
+            weakness attribute that deals bonus damage regardless of class —{" "}
             <strong className="text-red-400">Titan</strong> (Strength),{" "}
             <strong className="text-green-400">Emperor</strong> (Stamina),{" "}
             <strong className="text-blue-400">Mothman</strong> (Intelligence), and{" "}

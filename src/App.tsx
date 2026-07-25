@@ -10,7 +10,7 @@ import { loadLogs, saveLogs, loadSettings, saveSettings, loadMonsterState, saveM
 import { todayISO, fromISODate } from "./lib/date";
 import { getCurrentHealth, applyExerciseBoost, isManaChargeReady } from "./lib/championHealth";
 import { getAttributeProgress } from "./lib/attributes";
-import { getAbility, computeDamage } from "./lib/abilities";
+import { getAbilities, getAbilityFor, computeDamage } from "./lib/abilities";
 import { advanceMonsterState, applyDamage, computeWeaknessBonus, MAX_ACTION_POINTS } from "./lib/monsterEncounter";
 import { getMonster } from "./lib/monsters";
 import type { ClassId } from "./lib/classes";
@@ -43,7 +43,11 @@ function App() {
   );
   const selectedLog = logs[selectedDate] ?? { date: selectedDate };
   const activeMonster = getMonster(monsterState.encounter?.monsterId);
-  const ability = getAbility(settings.classId as ClassId | null);
+  const classId = settings.classId as ClassId | null;
+  const attacks = getAbilities(classId).map((ability) => ({
+    ability,
+    level: getAttributeProgress(logs, ability.scalesWith, monsterState.attributePenalties[ability.scalesWith] ?? 0).level,
+  }));
 
   function addHabitEntry(entry: Omit<HabitEntry, "id">) {
     setLogs((prev) => {
@@ -69,7 +73,8 @@ function App() {
     setSettings((prev) => ({ ...prev, actionPoints: Math.min(MAX_ACTION_POINTS, prev.actionPoints + 1) }));
   }
 
-  function attackMonster() {
+  function attackMonster(attributeId: AttributeId) {
+    const ability = getAbilityFor(classId, attributeId);
     if (!ability || settings.actionPoints <= 0 || !monsterState.encounter || !activeMonster) return;
     const { level: abilityLevel } = getAttributeProgress(
       logs,
@@ -186,7 +191,7 @@ function App() {
         monster={activeMonster}
         currentHealth={monsterState.encounter?.currentHealth ?? 0}
         actionPoints={settings.actionPoints}
-        abilityName={ability?.name ?? null}
+        attacks={attacks}
         onAttack={attackMonster}
       />
 
