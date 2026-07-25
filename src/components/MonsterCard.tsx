@@ -1,3 +1,4 @@
+import { ATTRIBUTES } from "../lib/attributes";
 import { MAX_ACTION_POINTS } from "../lib/monsterEncounter";
 import type { Monster } from "../lib/monsters";
 
@@ -25,6 +26,7 @@ export function MonsterCard({ monster, currentHealth, actionPoints, abilityName,
 
   const pct = Math.max(0, Math.min(100, Math.round((currentHealth / monster.maxHealth) * 100)));
   const canAttack = actionPoints > 0 && !!abilityName;
+  const weakness = ATTRIBUTES.find((attr) => attr.id === monster.weakness);
 
   return (
     <div className="bg-[#161b22] border border-[#30363d] rounded-lg p-4 flex flex-col gap-3">
@@ -43,6 +45,11 @@ export function MonsterCard({ monster, currentHealth, actionPoints, abilityName,
             <div className="h-full bg-red-600 rounded-full transition-[width]" style={{ width: `${pct}%` }} />
           </div>
           <span className="text-xs text-gray-500">{monster.tagline}</span>
+          {weakness && (
+            <span className="text-xs" style={{ color: weakness.hex }}>
+              Weak to {weakness.name} — undefeated at week's end drops your {weakness.name} by 1 level
+            </span>
+          )}
         </div>
       </div>
 

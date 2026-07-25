@@ -70,4 +70,6 @@ export interface MonsterState {
   spawnedThisCycle: boolean;
   /** Lifetime count of monsters defeated. */
   monstersSlain: number;
+  /** Levels subtracted from each attribute's effective level, accrued when a monster expires undefeated. */
+  attributePenalties: Record<string, number>;
 }

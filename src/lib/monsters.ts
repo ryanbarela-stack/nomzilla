@@ -1,4 +1,5 @@
 import type { SpriteSize } from "./classes";
+import type { AttributeId } from "./types";
 
 export type MonsterId = "titan" | "emperor" | "mothman" | "quetzalcoatl";
 
@@ -9,6 +10,8 @@ export interface Monster {
   sprite: string;
   spriteSize: SpriteSize;
   maxHealth: number;
+  /** Attribute that deals bonus damage to this monster, and drops by 1 level if it's not defeated in time. */
+  weakness: AttributeId;
 }
 
 export const MONSTERS: Monster[] = [
@@ -19,6 +22,7 @@ export const MONSTERS: Monster[] = [
     sprite: "/sprites/monsters/titan/south.png",
     spriteSize: { width: 92, height: 92 },
     maxHealth: 80,
+    weakness: "strength",
   },
   {
     id: "emperor",
@@ -27,6 +31,7 @@ export const MONSTERS: Monster[] = [
     sprite: "/sprites/monsters/emperor/south.png",
     spriteSize: { width: 92, height: 92 },
     maxHealth: 100,
+    weakness: "endurance",
   },
   {
     id: "mothman",
@@ -35,6 +40,7 @@ export const MONSTERS: Monster[] = [
     sprite: "/sprites/monsters/mothman/south.png",
     spriteSize: { width: 96, height: 96 },
     maxHealth: 90,
+    weakness: "intelligence",
   },
   {
     id: "quetzalcoatl",
@@ -43,6 +49,7 @@ export const MONSTERS: Monster[] = [
     sprite: "/sprites/monsters/quetzalcoatl/south.png",
     spriteSize: { width: 92, height: 92 },
     maxHealth: 120,
+    weakness: "wisdom",
   },
 ];
 

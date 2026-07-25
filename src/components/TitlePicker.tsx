@@ -4,11 +4,12 @@ import type { AttributeId, LogsByDate } from "../lib/types";
 interface Props {
   selectedId: AttributeId | null;
   logs: LogsByDate;
+  attributePenalties: Record<string, number>;
   onSelect: (id: AttributeId | null) => void;
   onClose: () => void;
 }
 
-export function TitlePicker({ selectedId, logs, onSelect, onClose }: Props) {
+export function TitlePicker({ selectedId, logs, attributePenalties, onSelect, onClose }: Props) {
   return (
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4" onClick={onClose}>
       <div
@@ -36,7 +37,7 @@ export function TitlePicker({ selectedId, logs, onSelect, onClose }: Props) {
 
         <div className="grid grid-cols-2 gap-3">
           {ATTRIBUTES.map((attr) => {
-            const { level } = getAttributeProgress(logs, attr.id);
+            const { level } = getAttributeProgress(logs, attr.id, attributePenalties[attr.id] ?? 0);
             const unlocked = level > 0;
             return (
               <button
@@ -51,7 +52,7 @@ export function TitlePicker({ selectedId, logs, onSelect, onClose }: Props) {
                 } ${unlocked ? "cursor-pointer hover:bg-[#1c2129]" : "opacity-40 cursor-not-allowed"}`}
               >
                 <span className="text-sm font-semibold text-gray-200">
-                  {unlocked ? getAttributeTitle(logs, attr.id) : attr.name}
+                  {unlocked ? getAttributeTitle(logs, attr.id, attributePenalties[attr.id] ?? 0) : attr.name}
                 </span>
                 {!unlocked && <span className="text-[10px] text-gray-500">Reach Level 1 to unlock</span>}
               </button>

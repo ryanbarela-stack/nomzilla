@@ -182,13 +182,19 @@ export interface AttributeProgress {
   pct: number;
 }
 
-/** Current level and progress-to-next-level for an attribute, uncapped. */
-export function getAttributeProgress(logs: LogsByDate, id: AttributeId): AttributeProgress {
+/**
+ * Current level and progress-to-next-level for an attribute, uncapped. `penalty` (from monsters
+ * left undefeated) is subtracted from the level shown/used everywhere, but progress-into-level is
+ * still computed from the raw, unpenalized level so the bar and points-to-next-level keep tracking
+ * real accumulated points — the penalty only ever knocks the displayed level number down.
+ */
+export function getAttributeProgress(logs: LogsByDate, id: AttributeId, penalty = 0): AttributeProgress {
   const attr = ATTRIBUTES.find((a) => a.id === id);
   const pointsPerLevel = attr?.pointsPerLevel ?? 1;
   const points = computeAttributePoints(logs, id);
-  const level = Math.floor(points / pointsPerLevel);
-  const pointsIntoLevel = points - level * pointsPerLevel;
+  const rawLevel = Math.floor(points / pointsPerLevel);
+  const level = Math.max(0, rawLevel - penalty);
+  const pointsIntoLevel = points - rawLevel * pointsPerLevel;
   return {
     points,
     level,
@@ -204,10 +210,10 @@ export function getAttributeProgress(logs: LogsByDate, id: AttributeId): Attribu
  * then on ATTRIBUTES order. Returns null until at least one attribute has
  * reached Level 1.
  */
-export function getTopAttributeTitle(logs: LogsByDate): string | null {
+export function getTopAttributeTitle(logs: LogsByDate, penalties: Record<string, number> = {}): string | null {
   let best: { attr: Attribute; level: number; points: number } | null = null;
   for (const attr of ATTRIBUTES) {
-    const { level, points } = getAttributeProgress(logs, attr.id);
+    const { level, points } = getAttributeProgress(logs, attr.id, penalties[attr.id] ?? 0);
     if (level === 0) continue;
     if (!best || level > best.level || (level === best.level && points > best.points)) {
       best = { attr, level, points };
@@ -217,8 +223,8 @@ export function getTopAttributeTitle(logs: LogsByDate): string | null {
 }
 
 /** A given attribute's current title, e.g. "Level 3 Warbringer" — null if still Level 0. */
-export function getAttributeTitle(logs: LogsByDate, id: AttributeId): string | null {
-  const { level } = getAttributeProgress(logs, id);
+export function getAttributeTitle(logs: LogsByDate, id: AttributeId, penalty = 0): string | null {
+  const { level } = getAttributeProgress(logs, id, penalty);
   if (level === 0) return null;
   return `Level ${level} ${getFantasyTitleName(id, level)}`;
 }
@@ -228,10 +234,14 @@ export function getAttributeTitle(logs: LogsByDate, id: AttributeId): string | n
  * title if set and unlocked, otherwise falls back to the auto-selected
  * top title.
  */
-export function getDisplayTitle(logs: LogsByDate, titleAttributeId: AttributeId | null): string | null {
+export function getDisplayTitle(
+  logs: LogsByDate,
+  titleAttributeId: AttributeId | null,
+  penalties: Record<string, number> = {},
+): string | null {
   if (titleAttributeId) {
-    const title = getAttributeTitle(logs, titleAttributeId);
+    const title = getAttributeTitle(logs, titleAttributeId, penalties[titleAttributeId] ?? 0);
     if (title) return title;
   }
-  return getTopAttributeTitle(logs);
+  return getTopAttributeTitle(logs, penalties);
 }

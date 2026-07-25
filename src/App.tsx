@@ -11,7 +11,7 @@ import { todayISO, fromISODate } from "./lib/date";
 import { getCurrentHealth, applyExerciseBoost, isManaChargeReady } from "./lib/championHealth";
 import { getAttributeProgress } from "./lib/attributes";
 import { getAbility, computeDamage } from "./lib/abilities";
-import { advanceMonsterState, applyDamage, MAX_ACTION_POINTS } from "./lib/monsterEncounter";
+import { advanceMonsterState, applyDamage, computeWeaknessBonus, MAX_ACTION_POINTS } from "./lib/monsterEncounter";
 import { getMonster } from "./lib/monsters";
 import type { ClassId } from "./lib/classes";
 import type { AttributeId, HabitEntry, LogsByDate, MonsterState, Settings } from "./lib/types";
@@ -70,9 +70,18 @@ function App() {
   }
 
   function attackMonster() {
-    if (!ability || settings.actionPoints <= 0 || !monsterState.encounter) return;
-    const { level } = getAttributeProgress(logs, ability.scalesWith);
-    const damage = computeDamage(ability, level);
+    if (!ability || settings.actionPoints <= 0 || !monsterState.encounter || !activeMonster) return;
+    const { level: abilityLevel } = getAttributeProgress(
+      logs,
+      ability.scalesWith,
+      monsterState.attributePenalties[ability.scalesWith] ?? 0,
+    );
+    const { level: weaknessLevel } = getAttributeProgress(
+      logs,
+      activeMonster.weakness,
+      monsterState.attributePenalties[activeMonster.weakness] ?? 0,
+    );
+    const damage = computeDamage(ability, abilityLevel) + computeWeaknessBonus(weaknessLevel);
     setMonsterState((prev) => applyDamage(prev, damage));
     setSettings((prev) => ({ ...prev, actionPoints: prev.actionPoints - 1 }));
   }
@@ -122,7 +131,7 @@ function App() {
   }
 
   function acknowledgeAttributeLevel(id: AttributeId) {
-    const { level } = getAttributeProgress(logs, id);
+    const { level } = getAttributeProgress(logs, id, monsterState.attributePenalties[id] ?? 0);
     setSettings((prev) => ({
       ...prev,
       seenAttributeLevels: { ...prev.seenAttributeLevels, [id]: level },
@@ -166,6 +175,7 @@ function App() {
         titleAttributeId={settings.titleAttributeId}
         classId={settings.classId}
         seenAttributeLevels={settings.seenAttributeLevels}
+        attributePenalties={monsterState.attributePenalties}
         onChangeTitle={changeTitle}
         onChangeClass={changeClass}
         onAcknowledgeAttributeLevel={acknowledgeAttributeLevel}

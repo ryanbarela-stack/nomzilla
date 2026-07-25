@@ -3,6 +3,7 @@ import type { LogsByDate } from "../lib/types";
 
 interface Props {
   logs: LogsByDate;
+  attributePenalties: Record<string, number>;
   /** Rendered width/height of the chart, in px. Everything else scales off this. */
   size?: number;
 }
@@ -19,7 +20,7 @@ interface LabelLayout {
   anchor: "middle" | "start" | "end";
 }
 
-export function AttributeRadar({ logs, size = BASE_SIZE }: Props) {
+export function AttributeRadar({ logs, attributePenalties, size = BASE_SIZE }: Props) {
   const scale = size / BASE_SIZE;
   const center = size / 2;
   const radius = 62 * scale;
@@ -56,7 +57,7 @@ export function AttributeRadar({ logs, size = BASE_SIZE }: Props) {
     }
   }
 
-  const progress = ATTRIBUTES.map((attr) => getAttributeProgress(logs, attr.id));
+  const progress = ATTRIBUTES.map((attr) => getAttributeProgress(logs, attr.id, attributePenalties[attr.id] ?? 0));
   /** Level plus curved fractional progress toward the next one, so any logged effort nudges the shape outward immediately. */
   const progressValues = progress.map((p) => p.level + visualProgressPct(p.pct) / 100);
   const axisMax = Math.max(4, Math.max(...progressValues) + 2);

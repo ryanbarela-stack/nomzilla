@@ -17,6 +17,7 @@ interface Props {
   titleAttributeId: AttributeId | null;
   classId: string | null;
   seenAttributeLevels: Record<string, number>;
+  attributePenalties: Record<string, number>;
   onChangeTitle: (id: AttributeId | null) => void;
   onChangeClass: (id: string) => void;
   onAcknowledgeAttributeLevel: (id: AttributeId) => void;
@@ -31,6 +32,7 @@ export function ChampionHeader({
   titleAttributeId,
   classId,
   seenAttributeLevels,
+  attributePenalties,
   onChangeTitle,
   onChangeClass,
   onAcknowledgeAttributeLevel,
@@ -38,8 +40,8 @@ export function ChampionHeader({
 }: Props) {
   const [titlePickerOpen, setTitlePickerOpen] = useState(false);
   const [classPickerOpen, setClassPickerOpen] = useState(false);
-  const displayTitle = getDisplayTitle(logs, titleAttributeId);
-  const hasAnyTitle = getDisplayTitle(logs, null) !== null;
+  const displayTitle = getDisplayTitle(logs, titleAttributeId, attributePenalties);
+  const hasAnyTitle = getDisplayTitle(logs, null, attributePenalties) !== null;
   const currentClass = getClass(classId);
   const healthPct = Math.round(health);
   const paused = isHealthPaused(manaCharges, now);
@@ -85,6 +87,7 @@ export function ChampionHeader({
             <TitlePicker
               selectedId={titleAttributeId}
               logs={logs}
+              attributePenalties={attributePenalties}
               onSelect={onChangeTitle}
               onClose={() => setTitlePickerOpen(false)}
             />
@@ -137,12 +140,13 @@ export function ChampionHeader({
             </div>
           </div>
 
-          <AttributeRadar logs={logs} size={128} />
+          <AttributeRadar logs={logs} attributePenalties={attributePenalties} size={128} />
         </div>
 
         <AttributeStats
           logs={logs}
           seenAttributeLevels={seenAttributeLevels}
+          attributePenalties={attributePenalties}
           onAcknowledgeLevel={onAcknowledgeAttributeLevel}
         />
       </div>

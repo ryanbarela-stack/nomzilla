@@ -4,16 +4,17 @@ import type { LogsByDate } from "../lib/types";
 interface Props {
   logs: LogsByDate;
   seenAttributeLevels: Record<string, number>;
+  attributePenalties: Record<string, number>;
   onAcknowledgeLevel: (id: AttributeId) => void;
 }
 
-export function AttributeStats({ logs, seenAttributeLevels, onAcknowledgeLevel }: Props) {
+export function AttributeStats({ logs, seenAttributeLevels, attributePenalties, onAcknowledgeLevel }: Props) {
   return (
     <div className="border-t border-[#30363d] pt-4 flex flex-col gap-3">
       <h2 className="text-sm font-semibold text-[#e6edf3] font-pixel">Champion Attributes</h2>
 
       {ATTRIBUTES.map((attr) => {
-        const { level, pointsToNextLevel, pct } = getAttributeProgress(logs, attr.id);
+        const { level, pointsToNextLevel, pct } = getAttributeProgress(logs, attr.id, attributePenalties[attr.id] ?? 0);
         const leveledUp = level > (seenAttributeLevels[attr.id] ?? 0);
         const pctLabel = pct > 0 && Math.round(pct) === 0 ? "<1" : String(Math.round(pct));
 

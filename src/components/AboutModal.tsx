@@ -51,9 +51,14 @@ export function AboutModal({ onClose }: Props) {
           <p className="text-sm text-gray-300">
             Once a week, a monster spawns at a random time — logging any training entry earns 1 action
             point (⚡, capped at 5), which you spend to attack it with your class's ability. Damage scales
-            with the level of that ability's attribute, so leveling up through training hits harder.
-            Defeating it adds to your lifetime kill count; if it's not defeated by week's end, it
-            disappears and a new one spawns the following week.
+            with the level of that ability's attribute, so leveling up through training hits harder. Each
+            monster also has a weakness attribute that deals bonus damage regardless of class —{" "}
+            <strong className="text-red-400">Titan</strong> (Strength),{" "}
+            <strong className="text-green-400">Emperor</strong> (Stamina),{" "}
+            <strong className="text-blue-400">Mothman</strong> (Intelligence), and{" "}
+            <strong className="text-yellow-400">Quetzalcoatl</strong> (Wisdom). Defeating a monster adds
+            to your lifetime kill count. Leave one undefeated at week's end, though, and its weakness
+            attribute drops a level — a real setback you'll need to train back.
           </p>
         </section>
 
