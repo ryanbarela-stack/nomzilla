@@ -47,6 +47,17 @@ export function AboutModal({ onClose }: Props) {
         </section>
 
         <section className="flex flex-col gap-1">
+          <h3 className="text-sm font-semibold text-emerald-400">Monsters</h3>
+          <p className="text-sm text-gray-300">
+            Once a week, a monster spawns at a random time — logging any training entry earns 1 action
+            point (⚡, capped at 5), which you spend to attack it with your class's ability. Damage scales
+            with the level of that ability's attribute, so leveling up through training hits harder.
+            Defeating it adds to your lifetime kill count; if it's not defeated by week's end, it
+            disappears and a new one spawns the following week.
+          </p>
+        </section>
+
+        <section className="flex flex-col gap-1">
           <h3 className="text-sm font-semibold text-emerald-400">Attributes</h3>
           <p className="text-sm text-gray-300">
             Each training entry is tagged to one attribute: weight training grows{" "}

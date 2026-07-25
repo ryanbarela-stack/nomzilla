@@ -46,6 +46,28 @@ export interface Settings {
   championHealthUpdatedAt: string | null;
   /** ISO timestamp each mana charge was last activated (pausing health decay for 24h from then), or null if unused. */
   manaCharges: (string | null)[];
+  /** Current action points, spent to attack the active monster. Capped at MAX_ACTION_POINTS. */
+  actionPoints: number;
 }
 
 export type LogsByDate = Record<string, DayLog>;
+
+export interface MonsterEncounter {
+  monsterId: string;
+  currentHealth: number;
+  /** ISO timestamp the monster spawned. */
+  spawnedAt: string;
+}
+
+export interface MonsterState {
+  /** ISO timestamp marking the start of the current weekly spawn cycle. */
+  weekAnchor: string;
+  /** Random offset (ms) into the current cycle when this week's monster spawns. */
+  spawnOffsetMs: number;
+  /** The currently active monster, or null if none is up right now (not spawned yet, or defeated). */
+  encounter: MonsterEncounter | null;
+  /** Whether this cycle's monster has already spawned — prevents respawning after a defeat until next week. */
+  spawnedThisCycle: boolean;
+  /** Lifetime count of monsters defeated. */
+  monstersSlain: number;
+}

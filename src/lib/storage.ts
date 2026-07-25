@@ -1,8 +1,10 @@
 import { MANA_CHARGE_COUNT } from "./championHealth";
-import type { LogsByDate, Settings } from "./types";
+import { createInitialMonsterState } from "./monsterEncounter";
+import type { LogsByDate, MonsterState, Settings } from "./types";
 
 const LOGS_KEY = "nomzilla:logs";
 const SETTINGS_KEY = "nomzilla:settings";
+const MONSTER_KEY = "nomzilla:monster";
 
 export const DEFAULT_SETTINGS: Settings = {
   seenAttributeLevels: {},
@@ -11,6 +13,7 @@ export const DEFAULT_SETTINGS: Settings = {
   championHealth: 100,
   championHealthUpdatedAt: null,
   manaCharges: Array<string | null>(MANA_CHARGE_COUNT).fill(null),
+  actionPoints: 0,
 };
 
 export function loadLogs(): LogsByDate {
@@ -37,4 +40,17 @@ export function loadSettings(): Settings {
 
 export function saveSettings(settings: Settings): void {
   localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+}
+
+export function loadMonsterState(): MonsterState {
+  try {
+    const raw = localStorage.getItem(MONSTER_KEY);
+    return raw ? (JSON.parse(raw) as MonsterState) : createInitialMonsterState();
+  } catch {
+    return createInitialMonsterState();
+  }
+}
+
+export function saveMonsterState(state: MonsterState): void {
+  localStorage.setItem(MONSTER_KEY, JSON.stringify(state));
 }

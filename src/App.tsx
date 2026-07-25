@@ -1,19 +1,25 @@
 import { useEffect, useMemo, useState } from "react";
 import { ChampionHeader } from "./components/ChampionHeader";
+import { MonsterCard } from "./components/MonsterCard";
 import { TrainingPanel } from "./components/TrainingPanel";
 import { AboutModal } from "./components/AboutModal";
 import { Calendar } from "./components/Calendar";
 import { StreakBar } from "./components/StreakBar";
 import { WeightPage } from "./components/WeightPage";
-import { loadLogs, saveLogs, loadSettings, saveSettings } from "./lib/storage";
+import { loadLogs, saveLogs, loadSettings, saveSettings, loadMonsterState, saveMonsterState } from "./lib/storage";
 import { todayISO, fromISODate } from "./lib/date";
 import { getCurrentHealth, applyExerciseBoost, isManaChargeReady } from "./lib/championHealth";
 import { getAttributeProgress } from "./lib/attributes";
-import type { AttributeId, HabitEntry, LogsByDate, Settings } from "./lib/types";
+import { getAbility, computeDamage } from "./lib/abilities";
+import { advanceMonsterState, applyDamage, MAX_ACTION_POINTS } from "./lib/monsterEncounter";
+import { getMonster } from "./lib/monsters";
+import type { ClassId } from "./lib/classes";
+import type { AttributeId, HabitEntry, LogsByDate, MonsterState, Settings } from "./lib/types";
 
 function App() {
   const [logs, setLogs] = useState<LogsByDate>(() => loadLogs());
   const [settings, setSettings] = useState<Settings>(() => loadSettings());
+  const [monsterState, setMonsterState] = useState<MonsterState>(() => loadMonsterState());
   const [selectedDate, setSelectedDate] = useState<string>(() => todayISO());
   const [viewDate, setViewDate] = useState<Date>(() => fromISODate(todayISO()));
   const [aboutOpen, setAboutOpen] = useState(false);
@@ -22,16 +28,22 @@ function App() {
 
   useEffect(() => saveLogs(logs), [logs]);
   useEffect(() => saveSettings(settings), [settings]);
+  useEffect(() => saveMonsterState(monsterState), [monsterState]);
   useEffect(() => {
     const id = setInterval(() => setNow(Date.now()), 60_000);
     return () => clearInterval(id);
   }, []);
+  useEffect(() => {
+    setMonsterState((prev) => advanceMonsterState(prev, now));
+  }, [now]);
 
   const championHealth = useMemo(
     () => getCurrentHealth(settings.championHealth, settings.championHealthUpdatedAt, settings.manaCharges, now),
     [settings.championHealth, settings.championHealthUpdatedAt, settings.manaCharges, now],
   );
   const selectedLog = logs[selectedDate] ?? { date: selectedDate };
+  const activeMonster = getMonster(monsterState.encounter?.monsterId);
+  const ability = getAbility(settings.classId as ClassId | null);
 
   function addHabitEntry(entry: Omit<HabitEntry, "id">) {
     setLogs((prev) => {
@@ -53,6 +65,16 @@ function App() {
         championHealthUpdatedAt: new Date(boostedAt).toISOString(),
       }));
     }
+
+    setSettings((prev) => ({ ...prev, actionPoints: Math.min(MAX_ACTION_POINTS, prev.actionPoints + 1) }));
+  }
+
+  function attackMonster() {
+    if (!ability || settings.actionPoints <= 0 || !monsterState.encounter) return;
+    const { level } = getAttributeProgress(logs, ability.scalesWith);
+    const damage = computeDamage(ability, level);
+    setMonsterState((prev) => applyDamage(prev, damage));
+    setSettings((prev) => ({ ...prev, actionPoints: prev.actionPoints - 1 }));
   }
 
   function removeHabitEntry(id: string) {
@@ -148,6 +170,14 @@ function App() {
         onChangeClass={changeClass}
         onAcknowledgeAttributeLevel={acknowledgeAttributeLevel}
         onActivateMana={activateMana}
+      />
+
+      <MonsterCard
+        monster={activeMonster}
+        currentHealth={monsterState.encounter?.currentHealth ?? 0}
+        actionPoints={settings.actionPoints}
+        abilityName={ability?.name ?? null}
+        onAttack={attackMonster}
       />
 
       <StreakBar logs={logs} />
