@@ -1,11 +1,3 @@
-export interface FoodEntry {
-  id: string;
-  name: string;
-  calories: number;
-  /** Grams of protein, if logged. */
-  protein?: number;
-}
-
 export type AttributeId = "strength" | "endurance" | "intelligence" | "wisdom";
 
 export interface SetDetail {
@@ -35,7 +27,6 @@ export interface HabitEntry {
 
 export interface DayLog {
   date: string; // ISO yyyy-mm-dd
-  entries: FoodEntry[];
   /** Optional — absent on days with no habits logged yet. */
   habitEntries?: HabitEntry[];
   /** Body weight logged for this day, in lbs. */
@@ -43,8 +34,6 @@ export interface DayLog {
 }
 
 export interface Settings {
-  targetCalories: number;
-  targetProtein: number;
   /** Highest attribute level already shown a level-up banner for, per attribute. */
   seenAttributeLevels: Record<string, number>;
   /** Manually chosen attribute whose title to display, or null to auto-pick the highest-tier one. */
@@ -57,8 +46,6 @@ export interface Settings {
   championHealthUpdatedAt: string | null;
   /** ISO timestamp each mana charge was last activated (pausing health decay for 24h from then), or null if unused. */
   manaCharges: (string | null)[];
-  /** Free USDA FoodData Central API key, used to look up foods the local table doesn't know. Empty if unset. */
-  usdaApiKey: string;
 }
 
 export type LogsByDate = Record<string, DayLog>;

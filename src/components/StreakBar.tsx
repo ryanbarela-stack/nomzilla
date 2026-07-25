@@ -25,7 +25,7 @@ export function StreakBar({ logs }: Props) {
         <div className="h-full bg-orange-500 rounded-full transition-[width]" style={{ width: `${pct}%` }} />
       </div>
       <span className="text-xs text-gray-500">
-        {streak === 0 ? "Log food today to start a streak" : `${daysToMilestone} more to next milestone`}
+        {streak === 0 ? "Log training today to start a streak" : `${daysToMilestone} more to next milestone`}
       </span>
     </div>
   );

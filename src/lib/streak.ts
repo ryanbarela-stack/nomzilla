@@ -1,8 +1,8 @@
 import { addDaysISO, todayISO } from "./date";
 import type { LogsByDate } from "./types";
 
-function hasFoodLog(logs: LogsByDate, iso: string): boolean {
-  return (logs[iso]?.entries.length ?? 0) > 0;
+function hasTrainingLog(logs: LogsByDate, iso: string): boolean {
+  return (logs[iso]?.habitEntries?.length ?? 0) > 0;
 }
 
 /**
@@ -12,8 +12,8 @@ function hasFoodLog(logs: LogsByDate, iso: string): boolean {
  */
 export function getStreakDates(logs: LogsByDate, today: string = todayISO()): string[] {
   const dates: string[] = [];
-  let cursor = hasFoodLog(logs, today) ? today : addDaysISO(today, -1);
-  while (hasFoodLog(logs, cursor)) {
+  let cursor = hasTrainingLog(logs, today) ? today : addDaysISO(today, -1);
+  while (hasTrainingLog(logs, cursor)) {
     dates.push(cursor);
     cursor = addDaysISO(cursor, -1);
   }

@@ -5,15 +5,12 @@ const LOGS_KEY = "nomzilla:logs";
 const SETTINGS_KEY = "nomzilla:settings";
 
 export const DEFAULT_SETTINGS: Settings = {
-  targetCalories: 2000,
-  targetProtein: 150,
   seenAttributeLevels: {},
   titleAttributeId: null,
   classId: null,
   championHealth: 100,
   championHealthUpdatedAt: null,
   manaCharges: Array<string | null>(MANA_CHARGE_COUNT).fill(null),
-  usdaApiKey: "",
 };
 
 export function loadLogs(): LogsByDate {

@@ -19,36 +19,21 @@ export function AboutModal({ onClose }: Props) {
         <section className="flex flex-col gap-1">
           <h3 className="text-sm font-semibold text-emerald-400">Streaks</h3>
           <p className="text-sm text-gray-300">
-            Log food each day to build a streak, shown as the 🔥 bar under your champion. A streak stays
-            alive as long as you don't skip a day — today doesn't need to be logged yet to keep it going,
-            but missing any other day breaks it back to 0. Every 7 days is a milestone, and streak days
-            are marked with 🔥 on the calendar.
-          </p>
-        </section>
-
-        <section className="flex flex-col gap-1">
-          <h3 className="text-sm font-semibold text-emerald-400">Logging food & protein</h3>
-          <p className="text-sm text-gray-300">
-            Log each food's name and calories against your daily calorie target — click the target number
-            to change it. Protein has its own target and progress bar nested right under calories, so you
-            can track it separately from your calorie budget. Type a description like "2 eggs and a banana"
-            and hit{" "}
-            <strong className="text-emerald-400">Estimate</strong> to auto-fill calories and protein from a
-            small built-in food table — always double-check the numbers before adding, since it's a rough
-            estimate, not an exact lookup. Add a free USDA FoodData Central API key (under the "Improve
-            estimates" link on the form) to check real USDA nutrition data first, with the built-in table
-            only filling in whatever USDA can't find — the key is stored only on this device.
+            Log training each day to build a streak, shown as the 🔥 bar under your champion. A streak
+            stays alive as long as you don't skip a day — today doesn't need to be logged yet to keep it
+            going, but missing any other day breaks it back to 0. Every 7 days is a milestone, and streak
+            days are marked with 🔥 on the calendar.
           </p>
         </section>
 
         <section className="flex flex-col gap-1">
           <h3 className="text-sm font-semibold text-emerald-400">Growing your champion</h3>
           <p className="text-sm text-gray-300">
-            Alongside food, log your training in the Training log: what you did, which attribute it
-            trains, and — optionally — sets, reps, and either weight lifted or time spent. Your champion
-            has a health bar that starts at 100% and drains 1% every hour. Logging a Strength or Stamina
-            training entry restores 33% of it. Pick a class — Warrior, Barbarian, Monk, Cleric, Wizard, or
-            Rogue — anytime to change how your champion looks.
+            Log your training in the Training log: what you did, which attribute it trains, and —
+            optionally — sets, reps, and either weight lifted or time spent. Your champion has a health bar
+            that starts at 100% and drains 1% every hour. Logging a Strength or Stamina training entry
+            restores 33% of it. Pick a class — Warrior, Barbarian, Monk, Cleric, Wizard, or Rogue — anytime
+            to change how your champion looks.
           </p>
         </section>
 
@@ -108,9 +93,8 @@ export function AboutModal({ onClose }: Props) {
         <section className="flex flex-col gap-1">
           <h3 className="text-sm font-semibold text-emerald-400">Calendar</h3>
           <p className="text-sm text-gray-300">
-            Each day is colored green if you logged food and stayed under your calorie target, red if you
-            went over, and dark if nothing was logged. A small dot marks days you also logged training.
-            Click any day to view or edit that day's log.
+            Each day is colored green if you logged training, and dark if nothing was logged. Click any day
+            to view or edit that day's log.
           </p>
         </section>
       </div>

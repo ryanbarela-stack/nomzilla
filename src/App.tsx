@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
 import { ChampionHeader } from "./components/ChampionHeader";
-import { CaloriePanel } from "./components/CaloriePanel";
 import { TrainingPanel } from "./components/TrainingPanel";
 import { AboutModal } from "./components/AboutModal";
 import { Calendar } from "./components/Calendar";
@@ -19,7 +18,7 @@ function App() {
   const [viewDate, setViewDate] = useState<Date>(() => fromISODate(todayISO()));
   const [aboutOpen, setAboutOpen] = useState(false);
   const [now, setNow] = useState(() => Date.now());
-  const [activeTab, setActiveTab] = useState<"calories" | "training" | "weight">("calories");
+  const [activeTab, setActiveTab] = useState<"training" | "weight">("training");
 
   useEffect(() => saveLogs(logs), [logs]);
   useEffect(() => saveSettings(settings), [settings]);
@@ -32,49 +31,11 @@ function App() {
     () => getCurrentHealth(settings.championHealth, settings.championHealthUpdatedAt, settings.manaCharges, now),
     [settings.championHealth, settings.championHealthUpdatedAt, settings.manaCharges, now],
   );
-  const selectedLog = logs[selectedDate] ?? { date: selectedDate, entries: [] };
-
-  function addEntry(name: string, calories: number, protein?: number) {
-    setLogs((prev) => {
-      const existing = prev[selectedDate] ?? { date: selectedDate, entries: [] };
-      return {
-        ...prev,
-        [selectedDate]: {
-          ...existing,
-          entries: [...existing.entries, { id: crypto.randomUUID(), name, calories, protein }],
-        },
-      };
-    });
-  }
-
-  function updateEntry(id: string, name: string, calories: number, protein?: number) {
-    setLogs((prev) => {
-      const existing = prev[selectedDate];
-      if (!existing) return prev;
-      return {
-        ...prev,
-        [selectedDate]: {
-          ...existing,
-          entries: existing.entries.map((e) => (e.id === id ? { ...e, name, calories, protein } : e)),
-        },
-      };
-    });
-  }
-
-  function removeEntry(id: string) {
-    setLogs((prev) => {
-      const existing = prev[selectedDate];
-      if (!existing) return prev;
-      return {
-        ...prev,
-        [selectedDate]: { ...existing, entries: existing.entries.filter((e) => e.id !== id) },
-      };
-    });
-  }
+  const selectedLog = logs[selectedDate] ?? { date: selectedDate };
 
   function addHabitEntry(entry: Omit<HabitEntry, "id">) {
     setLogs((prev) => {
-      const existing = prev[selectedDate] ?? { date: selectedDate, entries: [] };
+      const existing = prev[selectedDate] ?? { date: selectedDate };
       return {
         ...prev,
         [selectedDate]: {
@@ -107,7 +68,7 @@ function App() {
 
   function setWeight(date: string, weightLbs: number) {
     setLogs((prev) => {
-      const existing = prev[date] ?? { date, entries: [] };
+      const existing = prev[date] ?? { date };
       return { ...prev, [date]: { ...existing, weightLbs } };
     });
   }
@@ -119,18 +80,6 @@ function App() {
       const { weightLbs: _weightLbs, ...rest } = existing;
       return { ...prev, [date]: rest };
     });
-  }
-
-  function changeTarget(value: number) {
-    setSettings((prev) => ({ ...prev, targetCalories: value }));
-  }
-
-  function changeProteinTarget(value: number) {
-    setSettings((prev) => ({ ...prev, targetProtein: value }));
-  }
-
-  function changeUsdaApiKey(value: string) {
-    setSettings((prev) => ({ ...prev, usdaApiKey: value }));
   }
 
   function changeClass(id: string) {
@@ -172,7 +121,7 @@ function App() {
     <div className="max-w-3xl mx-auto p-4 flex flex-col gap-4">
       <div className="relative text-center">
         <h1 className="text-2xl font-pixel font-bold tracking-wide text-emerald-400">Nomzilla</h1>
-        <p className="text-sm text-gray-500">Every meal, every set, every level.</p>
+        <p className="text-sm text-gray-500">Every set, every level.</p>
         <button
           onClick={() => setAboutOpen(true)}
           aria-label="How Nomzilla works"
@@ -207,14 +156,13 @@ function App() {
         year={viewDate.getFullYear()}
         month={viewDate.getMonth()}
         logs={logs}
-        target={settings.targetCalories}
         selectedDate={selectedDate}
         onSelectDate={setSelectedDate}
         onChangeMonth={changeMonth}
       />
 
       <div className="flex gap-2">
-        {(["calories", "training", "weight"] as const).map((tab) => (
+        {(["training", "weight"] as const).map((tab) => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
@@ -228,22 +176,6 @@ function App() {
           </button>
         ))}
       </div>
-
-      {activeTab === "calories" && (
-        <CaloriePanel
-          log={selectedLog}
-          target={settings.targetCalories}
-          proteinTarget={settings.targetProtein}
-          usdaApiKey={settings.usdaApiKey}
-          onAddEntry={addEntry}
-          onUpdateEntry={updateEntry}
-          onRemoveEntry={removeEntry}
-          onJumpToday={jumpToday}
-          onChangeTarget={changeTarget}
-          onChangeProteinTarget={changeProteinTarget}
-          onChangeUsdaApiKey={changeUsdaApiKey}
-        />
-      )}
 
       {activeTab === "training" && (
         <TrainingPanel
