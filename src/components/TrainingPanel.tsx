@@ -1,13 +1,108 @@
 import { Fragment, useMemo, useState } from "react";
 import { ATTRIBUTES } from "../lib/attributes";
-import type { AttributeId, DayLog, HabitEntry, LogsByDate } from "../lib/types";
+import type { AttributeId, DayLog, HabitEntry, LogsByDate, PlannedEntry, SetDetail } from "../lib/types";
 import { formatFriendly, formatShort, todayISO } from "../lib/date";
 import { formatHabitDetails } from "../lib/habitFormat";
 import { findLastExerciseEntry, getOverloadSuggestion } from "../lib/progressiveOverload";
+import { ImportWorkoutModal, type ImportedExercise } from "./ImportWorkoutModal";
 
 type NewHabitEntry = Omit<HabitEntry, "id">;
 
 const SET_ROW_COUNT = 3;
+
+function PlannedEntryRow({
+  entry,
+  onUpdate,
+  onComplete,
+  onDiscard,
+}: {
+  entry: PlannedEntry;
+  onUpdate: (patch: Partial<PlannedEntry>) => void;
+  onComplete: () => void;
+  onDiscard: () => void;
+}) {
+  const attr = ATTRIBUTES.find((a) => a.id === entry.attributeId);
+  const setDetails = entry.setDetails ?? [];
+
+  function updateSet(index: number, field: "reps" | "weight", value: string) {
+    const next: SetDetail[] = setDetails.map((s, i) =>
+      i === index ? { ...s, [field]: value ? Number(value) : undefined } : s,
+    );
+    onUpdate({ setDetails: next });
+  }
+
+  function addSet() {
+    onUpdate({ setDetails: [...setDetails, {}] });
+  }
+
+  function removeSet(index: number) {
+    onUpdate({ setDetails: setDetails.filter((_, i) => i !== index) });
+  }
+
+  return (
+    <li className="flex flex-col gap-2 bg-[#0d1117] border border-[#21262d] rounded px-3 py-2">
+      <div className="flex items-center justify-between gap-2">
+        <input
+          type="text"
+          value={entry.description}
+          onChange={(e) => onUpdate({ description: e.target.value })}
+          className="flex-1 min-w-0 bg-transparent text-sm text-[#e6edf3] focus:outline-none border-b border-transparent focus:border-emerald-500"
+        />
+        {attr && (
+          <span className={`text-xs px-2 py-0.5 rounded-full border shrink-0 ${attr.activeButtonClassName}`}>
+            {attr.name}
+          </span>
+        )}
+      </div>
+
+      <div className="flex flex-col gap-1">
+        {setDetails.map((s, i) => (
+          <div key={i} className="flex items-center gap-2">
+            <span className="text-xs text-gray-500 w-10 shrink-0">Set {i + 1}</span>
+            <input
+              type="number"
+              placeholder="reps"
+              value={s.reps ?? ""}
+              onChange={(e) => updateSet(i, "reps", e.target.value)}
+              min={0}
+              className="w-16 bg-[#161b22] border border-[#30363d] rounded px-2 py-1 text-xs text-[#e6edf3] placeholder:text-gray-600 focus:outline-none focus:border-emerald-500"
+            />
+            <input
+              type="number"
+              placeholder="lbs"
+              value={s.weight ?? ""}
+              onChange={(e) => updateSet(i, "weight", e.target.value)}
+              min={0}
+              className="w-16 bg-[#161b22] border border-[#30363d] rounded px-2 py-1 text-xs text-[#e6edf3] placeholder:text-gray-600 focus:outline-none focus:border-emerald-500"
+            />
+            <button
+              onClick={() => removeSet(i)}
+              className="text-gray-500 hover:text-red-400 text-xs"
+              aria-label="Remove set"
+            >
+              ✕
+            </button>
+          </div>
+        ))}
+        <button type="button" onClick={addSet} className="self-start text-xs text-emerald-400 hover:text-emerald-300 underline">
+          + set
+        </button>
+      </div>
+
+      <div className="flex gap-2 justify-end">
+        <button onClick={onDiscard} className="text-xs text-gray-500 hover:text-red-400 px-2 py-1">
+          Discard
+        </button>
+        <button
+          onClick={onComplete}
+          className="bg-emerald-600 hover:bg-emerald-500 text-white rounded px-3 py-1.5 text-xs font-medium"
+        >
+          Complete
+        </button>
+      </div>
+    </li>
+  );
+}
 
 interface SetRow {
   reps: string;
@@ -23,18 +118,34 @@ interface Props {
   logs: LogsByDate;
   onAddHabitEntry: (entry: NewHabitEntry) => void;
   onRemoveHabitEntry: (id: string) => void;
+  onImportPlannedEntries: (entries: ImportedExercise[]) => void;
+  onUpdatePlannedEntry: (id: string, patch: Partial<PlannedEntry>) => void;
+  onCompletePlannedEntry: (id: string) => void;
+  onDiscardPlannedEntry: (id: string) => void;
   onJumpToday: () => void;
 }
 
-export function TrainingPanel({ log, logs, onAddHabitEntry, onRemoveHabitEntry, onJumpToday }: Props) {
+export function TrainingPanel({
+  log,
+  logs,
+  onAddHabitEntry,
+  onRemoveHabitEntry,
+  onImportPlannedEntries,
+  onUpdatePlannedEntry,
+  onCompletePlannedEntry,
+  onDiscardPlannedEntry,
+  onJumpToday,
+}: Props) {
   const [habitDescription, setHabitDescription] = useState("");
   const [habitAttributeId, setHabitAttributeId] = useState<AttributeId | null>(null);
   const [setRows, setSetRows] = useState<SetRow[]>(emptySetRows);
   const [isTimed, setIsTimed] = useState(false);
   const [durationMinutes, setDurationMinutes] = useState("");
+  const [importOpen, setImportOpen] = useState(false);
 
   const isToday = log.date === todayISO();
   const habitEntries = log.habitEntries ?? [];
+  const plannedEntries = log.plannedEntries ?? [];
 
   function updateSetRow(index: number, field: "reps" | "weight", value: string) {
     setSetRows((prev) => prev.map((row, i) => (i === index ? { ...row, [field]: value } : row)));
@@ -98,8 +209,40 @@ export function TrainingPanel({ log, logs, onAddHabitEntry, onRemoveHabitEntry, 
         )}
       </div>
 
+      {importOpen && (
+        <ImportWorkoutModal
+          onImport={onImportPlannedEntries}
+          onClose={() => setImportOpen(false)}
+        />
+      )}
+
       <div className="flex flex-col gap-3">
-        <h3 className="text-sm font-semibold text-[#e6edf3]">Training log</h3>
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-semibold text-[#e6edf3]">Training log</h3>
+          <button
+            onClick={() => setImportOpen(true)}
+            className="text-xs text-emerald-400 hover:text-emerald-300 underline"
+          >
+            Paste workout
+          </button>
+        </div>
+
+        {plannedEntries.length > 0 && (
+          <div className="flex flex-col gap-2">
+            <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Today's plan</h4>
+            <ul className="flex flex-col gap-2">
+              {plannedEntries.map((entry) => (
+                <PlannedEntryRow
+                  key={entry.id}
+                  entry={entry}
+                  onUpdate={(patch) => onUpdatePlannedEntry(entry.id, patch)}
+                  onComplete={() => onCompletePlannedEntry(entry.id)}
+                  onDiscard={() => onDiscardPlannedEntry(entry.id)}
+                />
+              ))}
+            </ul>
+          </div>
+        )}
 
         <form onSubmit={handleHabitSubmit} className="flex flex-col gap-2">
           <div className="flex gap-2 flex-wrap items-center">

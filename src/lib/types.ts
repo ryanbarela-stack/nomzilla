@@ -25,10 +25,24 @@ export interface HabitEntry {
   weight?: number;
 }
 
+/**
+ * An exercise imported (e.g. pasted from a website) for this day but not yet done — shown as a
+ * checklist item that gets turned into a real HabitEntry when completed.
+ */
+export interface PlannedEntry {
+  id: string;
+  description: string;
+  attributeId: AttributeId;
+  setDetails?: SetDetail[];
+  durationMinutes?: number;
+}
+
 export interface DayLog {
   date: string; // ISO yyyy-mm-dd
   /** Optional — absent on days with no habits logged yet. */
   habitEntries?: HabitEntry[];
+  /** Exercises imported for this day but not yet completed. */
+  plannedEntries?: PlannedEntry[];
   /** Body weight logged for this day, in lbs. */
   weightLbs?: number;
 }
