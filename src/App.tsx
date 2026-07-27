@@ -14,7 +14,8 @@ import { getAbilities, getAbilityFor, computeDamage } from "./lib/abilities";
 import { advanceMonsterState, applyDamage, computeWeaknessBonus, MAX_ACTION_POINTS } from "./lib/monsterEncounter";
 import { getMonster } from "./lib/monsters";
 import type { ClassId } from "./lib/classes";
-import type { AttributeId, HabitEntry, LogsByDate, MonsterState, Settings } from "./lib/types";
+import type { ImportedExercise } from "./components/ImportWorkoutModal";
+import type { AttributeId, HabitEntry, LogsByDate, MonsterState, PlannedEntry, Settings } from "./lib/types";
 
 function App() {
   const [logs, setLogs] = useState<LogsByDate>(() => loadLogs());
@@ -98,6 +99,57 @@ function App() {
       return {
         ...prev,
         [selectedDate]: { ...existing, habitEntries: (existing.habitEntries ?? []).filter((e) => e.id !== id) },
+      };
+    });
+  }
+
+  function importPlannedEntries(entries: ImportedExercise[]) {
+    setLogs((prev) => {
+      const existing = prev[selectedDate] ?? { date: selectedDate };
+      const newEntries: PlannedEntry[] = entries.map((entry) => ({ id: crypto.randomUUID(), ...entry }));
+      return {
+        ...prev,
+        [selectedDate]: { ...existing, plannedEntries: [...(existing.plannedEntries ?? []), ...newEntries] },
+      };
+    });
+  }
+
+  function updatePlannedEntry(id: string, patch: Partial<PlannedEntry>) {
+    setLogs((prev) => {
+      const existing = prev[selectedDate];
+      if (!existing) return prev;
+      return {
+        ...prev,
+        [selectedDate]: {
+          ...existing,
+          plannedEntries: (existing.plannedEntries ?? []).map((e) => (e.id === id ? { ...e, ...patch } : e)),
+        },
+      };
+    });
+  }
+
+  function discardPlannedEntry(id: string) {
+    setLogs((prev) => {
+      const existing = prev[selectedDate];
+      if (!existing) return prev;
+      return {
+        ...prev,
+        [selectedDate]: { ...existing, plannedEntries: (existing.plannedEntries ?? []).filter((e) => e.id !== id) },
+      };
+    });
+  }
+
+  function completePlannedEntry(id: string) {
+    const planned = (logs[selectedDate]?.plannedEntries ?? []).find((e) => e.id === id);
+    if (!planned) return;
+    const { id: _plannedId, ...entryData } = planned;
+    addHabitEntry(entryData);
+    setLogs((prev) => {
+      const existing = prev[selectedDate];
+      if (!existing) return prev;
+      return {
+        ...prev,
+        [selectedDate]: { ...existing, plannedEntries: (existing.plannedEntries ?? []).filter((e) => e.id !== id) },
       };
     });
   }
@@ -228,6 +280,10 @@ function App() {
           logs={logs}
           onAddHabitEntry={addHabitEntry}
           onRemoveHabitEntry={removeHabitEntry}
+          onImportPlannedEntries={importPlannedEntries}
+          onUpdatePlannedEntry={updatePlannedEntry}
+          onCompletePlannedEntry={completePlannedEntry}
+          onDiscardPlannedEntry={discardPlannedEntry}
           onJumpToday={jumpToday}
         />
       )}
