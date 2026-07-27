@@ -217,15 +217,7 @@ export function TrainingPanel({
       )}
 
       <div className="flex flex-col gap-3">
-        <div className="flex items-center justify-between">
-          <h3 className="text-sm font-semibold text-[#e6edf3]">Training log</h3>
-          <button
-            onClick={() => setImportOpen(true)}
-            className="text-xs text-emerald-400 hover:text-emerald-300 underline"
-          >
-            Paste workout
-          </button>
-        </div>
+        <h3 className="text-sm font-semibold text-[#e6edf3]">Training log</h3>
 
         {plannedEntries.length > 0 && (
           <div className="flex flex-col gap-2">
@@ -268,6 +260,13 @@ export function TrainingPanel({
               className="bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 disabled:cursor-not-allowed text-white rounded px-4 py-2 text-sm font-medium"
             >
               Add
+            </button>
+            <button
+              type="button"
+              onClick={() => setImportOpen(true)}
+              className="bg-[#0d1117] border border-[#30363d] hover:border-emerald-500 text-emerald-400 rounded px-4 py-2 text-sm font-medium"
+            >
+              Build Workout
             </button>
           </div>
           <div className="flex flex-wrap gap-2">
