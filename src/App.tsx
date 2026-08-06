@@ -9,7 +9,7 @@ import { WeightPage } from "./components/WeightPage";
 import { loadLogs, saveLogs, loadSettings, saveSettings, loadMonsterState, saveMonsterState } from "./lib/storage";
 import { todayISO, fromISODate } from "./lib/date";
 import { getCurrentHealth, applyExerciseBoost, isManaChargeReady } from "./lib/championHealth";
-import { getAttributeProgress } from "./lib/attributes";
+import { ATTRIBUTES, getAttributeProgress } from "./lib/attributes";
 import { getAbilities, getAbilityFor, computeDamage } from "./lib/abilities";
 import { advanceMonsterState, applyDamage, computeWeaknessBonus, MAX_ACTION_POINTS } from "./lib/monsterEncounter";
 import { getMonster } from "./lib/monsters";
@@ -25,7 +25,7 @@ function App() {
   const [viewDate, setViewDate] = useState<Date>(() => fromISODate(todayISO()));
   const [aboutOpen, setAboutOpen] = useState(false);
   const [now, setNow] = useState(() => Date.now());
-  const [activeTab, setActiveTab] = useState<"training" | "weight">("training");
+  const [activeTab, setActiveTab] = useState<AttributeId | "weight">(ATTRIBUTES[0].id);
 
   useEffect(() => saveLogs(logs), [logs]);
   useEffect(() => saveSettings(settings), [settings]);
@@ -258,24 +258,35 @@ function App() {
         onChangeMonth={changeMonth}
       />
 
-      <div className="flex gap-2">
-        {(["training", "weight"] as const).map((tab) => (
+      <div className="flex gap-2 flex-wrap">
+        {ATTRIBUTES.map((attr) => (
           <button
-            key={tab}
-            onClick={() => setActiveTab(tab)}
-            className={`flex-1 rounded-md border px-3 py-2 text-sm font-medium capitalize transition-colors ${
-              activeTab === tab
-                ? "bg-emerald-950 border-emerald-600 text-emerald-200"
+            key={attr.id}
+            onClick={() => setActiveTab(attr.id)}
+            className={`flex-1 min-w-[6rem] rounded-md border px-3 py-2 text-sm font-medium transition-colors ${
+              activeTab === attr.id
+                ? attr.activeButtonClassName
                 : "bg-[#161b22] border-[#30363d] text-gray-400 hover:border-gray-500"
             }`}
           >
-            {tab}
+            {attr.name}
           </button>
         ))}
+        <button
+          onClick={() => setActiveTab("weight")}
+          className={`flex-1 min-w-[6rem] rounded-md border px-3 py-2 text-sm font-medium transition-colors ${
+            activeTab === "weight"
+              ? "bg-emerald-950 border-emerald-600 text-emerald-200"
+              : "bg-[#161b22] border-[#30363d] text-gray-400 hover:border-gray-500"
+          }`}
+        >
+          Weight
+        </button>
       </div>
 
-      {activeTab === "training" && (
+      {activeTab !== "weight" && (
         <TrainingPanel
+          attributeId={activeTab}
           log={selectedLog}
           logs={logs}
           onAddHabitEntry={addHabitEntry}

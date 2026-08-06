@@ -11,14 +11,15 @@ export interface ImportedExercise {
 }
 
 interface Props {
+  attributeId: AttributeId;
   onImport: (entries: ImportedExercise[]) => void;
   onClose: () => void;
 }
 
-export function ImportWorkoutModal({ onImport, onClose }: Props) {
+export function ImportWorkoutModal({ attributeId, onImport, onClose }: Props) {
   const [text, setText] = useState("");
-  const [attributeId, setAttributeId] = useState<AttributeId | null>(null);
   const [parsed, setParsed] = useState<ParsedExercise[] | null>(null);
+  const attr = ATTRIBUTES.find((a) => a.id === attributeId)!;
 
   function handleParse() {
     setParsed(parseWorkoutText(text));
@@ -29,7 +30,7 @@ export function ImportWorkoutModal({ onImport, onClose }: Props) {
   }
 
   function handleImport() {
-    if (!parsed || !attributeId || parsed.length === 0) return;
+    if (!parsed || parsed.length === 0) return;
     onImport(
       parsed.map((p) => ({
         description: p.description,
@@ -47,7 +48,7 @@ export function ImportWorkoutModal({ onImport, onClose }: Props) {
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between">
-          <h2 className="font-pixel font-bold text-[#e6edf3] text-sm">Import workout</h2>
+          <h2 className="font-pixel font-bold text-[#e6edf3] text-sm">Build {attr.name} workout</h2>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-200 px-2 text-lg leading-none">
             ✕
           </button>
@@ -66,31 +67,9 @@ export function ImportWorkoutModal({ onImport, onClose }: Props) {
               placeholder={"Bench Press 3x10 135lb\nSquat 5x5 @ 225\nPlank 3x30"}
               className="bg-[#0d1117] border border-[#30363d] rounded px-3 py-2 text-sm text-[#e6edf3] placeholder:text-gray-600 focus:outline-none focus:border-emerald-500 resize-none"
             />
-            <div className="flex flex-col gap-2">
-              <div className="text-xs font-medium text-gray-400">Attribute for this whole workout</div>
-              <div className="flex flex-wrap gap-2">
-                {ATTRIBUTES.map((attr) => {
-                  const selected = attributeId === attr.id;
-                  return (
-                    <button
-                      key={attr.id}
-                      type="button"
-                      onClick={() => setAttributeId(attr.id)}
-                      className={`rounded-full border px-3 py-1.5 text-xs transition-colors ${
-                        selected
-                          ? attr.activeButtonClassName
-                          : "bg-[#0d1117] border-[#30363d] text-gray-400 hover:border-gray-500"
-                      }`}
-                    >
-                      {attr.name}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
             <button
               onClick={handleParse}
-              disabled={!text.trim() || !attributeId}
+              disabled={!text.trim()}
               className="bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 disabled:cursor-not-allowed text-white rounded px-4 py-2 text-sm font-medium"
             >
               Parse

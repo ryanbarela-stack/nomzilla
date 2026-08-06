@@ -21,7 +21,6 @@ function PlannedEntryRow({
   onComplete: () => void;
   onDiscard: () => void;
 }) {
-  const attr = ATTRIBUTES.find((a) => a.id === entry.attributeId);
   const setDetails = entry.setDetails ?? [];
 
   function updateSet(index: number, field: "reps" | "weight", value: string) {
@@ -48,11 +47,6 @@ function PlannedEntryRow({
           onChange={(e) => onUpdate({ description: e.target.value })}
           className="flex-1 min-w-0 bg-transparent text-sm text-[#e6edf3] focus:outline-none border-b border-transparent focus:border-emerald-500"
         />
-        {attr && (
-          <span className={`text-xs px-2 py-0.5 rounded-full border shrink-0 ${attr.activeButtonClassName}`}>
-            {attr.name}
-          </span>
-        )}
       </div>
 
       <div className="flex flex-col gap-1">
@@ -114,6 +108,7 @@ function emptySetRows(): SetRow[] {
 }
 
 interface Props {
+  attributeId: AttributeId;
   log: DayLog;
   logs: LogsByDate;
   onAddHabitEntry: (entry: NewHabitEntry) => void;
@@ -126,6 +121,7 @@ interface Props {
 }
 
 export function TrainingPanel({
+  attributeId,
   log,
   logs,
   onAddHabitEntry,
@@ -137,26 +133,27 @@ export function TrainingPanel({
   onJumpToday,
 }: Props) {
   const [habitDescription, setHabitDescription] = useState("");
-  const [habitAttributeId, setHabitAttributeId] = useState<AttributeId | null>(null);
   const [setRows, setSetRows] = useState<SetRow[]>(emptySetRows);
   const [isTimed, setIsTimed] = useState(false);
   const [durationMinutes, setDurationMinutes] = useState("");
   const [importOpen, setImportOpen] = useState(false);
 
   const isToday = log.date === todayISO();
-  const habitEntries = log.habitEntries ?? [];
-  const plannedEntries = log.plannedEntries ?? [];
+  const habitEntries = (log.habitEntries ?? []).filter((entry) => entry.attributeId === attributeId);
+  const plannedEntries = (log.plannedEntries ?? []).filter((entry) => entry.attributeId === attributeId);
 
   function updateSetRow(index: number, field: "reps" | "weight", value: string) {
     setSetRows((prev) => prev.map((row, i) => (i === index ? { ...row, [field]: value } : row)));
   }
 
-  const lastEntry = useMemo(() => findLastExerciseEntry(logs, habitDescription), [logs, habitDescription]);
+  const lastEntry = useMemo(
+    () => findLastExerciseEntry(logs, habitDescription, attributeId),
+    [logs, habitDescription, attributeId],
+  );
   const suggestion = useMemo(() => (lastEntry ? getOverloadSuggestion(lastEntry) : null), [lastEntry]);
 
   function applySuggestion() {
     if (!lastEntry || !suggestion) return;
-    if (!habitAttributeId) setHabitAttributeId(lastEntry.attributeId);
 
     const rows = emptySetRows();
     suggestion.setDetails?.forEach((set, i) => {
@@ -176,7 +173,7 @@ export function TrainingPanel({
 
   function handleHabitSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!habitDescription.trim() || !habitAttributeId) return;
+    if (!habitDescription.trim()) return;
 
     const setDetails = setRows
       .map((row) => ({
@@ -187,16 +184,17 @@ export function TrainingPanel({
 
     onAddHabitEntry({
       description: habitDescription.trim(),
-      attributeId: habitAttributeId,
+      attributeId,
       setDetails: setDetails.length > 0 ? setDetails : undefined,
       durationMinutes: isTimed && durationMinutes ? Number(durationMinutes) : undefined,
     });
     setHabitDescription("");
-    setHabitAttributeId(null);
     setSetRows(emptySetRows());
     setIsTimed(false);
     setDurationMinutes("");
   }
+
+  const attr = ATTRIBUTES.find((a) => a.id === attributeId)!;
 
   return (
     <div className="bg-[#161b22] border border-[#30363d] rounded-lg p-4 flex flex-col gap-4">
@@ -211,13 +209,16 @@ export function TrainingPanel({
 
       {importOpen && (
         <ImportWorkoutModal
+          attributeId={attributeId}
           onImport={onImportPlannedEntries}
           onClose={() => setImportOpen(false)}
         />
       )}
 
       <div className="flex flex-col gap-3">
-        <h3 className="text-sm font-semibold text-[#e6edf3]">Training log</h3>
+        <h3 className="text-sm font-semibold text-[#e6edf3]">
+          {attr.name} log <span className="text-xs font-normal text-gray-500">({attr.habitLabel})</span>
+        </h3>
 
         {plannedEntries.length > 0 && (
           <div className="flex flex-col gap-2">
@@ -256,7 +257,7 @@ export function TrainingPanel({
             </label>
             <button
               type="submit"
-              disabled={!habitDescription.trim() || !habitAttributeId}
+              disabled={!habitDescription.trim()}
               className="bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 disabled:cursor-not-allowed text-white rounded px-4 py-2 text-sm font-medium"
             >
               Add
@@ -268,26 +269,6 @@ export function TrainingPanel({
             >
               Build Workout
             </button>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {ATTRIBUTES.map((attr) => {
-              const selected = habitAttributeId === attr.id;
-              return (
-                <button
-                  key={attr.id}
-                  type="button"
-                  title={attr.habitLabel}
-                  onClick={() => setHabitAttributeId(attr.id)}
-                  className={`rounded-full border px-3 py-1.5 text-xs transition-colors ${
-                    selected
-                      ? attr.activeButtonClassName
-                      : "bg-[#0d1117] border-[#30363d] text-gray-400 hover:border-gray-500"
-                  }`}
-                >
-                  {attr.name}
-                </button>
-              );
-            })}
           </div>
 
           {lastEntry && suggestion && (
@@ -360,10 +341,9 @@ export function TrainingPanel({
 
         <ul className="flex flex-col gap-1 max-h-64 overflow-y-auto">
           {habitEntries.length === 0 && (
-            <li className="text-sm text-gray-500 italic py-2">No training logged yet.</li>
+            <li className="text-sm text-gray-500 italic py-2">No {attr.name.toLowerCase()} logged yet.</li>
           )}
           {habitEntries.map((entry) => {
-            const attr = ATTRIBUTES.find((a) => a.id === entry.attributeId);
             const details = formatHabitDetails(entry);
             return (
               <li
@@ -374,20 +354,13 @@ export function TrainingPanel({
                   <span className="text-sm text-[#e6edf3]">{entry.description}</span>
                   {details && <span className="text-xs text-gray-500">{details}</span>}
                 </div>
-                <div className="flex items-center gap-3">
-                  {attr && (
-                    <span className={`text-xs px-2 py-0.5 rounded-full border ${attr.activeButtonClassName}`}>
-                      {attr.name}
-                    </span>
-                  )}
-                  <button
-                    onClick={() => onRemoveHabitEntry(entry.id)}
-                    className="text-gray-500 hover:text-red-400 text-sm"
-                    aria-label="Remove training entry"
-                  >
-                    ✕
-                  </button>
-                </div>
+                <button
+                  onClick={() => onRemoveHabitEntry(entry.id)}
+                  className="text-gray-500 hover:text-red-400 text-sm"
+                  aria-label="Remove training entry"
+                >
+                  ✕
+                </button>
               </li>
             );
           })}

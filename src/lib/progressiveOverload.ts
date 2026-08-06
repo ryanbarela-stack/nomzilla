@@ -1,4 +1,4 @@
-import type { HabitEntry, LogsByDate, SetDetail } from "./types";
+import type { AttributeId, HabitEntry, LogsByDate, SetDetail } from "./types";
 
 export const WEIGHT_INCREMENT = 5;
 export const DURATION_INCREMENT = 5;
@@ -11,14 +11,19 @@ function normalize(description: string): string {
   return description.trim().toLowerCase();
 }
 
-/** The most recent logged entry (any day) whose description matches, or null if none. */
-export function findLastExerciseEntry(logs: LogsByDate, description: string): ExerciseHistoryEntry | null {
+/** The most recent logged entry (any day) whose description and attribute match, or null if none. */
+export function findLastExerciseEntry(
+  logs: LogsByDate,
+  description: string,
+  attributeId: AttributeId,
+): ExerciseHistoryEntry | null {
   const target = normalize(description);
   if (!target) return null;
 
   let best: ExerciseHistoryEntry | null = null;
   for (const [date, log] of Object.entries(logs)) {
     for (const entry of log.habitEntries ?? []) {
+      if (entry.attributeId !== attributeId) continue;
       if (normalize(entry.description) !== target) continue;
       if (!best || date > best.date) best = { ...entry, date };
     }
